@@ -254,7 +254,6 @@ void vtkEMSegmentInputChannelsStep::ShowUserInterface()
       this->SourceTaskFiles();
       
       int showCheckList = atoi(this->Script("::EMSegmenterSimpleTcl::CreateCheckList"));
-      // cout << "showCheckList: " <<  showCheckList << endl;
       if (showCheckList) 
       {
           if (!this->CheckListFrame)
@@ -293,6 +292,7 @@ void vtkEMSegmentInputChannelsStep::AlignTargetImagesCallback(int state)
 //----------------------------------------------------------------------------
 void vtkEMSegmentInputChannelsStep::Validate()
 {
+  // cout << "vtkEMSegmentInputChannelsStep::Validate()" << endl;
   vtkKWWizardWorkflow *wizard_workflow = this->GetGUI()->GetWizardWidget()->GetWizardWorkflow();
 
   //-----------------------------------------------
@@ -427,30 +427,30 @@ void vtkEMSegmentInputChannelsStep::Validate()
        inputNodes->SetNthInputChannelName(i,this->InputChannelDefineLineName[i]->GetWidget()->GetValue());
      }
      
-
-   //
    if (!this->GetGUI()->IsSegmentationModeAdvanced()) 
      {
        if (atoi(this->Script("::EMSegmenterSimpleTcl::ValidateCheckList")) )
        {
          return;
        }
-       
+
        this->UpdateTaskPreprocessingSetting();
+
        mrmlManager->GetWorkingDataNode()->SetAlignedTargetNodeIsValid(0);
        mrmlManager->GetWorkingDataNode()->SetAlignedAtlasNodeIsValid(0);
+
        if (this->GetGUI()->GetPreProcessingStep()) 
-     {
-       this->GetGUI()->GetPreProcessingStep()->askQuestionsBeforeRunningPreprocessingFlagOff();
-     }
+       {
+           this->GetGUI()->GetPreProcessingStep()->askQuestionsBeforeRunningPreprocessingFlagOff();
+       }
      } 
    else 
      {
        if (this->GetGUI()->GetPreProcessingStep()) 
-     {
-       this->GetGUI()->GetPreProcessingStep()->askQuestionsBeforeRunningPreprocessingFlagOn();
-     }
-     }
+       {
+         this->GetGUI()->GetPreProcessingStep()->askQuestionsBeforeRunningPreprocessingFlagOn();
+       }
+      }
 
    // Check Values for 
    this->Superclass::Validate();
@@ -669,7 +669,12 @@ void vtkEMSegmentInputChannelsStep::UpdateTaskPreprocessingSetting()
     }
 
 
-  std::string oldText = mrmlManager->GetNode()->GetTaskPreprocessingSetting();
+  std::string oldText;
+
+  if ( mrmlManager->GetNode()->GetTaskPreprocessingSetting() ) 
+    {
+      oldText = std::string(mrmlManager->GetNode()->GetTaskPreprocessingSetting());
+    }
 
   vtksys_stl::stringstream defText;
   size_t  startPos =0;
