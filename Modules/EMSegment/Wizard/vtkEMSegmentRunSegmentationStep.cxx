@@ -41,6 +41,7 @@
 #include "vtkSlicerSliceControllerWidget.h"
 #include "vtkKWScale.h"
 #include "vtkSlicerSlicesControlGUI.h"
+#include "vtkKWProgressDialog.h"
 
 //----------------------------------------------------------------------------
 vtkStandardNewMacro(vtkEMSegmentRunSegmentationStep);
@@ -777,7 +778,15 @@ void vtkEMSegmentRunSegmentationStep::StartSegmentationCallback()
   this->GetGUI()->GetMRMLManager()->CreateOutputVolumeNode();
 
   // start the segmentation
+  vtkKWProgressDialog* progress = vtkKWProgressDialog::New();
+  progress->SetParent(this->GetGUI()->GetApplicationGUI()->GetMainSlicerWindow());
+  progress->SetMasterWindow(this->GetGUI()->GetApplicationGUI()->GetMainSlicerWindow());
+  progress->Create();
+  progress->SetMessageText("Please wait until segmentation has been finished.");
+  progress->Display();
   logic->StartSegmentationWithoutPreprocessing();
+  progress->SetParent(NULL);
+  progress->Delete();
 
   // display Results 
   vtkSlicerApplicationGUI *applicationGUI  = this->GetGUI()->GetApplicationGUI();
@@ -1688,7 +1697,7 @@ void vtkEMSegmentRunSegmentationStep::ProcessGUIEvents(vtkObject *caller, unsign
        newROIRadius[0] = ceil(roiRadius[0]);
        newROIRadius[1] = ceil(roiRadius[1]);
        newROIRadius[2] = ceil(roiRadius[2]);
-       std::cerr << "ROI XYZ: " << roiXYZ[0] << ", " << roiXYZ[1] << ", " << roiXYZ[2] << std::endl;
+       std::cout << "ROI XYZ: " << roiXYZ[0] << ", " << roiXYZ[1] << ", " << roiXYZ[2] << std::endl;
        roiNode->SetXYZ(newROIXYZ);
        roiNode->SetRadiusXYZ(newROIRadius);
        MRMLUpdateROIFromROINode();

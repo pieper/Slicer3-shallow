@@ -8,11 +8,12 @@
 #include "vtkKWMessageDialog.h"
 #include "vtkEMSegmentLogic.h"
 #include "vtkKWWizardWorkflow.h"
-#include "vtkKWFrameWithLabel.h" 
+#include "vtkKWFrameWithLabel.h"
 #include "vtkMRMLEMSWorkingDataNode.h"
 #include "vtkMRMLEMSNode.h"
 #include "vtkKWCheckButtonWithLabel.h"
 #include "vtkKWEntryWithLabel.h"
+#include "vtkKWProgressDialog.h"
 
 //----------------------------------------------------------------------------
 vtkStandardNewMacro(vtkEMSegmentPreProcessingStep);
@@ -32,7 +33,8 @@ vtkEMSegmentPreProcessingStep::~vtkEMSegmentPreProcessingStep()
 }
 
 //----------------------------------------------------------------------------
-void vtkEMSegmentPreProcessingStep::ShowUserInterface()
+void
+vtkEMSegmentPreProcessingStep::ShowUserInterface()
 {
   this->Superclass::ShowUserInterface();
 
@@ -82,19 +84,21 @@ void vtkEMSegmentPreProcessingStep::ShowUserInterface()
 }
 
 //----------------------------------------------------------------------------
-void vtkEMSegmentPreProcessingStep::PrintSelf(ostream& os, vtkIndent indent)
+void
+vtkEMSegmentPreProcessingStep::PrintSelf(ostream& os, vtkIndent indent)
 {
   this->Superclass::PrintSelf(os,indent);
 }
 
 //----------------------------------------------------------------------------
-void vtkEMSegmentPreProcessingStep::Validate()
+void
+vtkEMSegmentPreProcessingStep::Validate()
 {
   
   vtkEMSegmentMRMLManager *mrmlManager = this->GetGUI()->GetMRMLManager();
   vtkKWWizardWorkflow *wizard_workflow = this->GetGUI()->GetWizardWidget()->GetWizardWorkflow();
 
-  // If they are still valid do not repeat preprocessing unless otherwhise wanted 
+  // If they are still valid do not repeat preprocessing unless otherwise wanted 
   // Kilian - still to do - save intermediate results 
   // so do special check here 
   if (this->askQuestionsBeforeRunningPreprocessingFlag)
@@ -124,7 +128,16 @@ void vtkEMSegmentPreProcessingStep::Validate()
     }
   this->SetTaskPreprocessingSetting();
 
+  vtkKWProgressDialog* progress = vtkKWProgressDialog::New();
+  progress->SetParent(this->GetGUI ()->GetApplicationGUI ()->GetMainSlicerWindow ());
+  progress->SetMasterWindow (this->GetGUI ()->GetApplicationGUI ()->GetMainSlicerWindow());
+  progress->Create();
+  progress->SetMessageText("Please wait until pre-processing has been finished.");
+  progress->Display();
   int flag = atoi(this->Script("::EMSegmenterPreProcessingTcl::Run"));
+  progress->SetParent(NULL);
+  progress->Delete();
+
   if (flag)
     {
       cout << "Pre-processing did not execute correctly" << endl;
@@ -146,7 +159,8 @@ void vtkEMSegmentPreProcessingStep::Validate()
 }
 
 //----------------------------------------------------------------------------
-void vtkEMSegmentPreProcessingStep::SetTaskPreprocessingSetting()
+void
+vtkEMSegmentPreProcessingStep::SetTaskPreprocessingSetting()
 {
   vtkEMSegmentMRMLManager *mrmlManager = this->GetGUI()->GetMRMLManager();
   if (!mrmlManager)
