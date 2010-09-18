@@ -289,9 +289,11 @@ void vtkEMSegmentRunSegmentationStep::ShowUserInterface()
     this->RunSegmentationDirectoryFrame->Create();
     this->RunSegmentationDirectoryFrame->SetLabelText("Working Directory");
     }
-  this->Script(
-    "pack %s -side top -anchor nw -fill x -padx 0 -pady 2", 
-    this->RunSegmentationDirectoryFrame->GetWidgetName());
+
+ if (this->GetGUI()->IsSegmentationModeAdvanced())
+   { 
+    this->Script("pack %s -side top -anchor nw -fill x -padx 0 -pady 2", this->RunSegmentationDirectoryFrame->GetWidgetName());
+   }
 
   // Create the frame for the directory sub frame
 
@@ -484,9 +486,10 @@ void vtkEMSegmentRunSegmentationStep::ShowUserInterface()
     this->RunSegmentationMiscFrame->SetLabelText("Misc.");
     }
 
-  this->Script(
-    "pack %s -side top -anchor nw -fill x -padx 2 -pady 2", 
-    this->RunSegmentationMiscFrame->GetWidgetName());
+ if (this->GetGUI()->IsSegmentationModeAdvanced())
+   { 
+      this->Script( "pack %s -side top -anchor nw -fill x -padx 2 -pady 2", this->RunSegmentationMiscFrame->GetWidgetName());
+   }
 
   // Create the multithread button
 
@@ -774,6 +777,12 @@ void vtkEMSegmentRunSegmentationStep::StartSegmentationCallback()
     return;
     }
 
+  // Compute Number of Trainig Samples if they are not set
+  if (this->GetGUI()->GetMRMLManager()->GetAtlasNumberOfTrainingSamples() <= 0 )
+    {
+      this->GetGUI()->GetMRMLManager()->ComputeAtlasNumberOfTrainingSamples();
+    }
+
   // Create output volume 
   this->GetGUI()->GetMRMLManager()->CreateOutputVolumeNode();
 
@@ -951,7 +960,11 @@ void vtkEMSegmentRunSegmentationStep::ShowROIGUI(vtkKWWidget* parent)
     this->DefineVOIFrame->Create();
     this->DefineVOIFrame->SetLabelText("Define VOI");
     }
-  this->Script("pack %s -side top -anchor nw -fill x -padx 0 -pady 2", this->DefineVOIFrame->GetWidgetName());
+
+ if (this->GetGUI()->IsSegmentationModeAdvanced())
+   { 
+     this->Script("pack %s -side top -anchor nw -fill x -padx 0 -pady 2", this->DefineVOIFrame->GetWidgetName());
+   }
 
   if(!this->roiNode)
     {

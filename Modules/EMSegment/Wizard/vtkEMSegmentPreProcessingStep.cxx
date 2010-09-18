@@ -72,7 +72,9 @@ vtkEMSegmentPreProcessingStep::ShowUserInterface()
     this->CheckListFrame->SetLabelText("Check List");
     }
 
-  this->Script("pack %s -side top -anchor nw -fill x -padx 0 -pady 2", this->CheckListFrame->GetWidgetName());
+  if (this->GetGUI()->IsSegmentationModeAdvanced()) {
+    this->Script("pack %s -side top -anchor nw -fill x -padx 0 -pady 2", this->CheckListFrame->GetWidgetName());
+  }
 
   //
   // Define Task Specific GUI 

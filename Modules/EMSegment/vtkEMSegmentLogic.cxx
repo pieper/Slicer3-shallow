@@ -2243,26 +2243,16 @@ CopyTreeGenericDataToSegmenter(vtkImageEMLocalGenericClass* node,
 
   // get working atlas
   // !!! error checking!
-  vtkMRMLEMSAtlasNode* workingAtlas = 
-    this->MRMLManager->GetWorkingDataNode()->GetAlignedAtlasNode();
-  std::string atlasVolumeKey = 
-    this->MRMLManager->GetTreeParametersNode(nodeID)->
-    GetSpatialPriorVolumeName() ?
-    this->MRMLManager->GetTreeParametersNode(nodeID)->
-    GetSpatialPriorVolumeName() : "";
-
-  int atlasVolumeIndex       = workingAtlas->GetIndexByKey(atlasVolumeKey.c_str());
-
-  if (atlasVolumeIndex >= 0)
+  vtkMRMLVolumeNode*  atlasNode = this->MRMLManager->GetAlignedSpatialPriorFromTreeNodeID(nodeID);
+  if (atlasNode)
     {
     vtkDebugMacro("Setting spatial prior: node=" 
                   << this->MRMLManager->GetTreeNodeLabel(nodeID));
-    vtkImageData* imageData = workingAtlas->GetNthVolumeNode(atlasVolumeIndex)->GetImageData();
+    vtkImageData* imageData = atlasNode->GetImageData();
     node->SetProbDataPtr(imageData);
     }
 
-  int exclude = 
-    this->MRMLManager->GetTreeNodeExcludeFromIncompleteEStep(nodeID);
+  int exclude =  this->MRMLManager->GetTreeNodeExcludeFromIncompleteEStep(nodeID);
   node->SetExcludeFromIncompleteEStepFlag(exclude);
 }
 
@@ -2509,10 +2499,19 @@ int vtkEMSegmentLogic::ComputeIntensityDistributionsFromSpatialPrior(vtkKWApplic
 //-----------------------------------------------------------------------------
 void vtkEMSegmentLogic::UpdateIntensityDistributionAuto(vtkKWApplication* app, vtkIdType nodeID)
 {
+
   if (!this->MRMLManager->GetTreeNodeSpatialPriorVolumeID(nodeID)) {
     vtkWarningMacro("Nothing to update for " << nodeID << " as atlas is not defined");
     return ;
   }
+
+  vtkMRMLVolumeNode*  atlasNode = this->MRMLManager->GetAlignedSpatialPriorFromTreeNodeID(nodeID);
+  if (!this->MRMLManager->GetTreeNodeSpatialPriorVolumeID(nodeID)) 
+  {
+    vtkErrorMacro("Atlas not yet aligned for " << nodeID << " ! ");
+    return ;
+  }
+
   // get working node 
   vtkMRMLEMSTargetNode* workingTarget = NULL;
   if (this->MRMLManager->GetWorkingDataNode()->GetAlignedTargetNode() &&
@@ -2527,7 +2526,7 @@ void vtkEMSegmentLogic::UpdateIntensityDistributionAuto(vtkKWApplication* app, v
     }
 
   int numTargetImages = workingTarget->GetNumberOfVolumes();
-
+  
    // Sample
   {
     vtksys_stl::stringstream CMD ;
@@ -2535,10 +2534,12 @@ void vtkEMSegmentLogic::UpdateIntensityDistributionAuto(vtkKWApplication* app, v
     for (int i = 0 ; i < numTargetImages; i++) {
       CMD << workingTarget->GetNthVolumeNodeID(i) << " " ;
     }
-    CMD << " } " << this->MRMLManager->GetVolumeNode(this->MRMLManager->GetTreeNodeSpatialPriorVolumeID(nodeID))->GetID() << " {" <<  this->MRMLManager->GetTreeNodeName(nodeID) << "} \n";
+    CMD << " } ";
+    CMD << atlasNode->GetID() << " {" <<  this->MRMLManager->GetTreeNodeName(nodeID) << "} \n";
     // cout << CMD.str().c_str() << endl;
     if (atoi(app->Script(CMD.str().c_str()))) { return; }
   }
+  
 
   //
   // propogate data to mrml node

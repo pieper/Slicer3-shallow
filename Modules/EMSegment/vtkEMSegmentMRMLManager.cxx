@@ -3138,6 +3138,68 @@ GetAtlasNumberOfTrainingSamples()
     }
 }
 
+
+//----------------------------------------------------------------------------
+void
+vtkEMSegmentMRMLManager::
+ComputeAtlasNumberOfTrainingSamples()
+{
+  cout << "vtkEMSegmentMRMLManager::ComputeAtlasNumberOfTrainingSamples: Start" << endl;
+
+ vtkMRMLEMSAtlasNode *atlasNode = this->GetAtlasInputNode();
+  if (atlasNode == NULL)
+    {
+    return;
+    }
+
+  if (!this->GetWorkingDataNode()->GetAlignedTargetNode() || !this->GetWorkingDataNode()->GetAlignedTargetNodeIsValid())
+    {
+      atlasNode->SetNumberOfTrainingSamples(0);
+      return;
+    }
+
+  vtkMRMLEMSAtlasNode* atlas =  this->GetWorkingDataNode()->GetAlignedAtlasNode();
+  int maxNum = 0;
+  int setFlag = 0;
+
+  typedef vtkstd::vector<vtkIdType>  NodeIDList;
+  typedef NodeIDList::const_iterator NodeIDListIterator;
+  NodeIDList nodeIDList;
+
+  this->GetListOfTreeNodeIDs(this->GetTreeRootNodeID(), nodeIDList);
+  for (NodeIDListIterator i = nodeIDList.begin(); i != nodeIDList.end(); ++i)
+    {
+      if (this->GetTreeNodeIsLeaf(*i)) 
+        {  
+           std::string atlasVolumeKey =  this->GetTreeParametersNode(*i)->GetSpatialPriorVolumeName() ? this->GetTreeParametersNode(*i)->GetSpatialPriorVolumeName() : "";
+           int atlasVolumeIndex       = atlas->GetIndexByKey(atlasVolumeKey.c_str());
+           if (atlasVolumeIndex >= 0)
+              {
+                 vtkImageData* imageData = atlas->GetNthVolumeNode(atlasVolumeIndex)->GetImageData();
+         if (imageData)
+           {
+                    double range[2];
+                       imageData->GetScalarRange(range);
+                       cout << "Max of " << atlas->GetNthVolumeNode(atlasVolumeIndex)->GetName() << ": " << range[1] << endl;
+                   if (!setFlag ||  int(range[1]) > maxNum) 
+                     {
+                             maxNum = int(range[1]);
+                 setFlag = 1;
+                     }
+           }
+          }
+    }
+    }
+  if (!setFlag) 
+    {
+      // Just set it to 1 so that it does not create problems later when running the EMSegmenter
+      maxNum =1 ;
+    }
+    atlas->SetNumberOfTrainingSamples(maxNum);
+    cout << "New NumberOfTrainingSamples: " << maxNum << endl;
+}
+
+
 // ????
 //----------------------------------------------------------------------------
 int
@@ -5247,4 +5309,17 @@ void vtkEMSegmentMRMLManager::CreateOutputVolumeNode()
   const char* ID = outputNode->GetID();
   outputNode->Delete();
   this->SetOutputVolumeMRMLID(ID);
+}
+
+//----------------------------------------------------------------------------
+vtkMRMLVolumeNode*  vtkEMSegmentMRMLManager::GetAlignedSpatialPriorFromTreeNodeID(vtkIdType nodeID)
+{
+   vtkMRMLEMSAtlasNode* workingAtlas = this->GetWorkingDataNode()->GetAlignedAtlasNode();
+   std::string atlasVolumeKey = this->GetTreeParametersNode(nodeID)->GetSpatialPriorVolumeName() ? this->GetTreeParametersNode(nodeID)->GetSpatialPriorVolumeName() : "";
+   int atlasVolumeIndex       = workingAtlas->GetIndexByKey(atlasVolumeKey.c_str());
+    if (atlasVolumeIndex >= 0 )
+    {
+      return workingAtlas->GetNthVolumeNode(atlasVolumeIndex);   
+    }
+    return NULL;
 }

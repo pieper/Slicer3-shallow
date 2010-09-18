@@ -446,20 +446,20 @@ namespace eval EMSegmenterPreProcessingTcl {
             set fastFlag 0 
             if { $affineFlag } {
                set registrationType  "${registrationType} Affine"
-           if { $affineType == [$mrmlManager GetRegistrationTypeFromString AtlasToTargetAffineRegistrationRigidMMIFast ] } {
-           set fastFlag 1
-           } else {
-           set fastFlag 0 
-           }
+               if { $affineType == [$mrmlManager GetRegistrationTypeFromString AtlasToTargetAffineRegistrationRigidMMIFast ] } {
+                  set fastFlag 1
+               } else {
+                 set fastFlag 0 
+               }
             }
     
             if { $bSplineFlag } {
                 set registrationType  "${registrationType} BSpline"
-        if { $deformableType == [$mrmlManager GetRegistrationTypeFromString AtlasToTargetDeformableRegistrationBSplineMMIFast ] } {
-           set fastFlag 1
-           } else {
-           set fastFlag 0 
-           }
+                if { $deformableType == [$mrmlManager GetRegistrationTypeFromString AtlasToTargetDeformableRegistrationBSplineMMIFast ] } {
+                    set fastFlag 1
+               } else {
+                   set fastFlag 0 
+               }
             }
     
             set backgroundLevel  [$LOGIC GuessRegistrationBackgroundLevel $movingAtlasVolumeNode]

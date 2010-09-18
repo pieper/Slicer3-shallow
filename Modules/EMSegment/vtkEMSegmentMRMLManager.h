@@ -314,6 +314,8 @@ public:
   virtual void      SetTreeNodeSpatialPriorVolumeID(vtkIdType nodeID, 
                                                     vtkIdType volumeID);
 
+  vtkMRMLVolumeNode* GetAlignedSpatialPriorFromTreeNodeID(vtkIdType nodeID);
+
   // target volumes
   virtual int         GetTargetNumberOfSelectedVolumes();
   // index in [0, #selected volumes)
@@ -516,6 +518,7 @@ public:
   virtual void      SetUpdateIntermediateData(int shouldUpdate);
 
   virtual int       GetAtlasNumberOfTrainingSamples();
+  virtual void      ComputeAtlasNumberOfTrainingSamples();
 
   virtual void      GetSegmentationBoundaryMin(int minPoint[3]);
   virtual void      SetSegmentationBoundaryMin(int minPoint[3]);

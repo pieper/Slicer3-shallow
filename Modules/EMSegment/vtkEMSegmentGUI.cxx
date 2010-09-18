@@ -30,8 +30,8 @@
 #include "vtkEMSegmentInputChannelsStep.h"
 #include "vtkEMSegmentPreProcessingStep.h"
 
-#include "CSAILLogo.h"
 #include "vtkKWIcon.h"
+#include "vtkKWLabel.h"
 
 #include <vtksys/stl/string>
 #include <vtksys/SystemTools.hxx>
@@ -76,14 +76,15 @@ vtkEMSegmentGUI::vtkEMSegmentGUI()
   this->RegistrationParametersStep = NULL;
   this->RunSegmentationStep        = NULL;
 
-  vtkKWIcon* logo = vtkKWIcon::New();
-  logo->SetImage(image_CSAILLogo,
-                 image_CSAILLogo_width, image_CSAILLogo_height,
-                 image_CSAILLogo_pixel_size, image_CSAILLogo_length,
-                 0);
-  this->Logo = logo;
-  logo->Delete();
+  //vtkKWIcon* logo = vtkKWIcon::New();
+  //logo->SetImage(image_CSAILLogo,
+  //                image_CSAILLogo_width, image_CSAILLogo_height,
+  //                image_CSAILLogo_pixel_size, image_CSAILLogo_length,
+  //                0);
+  // this->Logo = logo;
+  // logo->Delete();
 
+  this->NACLabel = NULL;
   this->StartSegmentStep= NULL;
   this->SegmentationMode = SegmentationModeAdvanced;
 }
@@ -162,6 +163,12 @@ vtkEMSegmentGUI::~vtkEMSegmentGUI()
     {
     this->RunSegmentationStep->Delete();
     this->RunSegmentationStep = NULL;
+    }
+
+  if (this->NACLabel)
+    {
+      this->NACLabel->Delete();
+      this->NACLabel = NULL;
     }
 }
 
@@ -315,9 +322,6 @@ void vtkEMSegmentGUI::BuildGUI()
 {
   vtkSlicerApplication *app = (vtkSlicerApplication *)this->GetApplication();
 
-  const char *help = 
-    "**EMSegment Module:** **Under Construction** Use this module to segment a set of set of images (target images) using the tree-based EM segmentation algorithm of K. Pohl et al.  First use the pull down menu to select a collection of parameters to edit (or create a new collection).  Use the 'Back' and 'Next' to navigate through the stages of filling in the algorithm parameters.  When the parameters are specified, use the button on the last step to start the segmentation process.  ";
-  
   this->Logic->RegisterMRMLNodesWithScene();
 
   this->UIPanel->AddPage("EMSegment", 
@@ -330,32 +334,43 @@ void vtkEMSegmentGUI::BuildGUI()
   // -----------------------------------------------------------------------
   // Help
 
-  vtkSlicerModuleCollapsibleFrame *help_frame = 
-    vtkSlicerModuleCollapsibleFrame::New();
-  help_frame->SetParent(module_page);
-  help_frame->Create();
-  help_frame->CollapseFrame();
-  help_frame->SetLabelText("Help");
-  help_frame->Delete();
+  // vtkSlicerModuleCollapsibleFrame *help_frame = 
+  //   vtkSlicerModuleCollapsibleFrame::New();
+  // help_frame->SetParent(module_page);
+  // help_frame->Create();
+  // help_frame->CollapseFrame();
+  // help_frame->SetLabelText("Help");
+  // help_frame->Delete();
 
-  app->Script("pack %s -side top -anchor nw -fill x -padx 2 -pady 2 -in %s",
-              help_frame->GetWidgetName(), 
-              module_page->GetWidgetName());
-  
+  // app->Script("pack %s -side top -anchor nw -fill x -padx 2 -pady 2 -in %s", help_frame->GetWidgetName(), module_page->GetWidgetName());
+
+ // configure the parent classes help text widget
+
+//   this->HelpText->SetParent(help_frame->GetFrame());
+//   this->HelpText->Create();
+//   this->HelpText->SetHorizontalScrollbarVisibility(0);
+//   this->HelpText->SetVerticalScrollbarVisibility(1);
+//   this->HelpText->GetWidget()->SetText(help);
+//   this->HelpText->GetWidget()->SetReliefToFlat();
+//   this->HelpText->GetWidget()->SetWrapToWord();
+//   this->HelpText->GetWidget()->ReadOnlyOn();
+//   this->HelpText->GetWidget()->QuickFormattingOn();
+// 
+//   app->Script("pack %s -side top -fill x -expand y -anchor w -padx 2 -pady 4",
+//               this->HelpText->GetWidgetName());
+//  
   // configure the parent classes help text widget
+  const char *help = 
+    "**EMSegment Module:**  Ssegment a set of set of images (target images) using the tree-based EM segmentation algorithmUse the pull down menu to select from a collection of tasks or create a new one.  Use the 'Back' and 'Next' to navigate through the stages of filling in the algorithm parameters.  When all parameters are specified, use the 'segmentation' button. \n \nFor latest updates, new tasks, and detail help please visit http://www.slicer.org/slicerWiki/index.php/Modules:EMSegmenter-3.6 \n\n **Please cite the following paper when using this module for your publications**: \nK.M. Pohl et. A hierarchical algorithm for MR brain image parcellation. IEEE Transactions on Medical Imaging, 26(9),pp 1201-1212, 2007.";
+    const char *about = "This module is currently mantained by Daniel Haehn, Dominique Belchami, and Kilian Pohl (SBIA,UPenn). The work is currently supported by an ARRA supplement to NAC and the Slicer Community (see also <a>http://www.slicer.org</a>). \n\nPlease cite the following paper when using this module for your publications: \nK.M. Pohl et. A hierarchical algorithm for MR brain image parcellation. IEEE Transactions on Medical Imaging, 26(9),pp 1201-1212, 2007.";
+ this->BuildHelpAndAboutFrame (module_page, help, about );
 
-  this->HelpText->SetParent(help_frame->GetFrame());
-  this->HelpText->Create();
-  this->HelpText->SetHorizontalScrollbarVisibility(0);
-  this->HelpText->SetVerticalScrollbarVisibility(1);
-  this->HelpText->GetWidget()->SetText(help);
-  this->HelpText->GetWidget()->SetReliefToFlat();
-  this->HelpText->GetWidget()->SetWrapToWord();
-  this->HelpText->GetWidget()->ReadOnlyOn();
-  this->HelpText->GetWidget()->QuickFormattingOn();
+  this->NACLabel = vtkKWLabel::New();
+  this->NACLabel->SetParent ( this->GetLogoFrame() );
+  this->NACLabel->Create();
+  this->NACLabel->SetImageToIcon ( this->GetAcknowledgementIcons()->GetNACLogo() );
+  app->Script ( "grid %s -row 0 -column 0 -padx 2 -pady 2 -sticky w", this->NACLabel->GetWidgetName());
 
-  app->Script("pack %s -side top -fill x -expand y -anchor w -padx 2 -pady 4",
-              this->HelpText->GetWidgetName());
 
   // -----------------------------------------------------------------------
   // Wizard

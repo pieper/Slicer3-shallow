@@ -19,6 +19,7 @@ class vtkEMSegmentRunSegmentationStep;
 class vtkEMSegmentInputChannelsStep;
 class vtkEMSegmentPreProcessingStep;
 class vtkKWWizardStep;
+class vtkKWLabel;
 
 class VTK_EMSEGMENT_EXPORT vtkEMSegmentGUI : 
   public vtkSlicerModuleGUI
@@ -177,6 +178,11 @@ private:
   vtkEMSegmentPreProcessingStep          *PreProcessingStep;
 
   vtkKWWizardStep *StartSegmentStep;
+
+   /// 
+  /// Acknowledgement icons
+  vtkKWLabel *NACLabel;
+
 
   // Description:
   // Populate the logic with testing data, load some volumes
