@@ -22,13 +22,11 @@ namespace eval EMSegmenterParametersStepTcl {
         # Make sure that in the MRML file 
         # EMS id="vtkMRMLEMSNode1"  name="MRI Human Brain"
         # the name is the same as this tcl file name where the spaces are replaced with empty spaces  
-    # puts "DefineMRMLFile Debugging right now" 
-    # return "/share/data/EMSegmentTrainingsm/MRIHumanBrain.mrml"
+
     # return "http://xnd.slicer.org:8000/data/20100504T005942Z/MRIHumanBrain.mrml"
-    return "http://xnd.slicer.org:8000/data/20100504T005942Z/MRIHumanBrain.mrml"
-    return "/data/EMSegment_DataSet/3.6/MRIHumanBrain/result/MRIHumanBrain.mrml"
+    return "http://xnd.slicer.org:8000/data/20100920T105925Z/MRIHumanBrain.mrml"
+    # return "/data/EMSegment_DataSet/3.6/MRIHumanBrain/result/MRIHumanBrain.mrml"
     # old one - did not work
-    # return http://xnd.slicer.org:8000/data/20100427T164324Z/MRIHumanBrain.mrml
     }
 }
 

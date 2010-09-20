@@ -329,6 +329,8 @@ public:
   virtual void        AddTargetSelectedVolume(vtkIdType volumeID);
   virtual void        AddTargetSelectedVolumeByMRMLID(char* mrmlID);
   virtual void        RemoveTargetSelectedVolume(vtkIdType volumeID);
+  virtual void        RemoveTargetSelectedVolumeIndex(vtkIdType imageIndex);
+
   virtual void        MoveNthTargetSelectedVolume(int fromIndex,
                                                   int toIndex);
   virtual void        MoveTargetSelectedVolume(vtkIdType volumeID,

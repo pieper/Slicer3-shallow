@@ -21,6 +21,7 @@
 #include "vtkKWEntryWithLabel.h"
 #include "vtkEMSegmentAnatomicalStructureStep.h"
 #include "vtkMath.h"
+#include "vtkMRMLEMSGlobalParametersNode.h"
 
 #include <vector>
 
@@ -2174,7 +2175,8 @@ void vtkEMSegmentNodeParametersStep::DefineInputChannelWeightOverviewWindow(int 
 {
   vtkEMSegmentMRMLManager *mrmlManager = this->GetGUI()->GetMRMLManager();
   vtkMRMLEMSTargetNode *inputNodes = mrmlManager->GetTargetInputNode();
-  if (!inputNodes) 
+  vtkMRMLEMSGlobalParametersNode* globalNode = mrmlManager->GetGlobalParametersNode();
+  if (!inputNodes || !globalNode) 
     {
       return;
     }
@@ -2216,8 +2218,6 @@ void vtkEMSegmentNodeParametersStep::DefineInputChannelWeightOverviewWindow(int 
        }
     }
 
-   vtkMRMLEMSTargetNode* targetNode = mrmlManager->GetWorkingDataNode()->GetInputTargetNode();
-
   for (int i = 0 ; i < newSize; i++)
     {      
        if (!this->NodeParametersInputChannelWeight[i])
@@ -2237,7 +2237,7 @@ void vtkEMSegmentNodeParametersStep::DefineInputChannelWeightOverviewWindow(int 
            this->NodeParametersInputChannelWeight[i]->SetBalloonHelpString("Weight of each channel in the segmentation decision.  Right-click or double-click to modify weights.  Weights should be in the range [0,1]; 0 indicates that the channel is ignored and 1 indicates the maximum channel weight.  The weights are not dependent on each other or any other weights.");
            this->Script( "pack %s -side top -anchor nw -padx 2 -pady 2", this->NodeParametersInputChannelWeight[i]->GetWidgetName());
     }
-    this->NodeParametersInputChannelWeight[i]->SetLabelText(targetNode->GetNthInputChannelName(i));
+    this->NodeParametersInputChannelWeight[i]->SetLabelText(globalNode->GetNthTargetInputChannelName(i));
     this->NodeParametersInputChannelWeight[i]->SetEnabled(enabled);      
     }
 }

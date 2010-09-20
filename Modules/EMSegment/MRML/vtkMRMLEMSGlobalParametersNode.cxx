@@ -67,7 +67,9 @@ vtkMRMLEMSGlobalParametersNode::vtkMRMLEMSGlobalParametersNode()
   this->SegmentationBoundaryMax[1] = 0;
   this->SegmentationBoundaryMax[2] = 0;  
 
-  this->Colormap = NULL;                   
+  this->Colormap = NULL;          
+         
+  this->InputChannelNames.clear();
 }
 
 //-----------------------------------------------------------------------------
@@ -93,6 +95,7 @@ UpdateReferenceID(const char* oldID, const char* newID)
       *i = newID;
       }
     }
+  this->InputChannelNames.clear();
 }
 
 //-----------------------------------------------------------------------------
@@ -121,6 +124,14 @@ void vtkMRMLEMSGlobalParametersNode::WriteXML(ostream& of, int nIndent)
 
   of << indent << " NumberOfTargetInputChannels=\"" 
      << this->NumberOfTargetInputChannels << "\" ";
+
+  of << indent << " InputChannelNames=\"";
+  for (std::vector<std::string>::iterator i = this->InputChannelNames.begin(); i != this->InputChannelNames.end(); 
+       ++i)
+    {
+      of << *i << " " ;
+    }
+   of << "\" ";
 
   of << indent << " WorkingDirectory=\"" 
      << (this->WorkingDirectory ? this->WorkingDirectory : "NULL") << "\" ";
@@ -181,6 +192,8 @@ void vtkMRMLEMSGlobalParametersNode::WriteXML(ostream& of, int nIndent)
 
     of << indent << " Colormap=\"" 
        << (this->Colormap ? this->Colormap : "NULL") << "\" ";
+
+    
 }
 
 //-----------------------------------------------------------------------------
@@ -195,12 +208,13 @@ void vtkMRMLEMSGlobalParametersNode::ReadXMLAttributes(const char** attrs)
     key = *attrs++;
     val = *attrs++;
     
-
     if (!strcmp(key, "NumberOfTargetInputChannels"))
       {
         vtksys_stl::stringstream ss;
         ss << val;
-        ss >> this->NumberOfTargetInputChannels;
+    int n ;
+        ss >> n;
+    this->SetNumberOfTargetInputChannels(n);
       }
     else if (!strcmp(key, "EnableTargetToTargetRegistration"))
       {
@@ -258,30 +272,30 @@ void vtkMRMLEMSGlobalParametersNode::ReadXMLAttributes(const char** attrs)
       }
     else if (!strcmp(key, "RegistrationAtlasVolumeKey"))
       {
-    vtksys_stl::stringstream ss;
-    ss << val;
-    vtksys_stl::string s;
+        vtksys_stl::stringstream ss;
+        ss << val;
+        vtksys_stl::string s;
 
-    while (ss >> s)
-      {
-        this->RegistrationAtlasVolumeKey.push_back(s);
-      }
+        while (ss >> s)
+        {
+          this->RegistrationAtlasVolumeKey.push_back(s);
+        }
       }
     else if (!strcmp(key, "RegistrationTargetVolumeKey"))
       {
-      this->SetRegistrationTargetVolumeKey(val);
+         this->SetRegistrationTargetVolumeKey(val);
       }
     else if (!strcmp(key, "SaveIntermediateResults"))
       {
-      vtksys_stl::stringstream ss;
-      ss << val;
-      ss >> this->SaveIntermediateResults;
+        vtksys_stl::stringstream ss;
+        ss << val;
+        ss >> this->SaveIntermediateResults;
       }
     else if (!strcmp(key, "SaveSurfaceModels"))
       {
-      vtksys_stl::stringstream ss;
-      ss << val;
-      ss >> this->SaveSurfaceModels;
+         vtksys_stl::stringstream ss;
+         ss << val;
+         ss >> this->SaveSurfaceModels;
       }
     else if (!strcmp(key, "MultithreadingEnabled"))
       {
@@ -312,11 +326,25 @@ void vtkMRMLEMSGlobalParametersNode::ReadXMLAttributes(const char** attrs)
         ++index;
         }
       }
-     if (!strcmp(key, "Colormap"))
+    else if (!strcmp(key, "Colormap"))
       {
       this->SetColormap(val);
       }
-   }
+    else if (!strcmp(key, "InputChannelNames"))
+      {
+        vtksys_stl::stringstream ss;
+        ss << val;
+        vtksys_stl::string name;
+        int index = 0;
+        while (ss >> name)
+         {
+       this->InputChannelNames.resize(index+1);
+       this->InputChannelNames[index] = name;
+           index ++;
+        }
+      }
+
+    }
 }
 
 //-----------------------------------------------------------------------------
@@ -349,6 +377,8 @@ void vtkMRMLEMSGlobalParametersNode::Copy(vtkMRMLNode *rhs)
     node->IntensityNormalizationParameterList;
   
   this->SetColormap(node->Colormap);
+
+  this->InputChannelNames= node->InputChannelNames;
 }
 
 //-----------------------------------------------------------------------------
@@ -359,6 +389,13 @@ void vtkMRMLEMSGlobalParametersNode::PrintSelf(ostream& os,
  
   os << indent << "NumberOfTargetInputChannels: "
      << this->NumberOfTargetInputChannels << "\n";
+
+  os << indent << "InputChannelNames: \n";
+  for (std::vector<std::string>::iterator i = this->InputChannelNames.begin(); i != this->InputChannelNames.end(); 
+       ++i)
+    {
+      os << indent << "   " << *i << "\n" ;
+    }
 
   os << indent << "EnableTargetToTargetRegistration: "
      << (this->EnableTargetToTargetRegistration ? "true" : "false") << "\n";
@@ -450,6 +487,9 @@ AddTargetInputChannel()
 {
   ++this->NumberOfTargetInputChannels;
 
+  this->InputChannelNames.resize(this->NumberOfTargetInputChannels);
+  this->InputChannelNames[this->NumberOfTargetInputChannels-1] = "";
+
   // create intensity normalization parameter node
   vtkMRMLEMSIntensityNormalizationParametersNode* intensityNormalizationNode
     = vtkMRMLEMSIntensityNormalizationParametersNode::New();
@@ -464,15 +504,26 @@ AddTargetInputChannel()
 
   // clean up
   intensityNormalizationNode->Delete();
+
 }
 
 void
 vtkMRMLEMSGlobalParametersNode::
 RemoveNthTargetInputChannel(int n)
 {
+  if ( (n < 0) && (n >= this->NumberOfTargetInputChannels)) 
+    {
+      vtkErrorMacro("n is out of range");
+      return;
+    }  
   --this->NumberOfTargetInputChannels;
   this->IntensityNormalizationParameterList.
     erase(this->IntensityNormalizationParameterList.begin() + n);
+  for (int i = n ; i < int(this->InputChannelNames.size() -1); i ++)
+    {
+      this->InputChannelNames[i]  = this->InputChannelNames[i+1]; 
+    }
+  this->InputChannelNames.resize(this->NumberOfTargetInputChannels);
 }
 
 void
@@ -509,3 +560,27 @@ const char* vtkMRMLEMSGlobalParametersNode::GetRegistrationAtlasVolumeKey(vtkIdT
   return RegistrationAtlasVolumeKey[inputID].c_str();
 }
 
+const char* vtkMRMLEMSGlobalParametersNode::GetNthTargetInputChannelName(vtkIdType index)
+{
+  if (index >= vtkIdType(this->InputChannelNames.size()))
+    {
+      return NULL;
+    }
+  return this->InputChannelNames[index].c_str();
+}
+
+void vtkMRMLEMSGlobalParametersNode::SetNthTargetInputChannelName(vtkIdType index,  const char* newName)
+{
+  if (index >= vtkIdType(this->InputChannelNames.size()))
+    {
+      return;
+    }
+  this->InputChannelNames[index] = newName;
+}
+
+
+void vtkMRMLEMSGlobalParametersNode::SetNumberOfTargetInputChannels(vtkIdType n)
+{
+  this->NumberOfTargetInputChannels = n ;
+  this->InputChannelNames.resize(n);
+}

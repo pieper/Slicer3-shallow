@@ -357,6 +357,7 @@ void vtkEMSegmentParametersSetStep::SelectedParameterSetChangedCallback(int inde
       {
     return ;
       }
+
   this->GUI->GetWizardWidget()->GetWizardWorkflow()->AttemptToGoToNextStep(); 
 }
 
