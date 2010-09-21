@@ -424,7 +424,13 @@ void vtkEMSegmentParametersSetStep::RenameApplyCallback(const char* newName)
    {
      return;
    }
-  mrmlManager->SetNthParameterName(this->RenameIndex,this->RenameEntry->GetWidget()->GetValue());
+  const char* newName2 = this->RenameEntry->GetWidget()->GetValue();
+
+  if ( strlen(newName2) < 1 ) {
+    vtkKWMessageDialog::PopupMessage(this->GetApplication(),NULL,"Error", "Invalid Task Name", vtkKWMessageDialog::ErrorIcon | vtkKWMessageDialog::InvokeAtPointer);
+    return;
+  }
+  mrmlManager->SetNthParameterName(this->RenameIndex,newName2);
   this->HideRenameEntry();
   this->UpdateTaskListIndex(this->RenameIndex);
   this->GUI->GetWizardWidget()->GetWizardWorkflow()->AttemptToGoToNextStep();
