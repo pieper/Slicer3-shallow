@@ -389,6 +389,28 @@ void vtkEMSegmentInputChannelsStep::Validate()
      }
      }
 
+    //-----------------------------------------------
+    // Check for ambiguous input channel names
+    // number of comparisons: N*(N-1)/2
+    for (int i = 0; i < this->GetNumberOfInputChannels (); i++)
+      {
+        const char *name_i = this->InputChannelDefineLineName[i]->GetWidget ()->GetValue ();
+
+        for (int j = i + 1; j < this->GetNumberOfInputChannels (); j++)
+          {
+            const char *name_j = this->InputChannelDefineLineName[j]->GetWidget ()->GetValue ();
+
+            if (0 == strcmp (name_i, name_j))
+              {
+                //std::cout << "ambiguous: " << name_i << " : " << name_j << std::endl;
+                vtkKWMessageDialog::PopupMessage (this->GetApplication (), NULL,
+                        "Warning",
+                        "Please avoid ambiguous input channel names",
+                        vtkKWMessageDialog::ErrorIcon | vtkKWMessageDialog::InvokeAtPointer);
+              }
+          }
+      }
+
    //-----------------------------------------------
    // Check if they are all different and update MRML Nodes 
 
@@ -692,7 +714,7 @@ void vtkEMSegmentInputChannelsStep::UpdateTaskPreprocessingSetting()
 
   for (int i =0 ; i < (int)  this->checkButton.size(); i++)
     {
-      // assumes that the entry with index 0 is used during processin otherwise have problems
+      // assumes that the entry with index 0 is used during processing otherwise have problems
       if (this->checkButton[i]) {
     defText << "|C";
     defText << this->checkButton[i]->GetWidget()->GetSelectedState();
