@@ -140,7 +140,7 @@ void vtkAnnotationBidimensionalRepresentation::BuildRepresentation()
       label << distStr2 << " x " << distStr1;
       }
     this->TextMapper->SetInput(label.str().c_str());
-
+    //this->TextMapper->SetInput("");
     // Adjust the font size
     int stringSize[2], *winSize = this->Renderer->GetSize();
     vtkTextMapper::SetRelativeFontSize(this->TextMapper, this->Renderer, winSize,
