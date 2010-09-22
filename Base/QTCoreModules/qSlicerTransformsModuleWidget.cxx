@@ -1,32 +1,20 @@
-/*==============================================================================
+/*=auto=========================================================================
 
-  Program: 3D Slicer
+ Portions (c) Copyright 2005 Brigham and Women's Hospital (BWH) 
+ All Rights Reserved.
 
-  Copyright (c) 2010 Kitware Inc.
+ See Doc/copyright/copyright.txt
+ or http://www.slicer.org/copyright/copyright.txt for details.
 
-  See Doc/copyright/copyright.txt
-  or http://www.slicer.org/copyright/copyright.txt for details.
+ Program:   3D Slicer
 
-  Unless required by applicable law or agreed to in writing, software
-  distributed under the License is distributed on an "AS IS" BASIS,
-  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-  See the License for the specific language governing permissions and
-  limitations under the License.
+=========================================================================auto=*/
 
-  This file was originally developed by Jean-Christophe Fillion-Robin, Kitware Inc.
-  and was partially funded by NIH grant 3P41RR013218-12S1
 
-==============================================================================*/
-
-// Qt includes
-#include <QButtonGroup>
-#include <QFileDialog>
-#include <QVector>
-#include <QDebug>
-
-// SlicerQt includes
 #include "qSlicerTransformsModuleWidget.h"
 #include "ui_qSlicerTransformsModule.h"
+
+// SlicerQT includes
 //#include "qSlicerApplication.h"
 //#include "qSlicerIOManager.h"
 
@@ -44,49 +32,41 @@
 #include <vtkTransform.h>
 #include <vtkMatrix4x4.h>
 
+// QT includes
+#include <QButtonGroup>
+#include <QFileDialog>
+#include <QVector>
+#include <QDebug>
+
 //-----------------------------------------------------------------------------
-class qSlicerTransformsModuleWidgetPrivate: public Ui_qSlicerTransformsModule
+class qSlicerTransformsModuleWidgetPrivate: public qCTKPrivate<qSlicerTransformsModuleWidget>,
+                                            public Ui_qSlicerTransformsModule
 {
-  Q_DECLARE_PUBLIC(qSlicerTransformsModuleWidget);
-protected:
-  qSlicerTransformsModuleWidget* const q_ptr;
 public:
-  qSlicerTransformsModuleWidgetPrivate(qSlicerTransformsModuleWidget& object);
+  qSlicerTransformsModuleWidgetPrivate()
+    {
+    this->CoordinateReferenceButtonGroup = 0;
+    this->MRMLTransformNode = 0;
+    }
   vtkSlicerTransformLogic*      logic()const;
   QButtonGroup*                 CoordinateReferenceButtonGroup;
   vtkMRMLLinearTransformNode*   MRMLTransformNode;
 };
 
 //-----------------------------------------------------------------------------
-qSlicerTransformsModuleWidgetPrivate::qSlicerTransformsModuleWidgetPrivate(qSlicerTransformsModuleWidget& object)
-  : q_ptr(&object)
-{
-  this->CoordinateReferenceButtonGroup = 0;
-  this->MRMLTransformNode = 0;
-}
-//-----------------------------------------------------------------------------
 vtkSlicerTransformLogic* qSlicerTransformsModuleWidgetPrivate::logic()const
 {
-  Q_Q(const qSlicerTransformsModuleWidget);
-  return vtkSlicerTransformLogic::SafeDownCast(q->logic());
+  QCTK_P(const qSlicerTransformsModuleWidget);
+  return vtkSlicerTransformLogic::SafeDownCast(p->logic());
 }
 
 //-----------------------------------------------------------------------------
-qSlicerTransformsModuleWidget::qSlicerTransformsModuleWidget(QWidget* _parentWidget)
-  : Superclass(_parentWidget)
-  , d_ptr(new qSlicerTransformsModuleWidgetPrivate(*this))
-{
-}
-
-//-----------------------------------------------------------------------------
-qSlicerTransformsModuleWidget::~qSlicerTransformsModuleWidget()
-{
-}
+QCTK_CONSTRUCTOR_1_ARG_CXX(qSlicerTransformsModuleWidget, QWidget*);
 
 //-----------------------------------------------------------------------------
 void qSlicerTransformsModuleWidget::setup()
 {
-  Q_D(qSlicerTransformsModuleWidget);
+  QCTK_D(qSlicerTransformsModuleWidget);
   d->setupUi(this);
 
   // Add coordinate reference button to a button group
@@ -125,9 +105,15 @@ void qSlicerTransformsModuleWidget::setup()
 }
 
 //-----------------------------------------------------------------------------
+QAction* qSlicerTransformsModuleWidget::showModuleAction()
+{
+  return new QAction(QIcon(":/Icons/Transforms.png"), tr("Show Transforms module"), this);
+}
+
+//-----------------------------------------------------------------------------
 void qSlicerTransformsModuleWidget::onCoordinateReferenceButtonPressed(int id)
 {
-  Q_D(qSlicerTransformsModuleWidget);
+  QCTK_D(qSlicerTransformsModuleWidget);
   
   qMRMLTransformSliders::CoordinateReferenceType ref =
     (id == qMRMLTransformSliders::GLOBAL) ? qMRMLTransformSliders::GLOBAL : qMRMLTransformSliders::LOCAL;
@@ -138,7 +124,7 @@ void qSlicerTransformsModuleWidget::onCoordinateReferenceButtonPressed(int id)
 //-----------------------------------------------------------------------------
 void qSlicerTransformsModuleWidget::onNodeSelected(vtkMRMLNode* node)
 {
-  Q_D(qSlicerTransformsModuleWidget);
+  QCTK_D(qSlicerTransformsModuleWidget);
   
   vtkMRMLLinearTransformNode* transformNode = vtkMRMLLinearTransformNode::SafeDownCast(node);
 
@@ -160,7 +146,7 @@ void qSlicerTransformsModuleWidget::onNodeSelected(vtkMRMLNode* node)
 //-----------------------------------------------------------------------------
 void qSlicerTransformsModuleWidget::onIdentityButtonPressed()
 {
-  Q_D(qSlicerTransformsModuleWidget);
+  QCTK_D(qSlicerTransformsModuleWidget);
   
   if (!d->MRMLTransformNode) { return; }
 
@@ -171,7 +157,7 @@ void qSlicerTransformsModuleWidget::onIdentityButtonPressed()
 //-----------------------------------------------------------------------------
 void qSlicerTransformsModuleWidget::onInvertButtonPressed()
 {
-  Q_D(qSlicerTransformsModuleWidget);
+  QCTK_D(qSlicerTransformsModuleWidget);
   
   if (!d->MRMLTransformNode) { return; }
 
@@ -182,7 +168,7 @@ void qSlicerTransformsModuleWidget::onInvertButtonPressed()
 //-----------------------------------------------------------------------------
 void qSlicerTransformsModuleWidget::onMRMLTransformNodeModified(vtkObject* caller)
 {
-  Q_D(qSlicerTransformsModuleWidget);
+  QCTK_D(qSlicerTransformsModuleWidget);
   
   vtkMRMLLinearTransformNode* transformNode = vtkMRMLLinearTransformNode::SafeDownCast(caller);
   if (!transformNode) { return; }
@@ -226,20 +212,18 @@ void qSlicerTransformsModuleWidget::extractMinMaxTranslationValue(
 }
 
 //-----------------------------------------------------------------------------
-int qSlicerTransformsModuleWidget::coordinateReference()const
+int qSlicerTransformsModuleWidget::coordinateReference()
 {
-  Q_D(const qSlicerTransformsModuleWidget);
-  return d->CoordinateReferenceButtonGroup->checkedId();
+  return qctk_d()->CoordinateReferenceButtonGroup->checkedId();
 }
 
 //-----------------------------------------------------------------------------
 void qSlicerTransformsModuleWidget::loadTransform()
 {
-  Q_D(qSlicerTransformsModuleWidget);
   Q_ASSERT(this->mrmlScene());
   QString fileName = QFileDialog::getOpenFileName(this);
   if (!fileName.isEmpty())
     {
-    d->logic()->AddTransform(fileName.toLatin1(), this->mrmlScene());
+    qctk_d()->logic()->AddTransform(fileName.toLatin1(), this->mrmlScene());
     }
 }

@@ -1,18 +1,5 @@
 import slicer
-
-# VTK-based libs
-from freesurfer import *
-from mrml import *
-from mrmlLogic import *
-from remoteio import *
-from teem import *
-from vtk import *
-
-# Qt-based libs
-from PythonQt.CTKWidgets import *
-from PythonQt.CTKVisualizationVTKWidgets import *
-# TODO: this is stubbed out until windows build issues are fixed
-#from PythonQt.qMRMLWidgets import *
+from slicer import vtk
 
 def quit():
   exit()
@@ -42,13 +29,4 @@ def getModuleGui(moduleName):
     print "Could not find module widget representation with name '%s" % moduleName
     return None
   return widgetRepr
-
-def getNodes():
-    nodes = {}
-    scene = slicer.mrmlScene
-    count = scene.GetNumberOfNodes()
-    for idx in range(count):
-        node = scene.GetNthNode(idx)
-        nodes[node.GetName()] = node
-    return nodes
-
+    

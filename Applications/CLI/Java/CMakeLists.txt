@@ -1,18 +1,8 @@
+project(JavaExamples Java )
+
 FIND_PACKAGE ( Java )
 
-# Since not all dashboard are running cmake 2.8.1, let's set the legacy variable
-IF("${CMAKE_MAJOR_VERSION}.${CMAKE_MINOR_VERSION}.${CMAKE_PATCH_VERSION}" VERSION_LESS "2.8.1")
-  SET(Java_JAVA_EXECUTABLE ${JAVA_RUNTIME})
-  SET(Java_JAVAC_EXECUTABLE ${JAVA_COMPILE})
-  SET(Java_JAR_EXECUTABLE ${JAVA_ARCHIVE})
-ENDIF()
 
-IF(NOT Java_JAVAC_EXECUTABLE)
-  MESSAGE(STATUS "Skipping installation of CLI/Application/Java - Set Java_JAVAC_EXECUTABLE variable to fix the problem")
-  RETURN()
-ENDIF()
-
-project(JavaExamples Java )
 
 
 slicer3_set_plugins_output_path()
@@ -23,9 +13,7 @@ if(WIN32 AND CMAKE_CONFIGURATION_TYPES)
   # here, so we are going to have to stick to the value of CMAKE_BUILD_TYPE
   # if it has been set explicitly (by a dashboard for example), or the
   # first value in CMAKE_CONFIGURATION_TYPES (i.e. Debug)/
-if (Slicer3_USE_KWWIDGETS)
   kwwidgets_get_cmake_build_type(build_type)
-endif (Slicer3_USE_KWWIDGETS)
 endif(WIN32 AND CMAKE_CONFIGURATION_TYPES)
 
 #####################
@@ -33,8 +21,8 @@ endif(WIN32 AND CMAKE_CONFIGURATION_TYPES)
 set (CLP HelloWorld)
 
 # If have the java compiler, try to compile the .java files
-IF ( Java_JAVAC_EXECUTABLE )
-# message (STATUS "Java run time = ${Java_JAVA_EXECUTABLE}, compiler = ${Java_JAVAC_EXECUTABLE}, jar = ${Java_JAR_EXECUTABLE}")
+IF ( JAVA_COMPILE )
+# message (STATUS "Java run time = ${JAVA_RUNTIME}, compiler = ${JAVA_COMPILE}, jar = ${JAVA_ARCHIVE}")
 
   # source files
   SET ( ${CLP}_JAR_SRCS               Examples/${CLP}App.java)
@@ -48,14 +36,14 @@ IF ( Java_JAVAC_EXECUTABLE )
       ".:../Examples:${CMAKE_CURRENT_BINARY_DIR}" )
   ENDIF ( WIN32 )
 
-# message (STATUS "Adding custom java compile target: ${Java_JAVAC_EXECUTABLE} -d ${CMAKE_CURRENT_BINARY_DIR} -classpath ${${CLP}_CLASSPATH} ${${CLP}_JAR_SRCS}")
+# message (STATUS "Adding custom java compile target: ${JAVA_COMPILE} -d ${CMAKE_CURRENT_BINARY_DIR} -classpath ${${CLP}_CLASSPATH} ${${CLP}_JAR_SRCS}")
   ADD_CUSTOM_TARGET ( ${CLP}.jar.classes ALL
-     ${Java_JAVAC_EXECUTABLE} -d ${CMAKE_CURRENT_BINARY_DIR} -classpath ${${CLP}_CLASSPATH} ${${CLP}_JAR_SRCS}
+     ${JAVA_COMPILE} -d ${CMAKE_CURRENT_BINARY_DIR} -classpath ${${CLP}_CLASSPATH} ${${CLP}_JAR_SRCS}
       WORKING_DIRECTORY ${PROJECT_SOURCE_DIR} )
 
 # message (STATUS "Adding a custom target to jar it up into the plug ins directory ${CMAKE_BINARY_DIR}/${Slicer3_INSTALL_PLUGINS_BIN_DIR}/${build_type}")
   ADD_CUSTOM_TARGET ( ${CLP}.jar ALL
-      ${Java_JAR_EXECUTABLE} cvf  ${CMAKE_BINARY_DIR}/${Slicer3_INSTALL_PLUGINS_BIN_DIR}/${build_type}/${CLP}.jar Examples
+      ${JAVA_ARCHIVE} cvf  ${CMAKE_BINARY_DIR}/${Slicer3_INSTALL_PLUGINS_BIN_DIR}/${build_type}/${CLP}.jar Examples
       WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR} )
 
   ADD_DEPENDENCIES ( ${CLP}.jar ${CLP}.jar.classes )
@@ -96,9 +84,9 @@ IF ( Java_JAVAC_EXECUTABLE )
      )
   endif (Slicer3_SOURCE_DIR)
 
-ELSE ( Java_JAVAC_EXECUTABLE)
+ELSE ( JAVA_COMPILE)
    message (STATUS "Unable to compile java code, skipping installation of ${CLP}.jar and .tcl")
-ENDIF ( Java_JAVAC_EXECUTABLE )
+ENDIF ( JAVA_COMPILE )
 
 ##############
 
@@ -117,8 +105,7 @@ if (Slicer3_SOURCE_DIR)
   # from a build)
   set(TARGETS 
      ${CLP}.tcl
-#     SPECTRE_2010-04-01.jar
-     SPECTRElite_2010-05-15.jar
+     SPECTRE_2010-04-01.jar
     )
 
 foreach(file ${TARGETS})

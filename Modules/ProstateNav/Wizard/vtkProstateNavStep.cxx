@@ -63,6 +63,7 @@ vtkProstateNavStep::~vtkProstateNavStep()
 
   if (this->MRMLObserverManager)
     {
+    this->MRMLObserverManager->RemoveAllObservers();
     this->MRMLObserverManager->Delete();
     }    
 
@@ -81,6 +82,8 @@ vtkProstateNavStep::~vtkProstateNavStep()
 void vtkProstateNavStep::HideUserInterface()
 {
   this->Superclass::HideUserInterface();
+
+  this->SetAndObserveMRMLScene(NULL);
 
   if (this->GetGUI())
     {
@@ -183,4 +186,52 @@ void vtkProstateNavStep::UpdateName()
 void vtkProstateNavStep::TearDownGUI()
 {
   // Override in child classes  
+}
+
+//----------------------------------------------------------------------------
+void vtkProstateNavStep::ShowWorkspaceModel(bool show)
+{
+  vtkProstateNavLogic *logic=this->GetGUI()->GetLogic();
+  if (!logic)
+  {
+    vtkErrorMacro("Invalid logic object");
+    return;
+  }
+  logic->ShowWorkspaceModel(show);
+}
+
+//----------------------------------------------------------------------------
+bool vtkProstateNavStep::IsWorkspaceModelShown()
+{
+  vtkProstateNavLogic *logic=this->GetGUI()->GetLogic();
+  if (!logic)
+  {
+    vtkErrorMacro("Invalid logic object");
+    return false;
+  }
+  return logic->IsWorkspaceModelShown();
+}
+
+//----------------------------------------------------------------------------
+void vtkProstateNavStep::ShowRobotModel(bool show)
+{
+  vtkProstateNavLogic *logic=this->GetGUI()->GetLogic();
+  if (!logic)
+  {
+    vtkErrorMacro("Invalid logic object");
+    return;
+  }
+  logic->ShowRobotModel(show);
+}
+
+//----------------------------------------------------------------------------
+bool vtkProstateNavStep::IsRobotModelShown()
+{
+  vtkProstateNavLogic *logic=this->GetGUI()->GetLogic();
+  if (!logic)
+  {
+    vtkErrorMacro("Invalid logic object");
+    return false;
+  }
+  return logic->IsRobotModelShown();
 }

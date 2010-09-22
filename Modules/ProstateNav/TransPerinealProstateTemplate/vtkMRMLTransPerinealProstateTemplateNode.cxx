@@ -284,12 +284,18 @@ void vtkMRMLTransPerinealProstateTemplateNode::Copy(vtkMRMLNode *anode)
   vtkMRMLTransPerinealProstateTemplateNode *node = vtkMRMLTransPerinealProstateTemplateNode::SafeDownCast(anode);
   if (node!=NULL)
   {
+    this->SetAndObserveScannerConnectorNodeID(NULL); // remove observer
     this->SetScannerConnectorNodeID(node->ScannerConnectorNodeID);
-    this->SetZFrameModelNodeID(node->ZFrameModelNodeID);
-    this->SetZFrameTransformNodeID(node->ZFrameTransformNodeID);
+    this->SetAndObserveZFrameModelNodeID(NULL); // remove observer
+    this->SetZFrameModelNodeID(node->ZFrameModelNodeID);    
+    this->SetAndObserveZFrameTransformNodeID(NULL); // remove observer
+    this->SetZFrameTransformNodeID(node->ZFrameTransformNodeID);    
+    this->SetAndObserveTemplateModelNodeID(NULL); // remove observer
     this->SetTemplateModelNodeID(node->TemplateModelNodeID);
     //this->SetTemplateTransformNodeID(node->TemplateTransformNodeID);
-    this->SetActiveNeedleModelNodeID(node->ActiveNeedleModelNodeID);
+    this->SetAndObserveActiveNeedleModelNodeID(NULL); // remove observer
+    this->SetActiveNeedleModelNodeID(node->ActiveNeedleModelNodeID);    
+    this->SetAndObserveActiveNeedleTransformNodeID(NULL); // remove observer
     this->SetActiveNeedleTransformNodeID(node->ActiveNeedleTransformNodeID);
   }
   else
@@ -430,9 +436,9 @@ void vtkMRMLTransPerinealProstateTemplateNode::PrintSelf(ostream& os, vtkIndent 
 }
 
 
-int vtkMRMLTransPerinealProstateTemplateNode::Init(vtkSlicerApplication* app)
+int vtkMRMLTransPerinealProstateTemplateNode::Init(vtkSlicerApplication* app, const char* moduleShareDir)
 { 
-  this->Superclass::Init(app);
+  this->Superclass::Init(app, moduleShareDir);
 
   vtkOpenIGTLinkIFGUI* igtlGUI = vtkOpenIGTLinkIFGUI::SafeDownCast(app->GetModuleGUIByName("OpenIGTLink IF"));
   if (igtlGUI)
@@ -1310,28 +1316,8 @@ vtkMRMLLinearTransformNode* vtkMRMLTransPerinealProstateTemplateNode::GetActiveN
   return NULL;
 }
 
-
-
-
 //----------------------------------------------------------------------------
-bool vtkMRMLTransPerinealProstateTemplateNode::FindTargetingParams(vtkProstateNavTargetDescriptor *targetDesc)
-{
-  // this is used for coverage area computation (IsOutsideReach means that the target is outside the robot's coverage area)
-
-  // :TODO: perform real targeting parameter computation  
-  double *ras=targetDesc->GetRASLocation();
-  const double center[3]={0,0,0};
-  const double radius2=25*25;
-  targetDesc->SetIsOutsideReach(
-    (ras[0]-center[0])*(ras[0]-center[0])+
-    (ras[1]-center[1])*(ras[1]-center[1])+
-    (ras[2]-center[2])*(ras[2]-center[2])>radius2
-    );
-  return true;
-}
-
-//----------------------------------------------------------------------------
-std::string vtkMRMLTransPerinealProstateTemplateNode::GetTargetInfoText(vtkProstateNavTargetDescriptor *targetDesc)
+std::string vtkMRMLTransPerinealProstateTemplateNode::GetTargetInfoText(vtkProstateNavTargetDescriptor *targetDesc, NeedleDescriptorStruct *needle)
 {
   // :TODO: construct a string that contains useful information for the active target (reachable, etc.)
   return "";

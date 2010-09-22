@@ -1,43 +1,35 @@
-/*==============================================================================
+/*=auto=========================================================================
 
-  Program: 3D Slicer
+ Portions (c) Copyright 2005 Brigham and Women's Hospital (BWH) 
+ All Rights Reserved.
 
-  Copyright (c) 2010 Kitware Inc.
+ See Doc/copyright/copyright.txt
+ or http://www.slicer.org/copyright/copyright.txt for details.
 
-  See Doc/copyright/copyright.txt
-  or http://www.slicer.org/copyright/copyright.txt for details.
+ Program:   3D Slicer
 
-  Unless required by applicable law or agreed to in writing, software
-  distributed under the License is distributed on an "AS IS" BASIS,
-  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-  See the License for the specific language governing permissions and
-  limitations under the License.
-
-  This file was originally developed by Jean-Christophe Fillion-Robin, Kitware Inc.
-  and was partially funded by NIH grant 3P41RR013218-12S1
-
-==============================================================================*/
+=========================================================================auto=*/
 
 #ifndef __qSlicerModuleFactoryManager_h
 #define __qSlicerModuleFactoryManager_h
 
-// Qt includes
-#include <QString>
+/// qCTK includes
+#include <qCTKAbstractFactory.h>
+#include <qCTKPimpl.h>
 
-// CTK includes
-#include <ctkAbstractFactory.h>
-#include <ctkPimpl.h>
+/// QT includes
+#include <QString>
 
 #include "qSlicerBaseQTCoreExport.h"
 
-class qSlicerAbstractCoreModule;
+class qSlicerAbstractModule;
 
 class qSlicerModuleFactoryManagerPrivate;
 
 class Q_SLICER_BASE_QTCORE_EXPORT qSlicerModuleFactoryManager
 {
 public:
-  typedef ctkAbstractFactory<qSlicerAbstractCoreModule> qSlicerAbstractModuleFactory;
+  typedef qCTKAbstractFactory<qSlicerAbstractModule> qSlicerAbstractModuleFactory;
  
   qSlicerModuleFactoryManager();
 
@@ -82,7 +74,7 @@ public:
 
   /// 
   /// Instantiate a module given its name
-  qSlicerAbstractCoreModule* instantiateModule(const QString& name);
+  qSlicerAbstractModule* instantiateModule(const QString& name);
 
   /// 
   /// Uninstantiate a module given its name
@@ -96,16 +88,8 @@ public:
   /// Indicate if a module has been registered
   bool isRegistered(const QString& name)const;
 
-  ///
-  /// Enable/Disable verbose output during module discovery process
-  void setVerboseModuleDiscovery(bool value);
-
-protected:
-  QScopedPointer<qSlicerModuleFactoryManagerPrivate> d_ptr;
-
 private:
-  Q_DECLARE_PRIVATE(qSlicerModuleFactoryManager);
-  Q_DISABLE_COPY(qSlicerModuleFactoryManager);
+  QCTK_DECLARE_PRIVATE(qSlicerModuleFactoryManager);
 };
 
 #endif

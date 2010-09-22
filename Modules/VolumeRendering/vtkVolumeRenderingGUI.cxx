@@ -82,8 +82,6 @@ vtkVolumeRenderingGUI::vtkVolumeRenderingGUI(void)
   this->Presets=NULL;
   this->Helper=NULL;
 
-  this->VolumeRenderingInteractionFlag = 0;
-    
   // :NOTE: 20080515 tgl: To use as a loadable module, initialize
   // the volume rendering replacements TCL wrappers.
   Tcl_Interp *interp = NULL;
@@ -97,8 +95,6 @@ vtkVolumeRenderingGUI::vtkVolumeRenderingGUI(void)
 
 vtkVolumeRenderingGUI::~vtkVolumeRenderingGUI(void)
 {
-  this->ListenToTclMouseEvent(0);
-   
   this->RemoveMRMLObservers();
 
   if(this->CB_VolumeRenderingOnOff != NULL)
@@ -209,23 +205,6 @@ void vtkVolumeRenderingGUI::PrintSelf(ostream& os, vtkIndent indent)
   if(this->GetLogic())
   {
     this->GetLogic()->PrintSelf(os,indent.GetNextIndent());
-  }
-}
-
-void vtkVolumeRenderingGUI::ListenToTclMouseEvent(int OnOff)
-{
-  const char* tclName = this->GetTclName();
-  
-  if (OnOff)
-  {
-    //hookup mouse button interaction
-    this->Script("bind all <Any-ButtonPress> {%s SetButtonDown 1}", tclName);
-    this->Script("bind all <Any-ButtonRelease> {%s SetButtonDown 0}", tclName);
-  }
-  else
-  {
-    this->Script("bind all <Any-ButtonPress> {}", tclName);
-    this->Script("bind all <Any-ButtonRelease> {}", tclName);
   }
 }
 
@@ -443,8 +422,6 @@ void vtkVolumeRenderingGUI::BuildGUI(void)
   this->AddMRMLObservers();
 
   this->Built = true;
-
-  this->ListenToTclMouseEvent(1);
 }
 
 void vtkVolumeRenderingGUI::TearDownGUI(void)
@@ -485,9 +462,9 @@ void vtkVolumeRenderingGUI::AddMRMLObservers(void)
   //Remove the MRML observer
   if ( this->GetApplicationGUI() )
   {
-    this->GetApplicationGUI()->GetMRMLScene()->AddObserver(vtkMRMLScene::SceneClosedEvent, this->MRMLCallbackCommand);
-    this->GetApplicationGUI()->GetMRMLScene()->AddObserver(vtkMRMLScene::SceneAboutToBeImportedEvent, this->MRMLCallbackCommand);
-    this->GetApplicationGUI()->GetMRMLScene()->AddObserver(vtkMRMLScene::SceneImportedEvent, this->MRMLCallbackCommand);
+    this->GetApplicationGUI()->GetMRMLScene()->AddObserver(vtkMRMLScene::SceneCloseEvent, this->MRMLCallbackCommand);
+    this->GetApplicationGUI()->GetMRMLScene()->AddObserver(vtkMRMLScene::SceneLoadStartEvent, this->MRMLCallbackCommand);
+    this->GetApplicationGUI()->GetMRMLScene()->AddObserver(vtkMRMLScene::SceneLoadEndEvent, this->MRMLCallbackCommand);
     this->GetApplicationGUI()->GetMRMLScene()->AddObserver(vtkMRMLScene::NodeAddedEvent, this->MRMLCallbackCommand);
     this->GetApplicationGUI()->GetMRMLScene()->AddObserver(vtkMRMLScene::NodeRemovedEvent, this->MRMLCallbackCommand);
   }
@@ -498,9 +475,9 @@ void vtkVolumeRenderingGUI::RemoveMRMLObservers(void)
   //Remove the MRML observer
   if ( this->GetApplicationGUI() )
   {
-    this->GetApplicationGUI()->GetMRMLScene()->RemoveObservers(vtkMRMLScene::SceneClosedEvent, this->MRMLCallbackCommand);
-    this->GetApplicationGUI()->GetMRMLScene()->RemoveObservers(vtkMRMLScene::SceneAboutToBeImportedEvent, this->MRMLCallbackCommand);
-    this->GetApplicationGUI()->GetMRMLScene()->RemoveObservers(vtkMRMLScene::SceneImportedEvent, this->MRMLCallbackCommand);
+    this->GetApplicationGUI()->GetMRMLScene()->RemoveObservers(vtkMRMLScene::SceneCloseEvent, this->MRMLCallbackCommand);
+    this->GetApplicationGUI()->GetMRMLScene()->RemoveObservers(vtkMRMLScene::SceneLoadStartEvent, this->MRMLCallbackCommand);
+    this->GetApplicationGUI()->GetMRMLScene()->RemoveObservers(vtkMRMLScene::SceneLoadEndEvent, this->MRMLCallbackCommand);
     this->GetApplicationGUI()->GetMRMLScene()->RemoveObservers(vtkMRMLScene::NodeAddedEvent, this->MRMLCallbackCommand);
     this->GetApplicationGUI()->GetMRMLScene()->RemoveObservers(vtkMRMLScene::NodeRemovedEvent, this->MRMLCallbackCommand);
   }
@@ -899,11 +876,11 @@ void vtkVolumeRenderingGUI::ProcessMRMLEvents(vtkObject *caller, unsigned long e
       }
     }
   }
-  else if (event == vtkMRMLScene::SceneAboutToBeImportedEvent)
+  else if (event == vtkMRMLScene::SceneLoadStartEvent)
   {
     this->NewParametersNodeFromSceneLoadingFlag = 1;
   }
-  else if (event == vtkMRMLScene::SceneImportedEvent)
+  else if (event == vtkMRMLScene::SceneLoadEndEvent)
   {
     this->NewParametersNodeFromSceneLoadingFlag = 0;
     
@@ -916,7 +893,7 @@ void vtkVolumeRenderingGUI::ProcessMRMLEvents(vtkObject *caller, unsigned long e
   {
     this->RequestRender();
   }
-  else if (event == vtkMRMLScene::SceneClosedEvent)
+  else if (event == vtkMRMLScene::SceneCloseEvent)
   {
     this->DeleteRenderingFrame();
 
@@ -998,32 +975,6 @@ void vtkVolumeRenderingGUI::Enter(void)
 void vtkVolumeRenderingGUI::Exit(void)
 {
   this->ReleaseModuleEventBindings();
-}
-
-void vtkVolumeRenderingGUI::SetButtonDown(int isDown)
-{
-  if (this->Helper == NULL)
-    return;
-    
-  vtkMRMLVolumeRenderingParametersNode* vspNode = this->GetCurrentParametersNode();
-  if (vspNode->GetPerformanceControl() != 0)
-    return;
-    
-  int val = this->GetLogic()->SetupVolumeRenderingInteractive(this->GetCurrentParametersNode(), isDown);
-
-  if (val == 0)
-    return;
-
-  if (isDown == 1)
-    this->VolumeRenderingInteractionFlag = 1;
-  else
-  {
-    if (this->VolumeRenderingInteractionFlag == 1)//avoid endless loop
-    {
-      this->RequestRender();
-      this->VolumeRenderingInteractionFlag = 0;
-    }
-  }
 }
 
 void vtkVolumeRenderingGUI::UpdateGUI()

@@ -45,7 +45,7 @@ proc sliceTest {} {
 
 
 proc toggleSlice {} {
-  set logic [lindex [vtkMRMLSliceLayerLogic ListInstances] 0]
+  set logic [lindex [vtkSlicerSliceLayerLogic ListInstances] 0]
   if { [$logic GetUseReslice] } {
     $logic UseResliceOff
   } else {
@@ -56,7 +56,7 @@ proc toggleSlice {} {
 }
 
 proc toggleSlices {} {
-  foreach logic [vtkMRMLSliceLayerLogic ListInstances] {
+  foreach logic [vtkSlicerSliceLayerLogic ListInstances] {
     if { [$logic GetUseReslice] } {
       $logic UseResliceOff
     } else {
@@ -68,7 +68,7 @@ proc toggleSlices {} {
 }
 
 proc slices { {onoff "on"} } {
-  foreach logic [vtkMRMLSliceLayerLogic ListInstances] {
+  foreach logic [vtkSlicerSliceLayerLogic ListInstances] {
     if { $onoff == "off" } {
       $logic UseResliceOff
     } else {

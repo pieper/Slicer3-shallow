@@ -60,7 +60,6 @@
 #endif
 #endif
 
-//-----------------------------------------------------------------------------
 static void
 splitString (std::string &text,
              std::string &separators,
@@ -77,7 +76,6 @@ splitString (std::string &text,
     }
 }
 
-//-----------------------------------------------------------------------------
 inline bool
 NameIsPythonModule ( const char* name )
 {
@@ -93,7 +91,7 @@ NameIsPythonModule ( const char* name )
 }
 
 
-//-----------------------------------------------------------------------------
+
 /**
  * A file scoped function to determine if a file has
  * the shared library extension in its name, this converts name to lower
@@ -122,7 +120,6 @@ NameIsSharedLibrary(const char* name)
   return false;
 }
 
-//-----------------------------------------------------------------------------
 /**
  * A file scoped function to determine if a file has
  * the executable extension in its name
@@ -180,7 +177,8 @@ NameIsExecutable(const char* name)
   return true;
 }
 
-//-----------------------------------------------------------------------------
+
+
 /**
  * A file scope typedef to make the cast code to the load
  * function cleaner to read.
@@ -190,7 +188,6 @@ typedef int (*ModuleEntryPoint)(int argc, char* argv[]);
 typedef const char * (*ModuleLogoFunction)(int *width, int *height, int *pixel_size, unsigned long *bufferLength);
 
 
-//-----------------------------------------------------------------------------
 // Private implementaton of an std::map
 class ModuleDescriptionMap : public std::map<std::string, ModuleDescription> {};
 class ModuleFileMap : public std::set<std::string> {};
@@ -199,7 +196,6 @@ class ModuleFileMap : public std::set<std::string> {};
 //
 //
 
-//-----------------------------------------------------------------------------
 // cache entry for a module
 struct ModuleCacheEntry
 {
@@ -215,12 +211,12 @@ struct ModuleCacheEntry
   std::string Logo;
 };
 
-//-----------------------------------------------------------------------------
 // map from a filename to cache entry
 class ModuleCache : public std::map<std::string, ModuleCacheEntry> {};
 
 
-//-----------------------------------------------------------------------------
+// ---
+
 ModuleFactory::ModuleFactory()
 {
   this->Name = "Application";
@@ -234,7 +230,6 @@ ModuleFactory::ModuleFactory()
   this->CacheModified = false;
 }
 
-//-----------------------------------------------------------------------------
 ModuleFactory::~ModuleFactory()
 {
   delete this->InternalCache;
@@ -242,8 +237,9 @@ ModuleFactory::~ModuleFactory()
   delete this->InternalFileMap;
 }
 
-//-----------------------------------------------------------------------------
-void ModuleFactory::WarningMessage(const char *msg)
+
+void
+ModuleFactory::WarningMessage(const char *msg)
 {
   if (this->WarningMessageCallback && msg)
     {
@@ -251,8 +247,8 @@ void ModuleFactory::WarningMessage(const char *msg)
     }
 }
 
-//-----------------------------------------------------------------------------
-void ModuleFactory::ErrorMessage(const char *msg)
+void
+ModuleFactory::ErrorMessage(const char *msg)
 {
   if (this->ErrorMessageCallback && msg)
     {
@@ -260,8 +256,8 @@ void ModuleFactory::ErrorMessage(const char *msg)
     }
 }
 
-//-----------------------------------------------------------------------------
-void ModuleFactory::InformationMessage(const char *msg)
+void
+ModuleFactory::InformationMessage(const char *msg)
 {
   if (this->InformationMessageCallback && msg)
     {
@@ -269,8 +265,8 @@ void ModuleFactory::InformationMessage(const char *msg)
     }
 }
 
-//-----------------------------------------------------------------------------
-void ModuleFactory::ModuleDiscoveryMessage(const char *msg)
+void
+ModuleFactory::ModuleDiscoveryMessage(const char *msg)
 {
   if (this->ModuleDiscoveryMessageCallback && msg)
     {
@@ -278,58 +274,59 @@ void ModuleFactory::ModuleDiscoveryMessage(const char *msg)
     }
 }
 
-//-----------------------------------------------------------------------------
-void ModuleFactory::SetWarningMessageCallback( CallbackFunctionType f )
+
+void
+ModuleFactory::SetWarningMessageCallback( CallbackFunctionType f )
 {
   this->WarningMessageCallback = f;
 }
 
-//-----------------------------------------------------------------------------
 ModuleFactory::CallbackFunctionType
 ModuleFactory::GetWarningMessageCallback()
 {
   return this->WarningMessageCallback;
 }
 
-//-----------------------------------------------------------------------------
-void ModuleFactory::SetErrorMessageCallback( CallbackFunctionType f )
+void
+ModuleFactory::SetErrorMessageCallback( CallbackFunctionType f )
 {
   this->ErrorMessageCallback = f;
 }
 
-//-----------------------------------------------------------------------------
 ModuleFactory::CallbackFunctionType
 ModuleFactory::GetErrorMessageCallback()
 {
   return this->ErrorMessageCallback;
 }
 
-//-----------------------------------------------------------------------------
-void ModuleFactory::SetInformationMessageCallback( CallbackFunctionType f )
+void
+ModuleFactory::SetInformationMessageCallback( CallbackFunctionType f )
 {
   this->InformationMessageCallback = f;
 }
 
-//-----------------------------------------------------------------------------
-ModuleFactory::CallbackFunctionType ModuleFactory::GetInformationMessageCallback()
+ModuleFactory::CallbackFunctionType
+ModuleFactory::GetInformationMessageCallback()
 {
   return this->InformationMessageCallback;
 }
 
-//-----------------------------------------------------------------------------
-void ModuleFactory::SetModuleDiscoveryMessageCallback( CallbackFunctionType f )
+void
+ModuleFactory::SetModuleDiscoveryMessageCallback( CallbackFunctionType f )
 {
   this->ModuleDiscoveryMessageCallback = f;
 }
 
-//-----------------------------------------------------------------------------
-ModuleFactory::CallbackFunctionType ModuleFactory::GetModuleDiscoveryMessageCallback()
+ModuleFactory::CallbackFunctionType
+ModuleFactory::GetModuleDiscoveryMessageCallback()
 {
   return this->ModuleDiscoveryMessageCallback;
 }
 
-//-----------------------------------------------------------------------------
-std::vector<std::string> ModuleFactory ::GetModuleNames() const
+
+std::vector<std::string>
+ModuleFactory
+::GetModuleNames() const
 {
   std::vector<std::string> names;
 
@@ -343,8 +340,9 @@ std::vector<std::string> ModuleFactory ::GetModuleNames() const
   return names;
 }
 
-//-----------------------------------------------------------------------------
-ModuleDescription ModuleFactory::GetModuleDescription(const std::string& name) const
+ModuleDescription
+ModuleFactory
+::GetModuleDescription(const std::string& name) const
 {
   std::map<std::string, ModuleDescription>::const_iterator mit;
 
@@ -358,8 +356,11 @@ ModuleDescription ModuleFactory::GetModuleDescription(const std::string& name) c
   return ModuleDescription();
 }
 
-//-----------------------------------------------------------------------------
-void ModuleFactory::Scan()
+
+
+void
+ModuleFactory
+::Scan()
 {
   // Load the module cache information
   this->LoadModuleCache();
@@ -389,8 +390,9 @@ void ModuleFactory::Scan()
     }
 }
 
-//-----------------------------------------------------------------------------
-long ModuleFactory::ScanForNotAModuleFiles()
+long
+ModuleFactory
+::ScanForNotAModuleFiles()
 {
   // Any file that was not found to be a module will be put in the
   // cache at the end as NotAModule
@@ -486,8 +488,9 @@ long ModuleFactory::ScanForNotAModuleFiles()
   return numberFound;
 }
 
-//-----------------------------------------------------------------------------
-long ModuleFactory::ScanForSharedObjectModules()
+long
+ModuleFactory
+::ScanForSharedObjectModules()
 {
   // add any of the self-describing shared object modules available
   //
@@ -821,8 +824,9 @@ long ModuleFactory::ScanForSharedObjectModules()
   return numberFound;
 }
 
-//-----------------------------------------------------------------------------
-long ModuleFactory::ScanForCommandLineModulesByExecuting()
+long
+ModuleFactory
+::ScanForCommandLineModulesByExecuting()
 {
   // add any of the self-describing command-line modules available
   //
@@ -1137,13 +1141,14 @@ long ModuleFactory::ScanForCommandLineModulesByExecuting()
   return numberFound;
 }
 
-//-----------------------------------------------------------------------------
 #if WIN32
 // Implementation of ScanForCommandLineModulesByPeeking() for Windows.
 // On Windows, executables can be opened and queried like libraries
 // for global symbols.
 //
-long ModuleFactory::ScanForCommandLineModulesByPeeking()
+long
+ModuleFactory
+::ScanForCommandLineModulesByPeeking()
 {
   // add any of the self-describing command-line modules available
   //
@@ -1382,8 +1387,6 @@ long ModuleFactory::ScanForCommandLineModulesByPeeking()
   return numberFound;
 }
 #else
-
-//-----------------------------------------------------------------------------
 // Implementation of ScanForCommandLineModulesByPeeking() for variants
 // of unix.  On Linux, executables cannot be opened and queried like
 // libraries because the loader tries to load "main" at a fixed
@@ -1392,7 +1395,9 @@ long ModuleFactory::ScanForCommandLineModulesByPeeking()
 // directly, using the Binary File Descriptor (BFD) library to find
 // global symbols.
 //
-long ModuleFactory::ScanForCommandLineModulesByPeeking()
+long
+ModuleFactory
+::ScanForCommandLineModulesByPeeking()
 {
   // only use this implementation if the system we are on has the BFD library
 
@@ -1640,9 +1645,10 @@ long ModuleFactory::ScanForCommandLineModulesByPeeking()
 #endif
 }
 #endif
-
-//-----------------------------------------------------------------------------
-void ModuleFactory::GetLogoForCommandLineModuleByExecuting(ModuleDescription& module)
+          
+void
+ModuleFactory
+::GetLogoForCommandLineModuleByExecuting(ModuleDescription& module)
 {
   itksysProcess *process = itksysProcess_New();
   char *command[3];
@@ -1759,8 +1765,10 @@ void ModuleFactory::GetLogoForCommandLineModuleByExecuting(ModuleDescription& mo
   itksysProcess_Delete(process);
 }
 
-//-----------------------------------------------------------------------------
-long ModuleFactory::ScanForPythonModulesByLoading()
+
+long
+ModuleFactory
+::ScanForPythonModulesByLoading()
 {
   long numberFound = 0;
 
@@ -2024,8 +2032,10 @@ long ModuleFactory::ScanForPythonModulesByLoading()
   return numberFound;
 }
 
-//-----------------------------------------------------------------------------
-void ModuleFactory::LoadModuleCache()
+
+void
+ModuleFactory
+::LoadModuleCache()
 {
   std::stringstream information;
   if (this->CachePath == "")
@@ -2150,8 +2160,9 @@ void ModuleFactory::LoadModuleCache()
     }
 }
 
-//-----------------------------------------------------------------------------
-void ModuleFactory::SaveModuleCache()
+void
+ModuleFactory
+::SaveModuleCache()
 {
   if (this->CacheModified)
     {
@@ -2238,11 +2249,12 @@ void ModuleFactory::SaveModuleCache()
     }
 }
 
-//-----------------------------------------------------------------------------
-int ModuleFactory ::GetModuleFromCache(const std::string &commandName,
-                                       long int commandModifiedTime,
-                                       const std::string & type,
-                                       std::stringstream &stream)
+int
+ModuleFactory
+::GetModuleFromCache(const std::string &commandName,
+                     long int commandModifiedTime,
+                     const std::string & type,
+                     std::stringstream &stream)
 {
   int returnval = 0;
   
@@ -2366,10 +2378,8 @@ int ModuleFactory ::GetModuleFromCache(const std::string &commandName,
   return returnval;
 }
 
-//-----------------------------------------------------------------------------
-void ModuleFactory::RegisterFileExtension(const char *ext,
-                                          const char *cmdstring,
-                                          const char *path)
+// -----------------------------------------------------------------------------------------------
+void ModuleFactory::RegisterFileExtension(const char *ext, const char *cmdstring, const char *path)
 {
   if (ext == NULL || cmdstring == NULL)
     {
@@ -2394,7 +2404,7 @@ void ModuleFactory::RegisterFileExtension(const char *ext,
   this->RegisteredExecutablesForFileExtensions[extString] = formattedCommandString;
 }
 
-//-----------------------------------------------------------------------------
+// -----------------------------------------------------------------------------------------------
 const char * ModuleFactory::GetExecutableForFileExtension(std::string ext)
 {
   if (ext.length() == 0)

@@ -47,13 +47,7 @@ set(FreeSurfer_SRCS
   vtkFSSurfaceWFileReader.cxx
   vtkFSSurfaceLabelReader.cxx
   vtkFSLookupTable.cxx
-  vtkFSSurfaceHelper.cxx
   )
-  
-set_source_files_properties(
-  vtkFSIO.cxx
-  WRAP_EXCLUDE
-)
 
 # --------------------------------------------------------------------------
 # Wrapping

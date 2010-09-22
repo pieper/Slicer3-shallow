@@ -16,7 +16,7 @@ if(WIN32)
 
   # point the tkinter build file to the slicer tcl-build
   set(python_PATCH_COMMAND)
-  if(Slicer3_USE_KWWIDGETS OR Slicer3_USE_PYTHONQT_WITH_TCL)
+  if(Slicer3_USE_KWWIDGETS)
     set(python_tkinter ${python_base}/pyproject.vsprops)
     string(REPLACE "/" "\\" python_tkinter ${python_tkinter})
 
@@ -44,7 +44,7 @@ if(WIN32)
       ${python_DEPENDENCIES}
   )
 
-  if(Slicer3_USE_KWWIDGETS OR Slicer3_USE_PYTHONQT_WITH_TCL)
+  if(Slicer3_USE_KWWIDGETS)
     # this must match the version of tcl we are building for slicer.
     ExternalProject_Add_Step(${proj} Patch_tcltk_version
       COMMAND ${CMAKE_COMMAND} -Din=${in} -Dout=${out} -Dfind=85 -Dreplace=84 -P ${script}
@@ -68,11 +68,11 @@ if(WIN32)
   build_python_target(pythoncore Build_w9xpopen)
   build_python_target(_socket Build_pythoncore)
 
-  if(Slicer3_USE_KWWIDGETS OR Slicer3_USE_PYTHONQT_WITH_TCL)
+  if(Slicer3_USE_KWWIDGETS)
     build_python_target(_tkinter Build__socket)
     build_python_target(_testcapi Build__tkinter)
   else()
-    build_python_target(_testcapi Build__pythoncore)
+    build_python_target(_testcapi Build_pythoncore)  
   endif()
 
   build_python_target(_msi Build__testcapi)
@@ -112,22 +112,10 @@ if(WIN32)
     COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_BINARY_DIR}/python-build/PC/pyconfig.h ${CMAKE_BINARY_DIR}/python-build/Include/pyconfig.h
     DEPENDEES install
     )
-
-  if(Slicer3_USE_KWWIDGETS OR Slicer3_USE_PYTHONQT_WITH_TCL)
-    ExternalProject_Add_Step(${proj} Copy_tkinterPyd
-      COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_BINARY_DIR}/python-build/PCbuild/_tkinter.pyd ${CMAKE_BINARY_DIR}/python-build/Lib/_tkinter.pyd
-      DEPENDEES install
-      )
-  endif()
     
 elseif(UNIX)
-  set(python_SOURCE_DIR python)
   set(python_BUILD_IN_SOURCE 1)
   
-  configure_file(${CMAKE_CURRENT_SOURCE_DIR}/python_patch_step.cmake.in
-    ${CMAKE_CURRENT_BINARY_DIR}/python_patch_step.cmake
-    @ONLY)
-    
   configure_file(${CMAKE_CURRENT_SOURCE_DIR}/python_configure_step.cmake.in
     ${CMAKE_CURRENT_BINARY_DIR}/python_configure_step.cmake
     @ONLY)
@@ -140,7 +128,7 @@ elseif(UNIX)
     ${CMAKE_CURRENT_BINARY_DIR}/python_install_step.cmake
     @ONLY)
 
-  set(python_PATCH_COMMAND ${CMAKE_COMMAND} -P ${CMAKE_CURRENT_BINARY_DIR}/python_patch_step.cmake)
+  set(python_SOURCE_DIR python)
   set(python_CONFIGURE_COMMAND ${CMAKE_COMMAND} -P ${CMAKE_CURRENT_BINARY_DIR}/python_configure_step.cmake)
   set(python_BUILD_COMMAND ${CMAKE_COMMAND} -P ${CMAKE_CURRENT_BINARY_DIR}/python_make_step.cmake)
   set(python_INSTALL_COMMAND ${CMAKE_COMMAND} -P ${CMAKE_CURRENT_BINARY_DIR}/python_install_step.cmake)
@@ -152,7 +140,6 @@ elseif(UNIX)
     #SVN_REVISION ${python_SVN_REVISION}
     SOURCE_DIR ${python_SOURCE_DIR}
     BUILD_IN_SOURCE ${python_BUILD_IN_SOURCE}
-    PATCH_COMMAND ${python_PATCH_COMMAND}
     CONFIGURE_COMMAND ${python_CONFIGURE_COMMAND}
     BUILD_COMMAND ${python_BUILD_COMMAND}
     UPDATE_COMMAND ""
@@ -161,6 +148,21 @@ elseif(UNIX)
       ${python_DEPENDENCIES}
     )
     
+  if(APPLE)
+  
+    configure_file(${CMAKE_CURRENT_SOURCE_DIR}/python_environhack_step.cmake.in
+      ${CMAKE_CURRENT_BINARY_DIR}/python_environhack_step.cmake
+      @ONLY)
+    
+    FILE(WRITE ${python_base}/environhack.c "char **environ=0;")
+    
+    ExternalProject_Add_Step(${proj} EnvironHack
+      COMMAND ${CMAKE_COMMAND} -P ${CMAKE_CURRENT_BINARY_DIR}/python_environhack_step.cmake
+      DEPENDEES build
+      DEPENDERS install
+      )
+  endif()
+
 endif()
 
 #-----------------------------------------------------------------------------

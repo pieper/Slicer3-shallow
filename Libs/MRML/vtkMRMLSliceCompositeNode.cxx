@@ -110,10 +110,7 @@ void vtkMRMLSliceCompositeNode::WriteXML(ostream& of, int nIndent)
   of << indent << " fiducialVisibility=\"" << this->FiducialVisibility << "\"";
   of << indent << " fiducialLabelVisibility=\"" << this->FiducialLabelVisibility << "\"";
   of << indent << " sliceIntersectionVisibility=\"" << this->SliceIntersectionVisibility << "\"";
-  if (this->GetLayoutName() != NULL)
-    {
-    of << indent << " layoutName=\"" << this->GetLayoutName() << "\"";
-    }
+  of << indent << " layoutName=\"" << this->GetLayoutName() << "\"";
 
   if ( this->AnnotationSpace == vtkMRMLSliceCompositeNode::XYZ)
     {
@@ -377,4 +374,24 @@ void vtkMRMLSliceCompositeNode::PrintSelf(ostream& os, vtkIndent indent)
   os << indent << "DoPropagateVolumeSelection: " << this->DoPropagateVolumeSelection << "\n";
 }
 
+//----------------------------------------------------------------------------
+void vtkMRMLSliceCompositeNode::UpdateScene(vtkMRMLScene* scene)
+{
+  vtkMRMLSliceCompositeNode *node= NULL;
+  int nnodes = scene->GetNumberOfNodesByClass("vtkMRMLSliceCompositeNode");
+  for (int n=0; n<nnodes; n++)
+    {
+    node = vtkMRMLSliceCompositeNode::SafeDownCast (
+          scene->GetNthNodeByClass(n, "vtkMRMLSliceCompositeNode"));
+    if (node != this && !strcmp(node->GetLayoutName(), this->GetLayoutName()))
+      {
+      break;
+      }
+    node = NULL;
+    }
+  if (node != NULL)
+    {
+    scene->RemoveNodeNoNotify(node);
+    }
+}
 // End

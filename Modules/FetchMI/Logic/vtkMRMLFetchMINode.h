@@ -10,7 +10,7 @@
 // VTK includes
 #include "vtkStringArray.h"
 
-// STD includes
+// STL includes
 #include <string>
 #include <vector>
 

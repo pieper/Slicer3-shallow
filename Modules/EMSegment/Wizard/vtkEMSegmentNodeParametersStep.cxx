@@ -21,6 +21,7 @@
 #include "vtkKWEntryWithLabel.h"
 #include "vtkEMSegmentAnatomicalStructureStep.h"
 #include "vtkMath.h"
+#include "vtkMRMLEMSGlobalParametersNode.h"
 
 #include <vector>
 
@@ -77,6 +78,7 @@ vtkEMSegmentNodeParametersStep::vtkEMSegmentNodeParametersStep()
   this->NodeParametersClassOverviewWeightAuto.clear();
   this->ClassOverviewWeightAutomaticRecalculateFlag = 0;
 
+  this->NodeParametersLabel = NULL;
 }
 
 //----------------------------------------------------------------------------
@@ -86,6 +88,12 @@ vtkEMSegmentNodeParametersStep::~vtkEMSegmentNodeParametersStep()
     {
     this->NodeParametersNotebook->Delete();
     this->NodeParametersNotebook = NULL;
+    }
+
+  if (this->NodeParametersLabel)
+    {
+    this->NodeParametersLabel->Delete();
+    this->NodeParametersLabel = NULL;
     }
 
   if (this->NodeParametersGlobalPriorScale)
@@ -359,6 +367,22 @@ void vtkEMSegmentNodeParametersStep::ShowUserInterface()
     "pack %s -side top -anchor nw -fill both -expand y -padx 2 -pady 2", 
     this->NodeParametersNotebook->GetWidgetName());
 
+  // Create a label to display selected node
+
+  if (!this->NodeParametersLabel)
+    {
+    this->NodeParametersLabel = vtkKWLabel::New();
+    }
+  if (!this->NodeParametersLabel->IsCreated())
+    {
+    this->NodeParametersLabel->SetParent(basic_page);
+    this->NodeParametersLabel->Create();
+    //this->NodeParametersLabel->SetWidth(10);
+    this->NodeParametersLabel->SetForegroundColor(1.0, 1.0, 1.0);
+    this->NodeParametersLabel->SetBackgroundColor(0.2, 0.2, 0.4);
+    this->Script("grid %s -column 0 -row 0 -sticky nw -padx 2 -pady 2", this->NodeParametersLabel->GetWidgetName());
+    }
+
   // Create the class probability scale
 
   if (!this->NodeParametersGlobalPriorScale)
@@ -381,7 +405,7 @@ void vtkEMSegmentNodeParametersStep::ShowUserInterface()
     this->NodeParametersGlobalPriorScale->SetBalloonHelpString("Probability that a voxel belonging to the parent structure will also belong to this structure.  The value must be in the range [0,1].  Class weights across siblings must sum to 1."); 
     }
 
-  this->Script("grid %s -column 0 -row 0 -sticky nw -padx 2 -pady 2",  this->NodeParametersGlobalPriorScale->GetWidgetName());
+  this->Script("grid %s -column 0 -row 1 -sticky nw -padx 2 -pady 2",  this->NodeParametersGlobalPriorScale->GetWidgetName());
 
   // Create the spatial prior weight scale
 
@@ -406,7 +430,7 @@ void vtkEMSegmentNodeParametersStep::ShowUserInterface()
     this->NodeParametersSpatialPriorWeightScale->SetBalloonHelpString("Weight of the atlas (spatial prior) in the segmentation decision.  The value must be in the range [0,1], where 0 indicates that the atlas is ignored and 1 indicates the maximum atlas weight."); 
     }
 
-  this->Script("grid %s -column 0 -row 1 -sticky nw -padx 2 -pady 2", 
+  this->Script("grid %s -column 0 -row 2 -sticky nw -padx 2 -pady 2",
     this->NodeParametersSpatialPriorWeightScale->GetWidgetName());
 
   // Create Atlas Weight  
@@ -966,6 +990,26 @@ void vtkEMSegmentNodeParametersStep::DisplaySelectedNodeParametersCallback()
 
   int enabled = tree->GetEnabled();
   char buffer[256];
+
+  // Update the current tree node label
+
+  vtkMRMLEMSGlobalParametersNode* globalNode = mrmlManager->GetGlobalParametersNode();
+
+  if (this->NodeParametersLabel)
+    {
+    if (has_valid_selection)
+      {
+      this->NodeParametersLabel->SetEnabled(enabled);
+      this->NodeParametersLabel->SetText(globalNode->GetName());
+      this->NodeParametersLabel->SetText(tree->GetNodeText(sel_node.c_str()));
+      }
+    else
+      {
+      this->NodeParametersLabel->SetEnabled(0);
+      this->NodeParametersLabel->SetText("");
+      }
+    }
+
 
   // Update the class probability scale
 
@@ -1616,7 +1660,7 @@ void vtkEMSegmentNodeParametersStep::DisplaySelectedNodeParametersCallback()
       }
     }
 
-  // Update miscellaeneous Generate Background probability parameters
+  // Update miscellaneous Generate Background probability parameters
 
   if(this->NodeParametersGenerateBackgroundProbabilityCheckButton)
     {
@@ -2174,7 +2218,8 @@ void vtkEMSegmentNodeParametersStep::DefineInputChannelWeightOverviewWindow(int 
 {
   vtkEMSegmentMRMLManager *mrmlManager = this->GetGUI()->GetMRMLManager();
   vtkMRMLEMSTargetNode *inputNodes = mrmlManager->GetTargetInputNode();
-  if (!inputNodes) 
+  vtkMRMLEMSGlobalParametersNode* globalNode = mrmlManager->GetGlobalParametersNode();
+  if (!inputNodes || !globalNode) 
     {
       return;
     }
@@ -2216,8 +2261,6 @@ void vtkEMSegmentNodeParametersStep::DefineInputChannelWeightOverviewWindow(int 
        }
     }
 
-   vtkMRMLEMSTargetNode* targetNode = mrmlManager->GetWorkingDataNode()->GetInputTargetNode();
-
   for (int i = 0 ; i < newSize; i++)
     {      
        if (!this->NodeParametersInputChannelWeight[i])
@@ -2237,7 +2280,7 @@ void vtkEMSegmentNodeParametersStep::DefineInputChannelWeightOverviewWindow(int 
            this->NodeParametersInputChannelWeight[i]->SetBalloonHelpString("Weight of each channel in the segmentation decision.  Right-click or double-click to modify weights.  Weights should be in the range [0,1]; 0 indicates that the channel is ignored and 1 indicates the maximum channel weight.  The weights are not dependent on each other or any other weights.");
            this->Script( "pack %s -side top -anchor nw -padx 2 -pady 2", this->NodeParametersInputChannelWeight[i]->GetWidgetName());
     }
-    this->NodeParametersInputChannelWeight[i]->SetLabelText(targetNode->GetNthInputChannelName(i));
+    this->NodeParametersInputChannelWeight[i]->SetLabelText(globalNode->GetNthTargetInputChannelName(i));
     this->NodeParametersInputChannelWeight[i]->SetEnabled(enabled);      
     }
 }

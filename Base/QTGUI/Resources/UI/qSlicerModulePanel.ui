@@ -7,11 +7,11 @@
     <x>0</x>
     <y>0</y>
     <width>357</width>
-    <height>161</height>
+    <height>120</height>
    </rect>
   </property>
   <property name="windowTitle">
-   <string>Module Panel</string>
+   <string>Form</string>
   </property>
   <layout class="QGridLayout" name="gridLayout">
    <property name="margin">
@@ -19,9 +19,6 @@
    </property>
    <item row="0" column="0">
     <widget class="QScrollArea" name="ScrollArea">
-     <property name="frameShape">
-      <enum>QFrame::NoFrame</enum>
-     </property>
      <property name="horizontalScrollBarPolicy">
       <enum>Qt::ScrollBarAlwaysOff</enum>
      </property>
@@ -33,16 +30,13 @@
        <rect>
         <x>0</x>
         <y>0</y>
-        <width>357</width>
-        <height>161</height>
+        <width>353</width>
+        <height>116</height>
        </rect>
       </property>
-      <layout class="QVBoxLayout" name="verticalLayout_4">
-       <property name="margin">
-        <number>0</number>
-       </property>
+      <layout class="QVBoxLayout" name="verticalLayout">
        <item>
-        <widget class="ctkCollapsibleButton" name="HelpCollapsibleButton">
+        <widget class="qCTKCollapsibleButton" name="HelpCollapsibleButton">
          <property name="sizePolicy">
           <sizepolicy hsizetype="Ignored" vsizetype="Fixed">
            <horstretch>0</horstretch>
@@ -50,54 +44,26 @@
           </sizepolicy>
          </property>
          <property name="text">
-          <string>Help &amp;&amp; Acknowledgement</string>
-         </property>
-         <property name="collapsed">
-          <bool>true</bool>
+          <string>Help</string>
          </property>
          <property name="contentsFrameShape">
           <enum>QFrame::StyledPanel</enum>
          </property>
-         <layout class="QVBoxLayout" name="verticalLayout_3">
+         <layout class="QHBoxLayout" name="horizontalLayout">
           <item>
-           <widget class="QTabWidget" name="HelpAcknowledgementTabWidget">
-            <property name="currentIndex">
-             <number>1</number>
+           <widget class="qCTKFittedTextBrowser" name="HelpLabel">
+            <property name="frameShape">
+             <enum>QFrame::NoFrame</enum>
             </property>
-            <widget class="QWidget" name="HelpTab">
-             <attribute name="title">
-              <string>Help</string>
-             </attribute>
-             <layout class="QVBoxLayout" name="verticalLayout">
-              <property name="margin">
-               <number>0</number>
-              </property>
-              <item>
-               <widget class="ctkFittedTextBrowser" name="HelpLabel">
-                <property name="frameShape">
-                 <enum>QFrame::NoFrame</enum>
-                </property>
-               </widget>
-              </item>
-             </layout>
-            </widget>
-            <widget class="QWidget" name="AcknowledgementTab">
-             <attribute name="title">
-              <string>Acknowledgement</string>
-             </attribute>
-             <layout class="QVBoxLayout" name="verticalLayout_2">
-              <property name="margin">
-               <number>0</number>
-              </property>
-              <item>
-               <widget class="ctkFittedTextBrowser" name="AcknowledgementLabel">
-                <property name="frameShape">
-                 <enum>QFrame::NoFrame</enum>
-                </property>
-               </widget>
-              </item>
-             </layout>
-            </widget>
+            <property name="verticalScrollBarPolicy">
+             <enum>Qt::ScrollBarAlwaysOff</enum>
+            </property>
+            <property name="horizontalScrollBarPolicy">
+             <enum>Qt::ScrollBarAlwaysOff</enum>
+            </property>
+            <property name="openExternalLinks">
+             <bool>true</bool>
+            </property>
            </widget>
           </item>
          </layout>
@@ -127,15 +93,15 @@
  </widget>
  <customwidgets>
   <customwidget>
-   <class>ctkCollapsibleButton</class>
+   <class>qCTKCollapsibleButton</class>
    <extends>QWidget</extends>
-   <header>ctkCollapsibleButton.h</header>
+   <header>qCTKCollapsibleButton.h</header>
    <container>1</container>
   </customwidget>
   <customwidget>
-   <class>ctkFittedTextBrowser</class>
+   <class>qCTKFittedTextBrowser</class>
    <extends>QTextBrowser</extends>
-   <header>ctkFittedTextBrowser.h</header>
+   <header>qCTKFittedTextBrowser.h</header>
   </customwidget>
   <customwidget>
    <class>qSlicerWidget</class>

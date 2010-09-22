@@ -73,7 +73,6 @@ class VTK_MRML_EXPORT vtkMRMLStorageNode : public vtkMRMLNode
 
   /// 
   /// Use compression on write
-  vtkBooleanMacro(UseCompression, int);
   vtkGetMacro(UseCompression, int);
   vtkSetMacro(UseCompression, int);
 
@@ -228,8 +227,7 @@ class VTK_MRML_EXPORT vtkMRMLStorageNode : public vtkMRMLNode
 
   /// 
   /// Checks is file path is a relative path by calling appropriate
-  /// method on the scene depending on whether the scene pointer is valid.
-  /// returns 0 if it's not relative or the input is null, 1 if it is relative
+  /// method on the scene depending on whether the scene pointer is valid
   int IsFilePathRelative(const char * filepath);
   
 protected:

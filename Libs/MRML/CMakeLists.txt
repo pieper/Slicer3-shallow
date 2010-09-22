@@ -35,6 +35,7 @@ set(include_dirs
   )
 
 set(packages
+  VTK
   vtkITK 
   FreeSurfer
   )
@@ -106,7 +107,6 @@ set(MRML_SRCS
   vtkMRMLFreeSurferModelStorageNode.cxx    
   vtkMRMLFreeSurferProceduralColorNode.cxx
   vtkMRMLHierarchyNode.cxx
-  vtkMRMLDisplayableHierarchyNode.cxx
   vtkMRMLInteractionNode.cxx
   vtkMRMLLabelMapVolumeDisplayNode.cxx
   vtkMRMLLinearTransformNode.cxx
@@ -208,18 +208,13 @@ set_source_files_properties(
   ABSTRACT
   )
 
-#-----------------------------------------------------------------------------
-# Wrapping hints used by all Tcl, Python and Java wrapping.
-# It can also be used by external wrapping tools.
-SET(VTK_WRAP_HINTS ${CMAKE_CURRENT_SOURCE_DIR}/Wrapping/Tcl/hints)
-
 # --------------------------------------------------------------------------
 # Wrapping
 IF (VTK_WRAP_TCL)
   include("${VTK_CMAKE_DIR}/vtkWrapTcl.cmake")
+  set(VTK_WRAP_HINTS ${CMAKE_CURRENT_SOURCE_DIR}/Wrapping/Tcl/hints)
   vtk_wrap_tcl3(MRML MRML_TCL_SRCS "${MRML_SRCS}" "")
 ENDIF (VTK_WRAP_TCL)
-
 
 # --------------------------------------------------------------------------
 # Build and install the library
@@ -302,16 +297,6 @@ IF(VTK_WRAP_PYTHON AND BUILD_SHARED_LIBS)
   IF(WIN32 AND NOT CYGWIN)
     SET_TARGET_PROPERTIES(${lib_name}Python PROPERTIES SUFFIX ".pyd")
   ENDIF(WIN32 AND NOT CYGWIN)
-
-  # Apply user-defined properties to the library target.
-  IF(Slicer3_LIBRARY_PROPERTIES)
-    SET_TARGET_PROPERTIES(${lib_name}Python PROPERTIES
-       ${Slicer3_LIBRARY_PROPERTIES}
-    )
-    SET_TARGET_PROPERTIES(${lib_name}PythonD PROPERTIES
-       ${Slicer3_LIBRARY_PROPERTIES}
-    )
-  ENDIF(Slicer3_LIBRARY_PROPERTIES)
 
   INSTALL(TARGETS ${lib_name}PythonD ${lib_name}Python
     RUNTIME DESTINATION bin COMPONENT RuntimeLibraries 

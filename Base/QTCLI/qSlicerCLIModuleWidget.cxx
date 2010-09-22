@@ -1,57 +1,65 @@
-/*==============================================================================
+/*=auto=========================================================================
 
-  Program: 3D Slicer
+ Portions (c) Copyright 2005 Brigham and Women's Hospital (BWH) 
+ All Rights Reserved.
 
-  Copyright (c) 2010 Kitware Inc.
+ See Doc/copyright/copyright.txt
+ or http://www.slicer.org/copyright/copyright.txt for details.
 
-  See Doc/copyright/copyright.txt
-  or http://www.slicer.org/copyright/copyright.txt for details.
+ Program:   3D Slicer
 
-  Unless required by applicable law or agreed to in writing, software
-  distributed under the License is distributed on an "AS IS" BASIS,
-  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-  See the License for the specific language governing permissions and
-  limitations under the License.
+=========================================================================auto=*/
 
-  This file was originally developed by Jean-Christophe Fillion-Robin, Kitware Inc.
-  and was partially funded by NIH grant 3P41RR013218-12S1
 
-==============================================================================*/
-
-// Qt includes
-#include <QLabel>
-#include <QFormLayout>
-#include <QDebug>
-
-// SlicerQt includes
 #include "qSlicerCLIModuleWidget.h"
 #include "qSlicerCLIModuleWidget_p.h"
 #include "vtkSlicerCLIModuleLogic.h"
-#include "qSlicerCLIModuleUIHelper.h"
+
+// SlicerQT includes
 #include "qSlicerWidget.h"
+
+// qMRML includes
+#include <qMRMLNodeComboBox.h>
+#include <qMRMLNodeFactory.h>
+
+// qCTK includes
+#include <qCTKCollapsibleButton.h>
+#include <qCTKDoubleSlider.h>
+#include <qCTKFlowLayout.h>
 
 // MRML includes
 #include <vtkMRMLScene.h>
 #include <vtkMRMLCommandLineModuleNode.h>
 
+// QT includes
+#include <QGroupBox>
+#include <QLabel>
+#include <QFormLayout>
+#include <QDebug>
+#include <QSpinBox>
+#include <QDoubleSpinBox>
+#include <QCheckBox>
+#include <QLineEdit>
+#include <QRadioButton>
+
+// std includes
+#include <limits>
+
+//-----------------------------------------------------------------------------
+bool qSlicerCLIModuleWidgetPrivate::MapInitialized = false;
+QHash<QString, QString> qSlicerCLIModuleWidgetPrivate::ImageTypeAttributeToNodeType;
+QHash<QString, QString> qSlicerCLIModuleWidgetPrivate::GeometryTypeAttributeToNodeType;
+QHash<QString, QString> qSlicerCLIModuleWidgetPrivate::TableTypeAttributeToNodeType;
+QHash<QString, QString> qSlicerCLIModuleWidgetPrivate::TransformTypeAttributeToNodeType;
+
 //-----------------------------------------------------------------------------
 // qSlicerCLIModuleWidgetPrivate methods
 
 //-----------------------------------------------------------------------------
-qSlicerCLIModuleWidgetPrivate::qSlicerCLIModuleWidgetPrivate(qSlicerCLIModuleWidget& object)
-  :q_ptr(&object)
-{
-  this->ProcessInformation = 0;
-  this->Name = "NA";
-  this->CommandLineModuleNode = 0;
-  this->CLIModuleUIHelper = 0;
-}
-    
-//-----------------------------------------------------------------------------
 vtkSlicerCLIModuleLogic* qSlicerCLIModuleWidgetPrivate::logic()const
 {
-  Q_Q(const qSlicerCLIModuleWidget);
-  return vtkSlicerCLIModuleLogic::SafeDownCast(q->logic());
+  QCTK_P(const qSlicerCLIModuleWidget);
+  return vtkSlicerCLIModuleLogic::SafeDownCast(p->logic());
 }
 
 //-----------------------------------------------------------------------------
@@ -64,39 +72,51 @@ vtkMRMLCommandLineModuleNode* qSlicerCLIModuleWidgetPrivate::commandLineModuleNo
 //-----------------------------------------------------------------------------
 void qSlicerCLIModuleWidgetPrivate::setupUi(qSlicerWidget* widget)
 {
-  Q_Q(qSlicerCLIModuleWidget);
-  
   this->Ui_qSlicerCLIModule::setupUi(widget);
 
-  this->ModuleCollapsibleButton->setText(this->Title);
-
-  this->MRMLCommandLineModuleNodeSelector->setBaseName(this->Title);
-  this->MRMLCommandLineModuleNodeSelector->addAttribute(
-    "vtkMRMLCommandLineModuleNode", "CommandLineModule", this->Title);
+  this->MainCollapsibleWidget->setText(this->Title);
 
   this->addParameterGroups();
 
   // Connect buttons
-  this->connect(this->ApplyPushButton, SIGNAL(pressed()),
-                q, SLOT(apply()));
-
-  this->connect(this->CancelPushButton, SIGNAL(pressed()),
-                q, SLOT(cancel()));
-
-  this->connect(this->DefaultPushButton, SIGNAL(pressed()),
-                q, SLOT(reset()));
+  this->connect(this->ApplyPushButton,
+                SIGNAL(pressed()),
+                SLOT(onApplyButtonPressed()));
+                
+  this->connect(this->CancelPushButton,
+                SIGNAL(pressed()),
+                SLOT(onCancelButtonPressed()));
+                
+  this->connect(this->DefaultPushButton,
+                SIGNAL(pressed()),
+                SLOT(onDefaultButtonPressed()));
 
   this->connect(this->MRMLCommandLineModuleNodeSelector,
                 SIGNAL(currentNodeChanged(bool)),
                 SLOT(enableCommandButtonState(bool)));
+}
 
-  this->connect(this->MRMLCommandLineModuleNodeSelector,
-                SIGNAL(currentNodeChanged(vtkMRMLNode*)),
-                q, SLOT(setCurrentCommandLineModuleNode(vtkMRMLNode*)));
+//-----------------------------------------------------------------------------
+void qSlicerCLIModuleWidgetPrivate::onApplyButtonPressed()
+{
+  qDebug() << "qSlicerCLIModuleWidgetPrivate::onApplyButtonPressed";
+  this->updateMRMLCommandLineModuleNode();
 
-  this->connect(this->MRMLCommandLineModuleNodeSelector,
-                SIGNAL(nodeAddedByUser(vtkMRMLNode*)),
-                SLOT(setDefaultNodeValue(vtkMRMLNode*)));
+  vtkMRMLCommandLineModuleNode* node = this->commandLineModuleNode();
+  Q_ASSERT(node);
+  this->logic()->Apply(node);
+}
+
+//-----------------------------------------------------------------------------
+void qSlicerCLIModuleWidgetPrivate::onCancelButtonPressed()
+{
+  qDebug() << "qSlicerCLIModuleWidgetPrivate::onCancelButtonPressed";
+}
+
+//-----------------------------------------------------------------------------
+void qSlicerCLIModuleWidgetPrivate::onDefaultButtonPressed()
+{
+  qDebug() << "qSlicerCLIModuleWidgetPrivate::onDefaultButtonPressed";
 }
 
 //-----------------------------------------------------------------------------
@@ -104,51 +124,6 @@ void qSlicerCLIModuleWidgetPrivate::enableCommandButtonState(bool enable)
 {
   this->ApplyPushButton->setEnabled(enable);
   this->CancelPushButton->setEnabled(enable);
-  this->DefaultPushButton->setEnabled(enable);
-}
-
-//-----------------------------------------------------------------------------
-void qSlicerCLIModuleWidgetPrivate::updateUiFromCommandLineModuleNode(
-  vtkObject* commandLineModuleNode)
-{
-  if (!commandLineModuleNode)
-    {
-    return;
-    }
-  vtkMRMLCommandLineModuleNode * node =
-    vtkMRMLCommandLineModuleNode::SafeDownCast(commandLineModuleNode);
-  Q_ASSERT(node);
-
-  this->CLIModuleUIHelper->updateUi(node);
-}
-
-//-----------------------------------------------------------------------------
-void qSlicerCLIModuleWidgetPrivate::updateCommandLineModuleNodeFromUi(
-  vtkObject* commandLineModuleNode)
-{
-  if (!commandLineModuleNode)
-    {
-    return;
-    }
-  vtkMRMLCommandLineModuleNode * node =
-    vtkMRMLCommandLineModuleNode::SafeDownCast(commandLineModuleNode);
-  Q_ASSERT(node);
-  this->CLIModuleUIHelper->updateMRMLCommandLineModuleNode(node);
-}
-
-//-----------------------------------------------------------------------------
-void qSlicerCLIModuleWidgetPrivate::setDefaultNodeValue(vtkMRMLNode* commandLineModuleNode)
-{
-  vtkMRMLCommandLineModuleNode * node =
-    vtkMRMLCommandLineModuleNode::SafeDownCast(commandLineModuleNode);
-  Q_ASSERT(node);
-
-  int disabledModify = node->StartModify();
-  node->SetModuleDescription(this->ModuleDescriptionObject);
-  node->EndModify(disabledModify);
-  
-  // Notify observer(s)
-  node->Modified();
 }
 
 //-----------------------------------------------------------------------------
@@ -168,7 +143,7 @@ void qSlicerCLIModuleWidgetPrivate::addParameterGroup(QBoxLayout* _layout,
 {
   Q_ASSERT(_layout);
 
-  ctkCollapsibleButton * collapsibleWidget = new ctkCollapsibleButton();
+  qCTKCollapsibleButton * collapsibleWidget = new qCTKCollapsibleButton();
   collapsibleWidget->setText(QString::fromStdString(parameterGroup.GetLabel()));
   collapsibleWidget->setCollapsed(parameterGroup.GetAdvanced() == "true");
 
@@ -211,46 +186,612 @@ void qSlicerCLIModuleWidgetPrivate::addParameter(QFormLayout* _layout,
   QString _label = QString::fromStdString(moduleParameter.GetLabel());
   QString description = QString::fromStdString(moduleParameter.GetDescription());
   
-  // TODO Parameters with flags can support the None node because they are optional
-  int noneEnabled = 0; 
+  // Parameters with flags can support the None node because they are optional
+  int noneEnabled = 0;
   if (moduleParameter.GetLongFlag() != "" || moduleParameter.GetFlag() != "")
     {
     noneEnabled = 1;
     }
 
-  QWidget * widget = this->CLIModuleUIHelper->createTagWidget(moduleParameter);
+  QWidget * widget = 0;
+  bool defaultWidget = false;
+  
+  if (moduleParameter.GetTag() == "integer")
+    {
+    widget = this->createIntegerTagWidget(moduleParameter);
+    }
+  else if (moduleParameter.GetTag() == "boolean")
+    {
+    widget = this->createBooleanTagWidget(moduleParameter);
+    }
+  else if (moduleParameter.GetTag() == "float")
+    {
+    widget = this->createFloatTagWidget(moduleParameter);
+    }
+  else if (moduleParameter.GetTag() == "double")
+    {
+    widget = this->createDoubleTagWidget(moduleParameter);
+    }
+  else if (moduleParameter.GetTag() == "string" ||
+           moduleParameter.GetTag() == "integer-vector" ||
+           moduleParameter.GetTag() == "float-vector" ||
+           moduleParameter.GetTag() == "double-vector" ||
+           moduleParameter.GetTag() == "string-vector")
+    {
+    widget = this->createStringTagWidget(moduleParameter);
+    }
+  else if (moduleParameter.GetTag() == "point")
+    {
+    widget = this->createPointTagWidget(moduleParameter);
+    }
+  else if (moduleParameter.GetTag() == "region")
+    {
+    widget = this->createRegionTagWidget(moduleParameter);
+    }
+  else if (moduleParameter.GetTag() == "image")
+    {
+    widget = this->createImageTagWidget(moduleParameter);
+    }
+  else if (moduleParameter.GetTag() == "geometry")
+    {
+    widget = this->createGeometryTagWidget(moduleParameter);
+    }
+  else if (moduleParameter.GetTag() == "table")
+    {
+    widget = this->createTableTagWidget(moduleParameter);
+    }
+  else if (moduleParameter.GetTag() == "transform")
+    {
+    widget = this->createTransformTagWidget(moduleParameter);
+    }
+  else if (moduleParameter.GetTag() == "directory")
+    {
+    widget = this->createDirectoryTagWidget(moduleParameter);
+    }
+  else if (moduleParameter.GetTag() == "file")
+    {
+    widget = this->createFileTagWidget(moduleParameter);
+    }
+  else if(moduleParameter.GetTag() == "string-enumeration" ||
+          moduleParameter.GetTag() == "integer-enumeration" ||
+          moduleParameter.GetTag() == "float-enumeration" ||
+          moduleParameter.GetTag() == "double-enumeration")
+    {
+    widget = this->createEnumerationTagWidget(moduleParameter);
+    }
+  else
+    {
+    defaultWidget = true;
+    QLabel * labelWidget = new QLabel(_label); 
+    labelWidget->setToolTip(description);
+    _layout->addWidget(labelWidget);
+    }
 
+  Q_ASSERT(!defaultWidget && widget);
   if (widget)
     {
     widget->setToolTip(description);
     _layout->addRow(new QLabel(_label), widget);
     }
-  else
-    {
-    QLabel * labelWidget = new QLabel(_label); 
-    labelWidget->setToolTip(description);
-    _layout->addWidget(labelWidget);
-    }
 }
 
 //-----------------------------------------------------------------------------
-void qSlicerCLIModuleWidgetPrivate::onValueChanged(const QString& name, const QVariant& value)
+WIDGET_VALUE_WRAPPER(IntegerWithoutConstraints, QSpinBox, value);
+WIDGET_VALUE_WRAPPER(IntegerWithConstraints, QSlider, value);
+
+//-----------------------------------------------------------------------------
+QWidget* qSlicerCLIModuleWidgetPrivate::createIntegerTagWidget(const ModuleParameter& moduleParameter)
 {
-  Q_Q(qSlicerCLIModuleWidget);
-  // make sure a command line module node is created
-  if (this->CommandLineModuleNode != 0 ||
-      // but if the scene is closing, then nevermind, values are changing
-      // because nodes are getting removed
-      !q->mrmlScene() ||
-      q->mrmlScene()->GetIsClosing())
+  int value = QString::fromStdString(moduleParameter.GetDefault()).toInt();
+  int step = 1; 
+  int min = std::numeric_limits<int>::min();
+  int max = std::numeric_limits<int>::max();
+  bool withConstraints = !QString::fromStdString(moduleParameter.GetConstraints()).isEmpty();
+  QString _label = QString::fromStdString(moduleParameter.GetLabel());
+  
+  QWidget * widget = 0; 
+  if (!withConstraints)
+    {
+    QSpinBox * spinBox = new QSpinBox;
+    spinBox->setSingleStep(step);
+    spinBox->setValue(value);
+    spinBox->setRange(min, max);
+    widget = spinBox;
+    INSTANCIATE_WIDGET_VALUE_WRAPPER(IntegerWithoutConstraints, _label, spinBox);
+    }
+  else
+    {
+    QString minAsStr = QString::fromStdString(moduleParameter.GetMinimum());
+    if (!minAsStr.isEmpty()) { min = minAsStr.toInt(); }
+    
+    QString maxAsStr = QString::fromStdString(moduleParameter.GetMaximum());
+    if (!maxAsStr.isEmpty()) { max = maxAsStr.toInt(); }
+    
+    QString stepAsStr = QString::fromStdString(moduleParameter.GetStep());
+    if (!stepAsStr.isEmpty()) { step = stepAsStr.toInt(); }
+    
+    QSlider * slider = new QSlider;
+    slider->setOrientation(Qt::Horizontal);
+    slider->setSingleStep(step);
+    slider->setTickInterval(step);
+    slider->setRange(min, max);
+    slider->setValue(value);
+    widget = slider;
+    INSTANCIATE_WIDGET_VALUE_WRAPPER(IntegerWithConstraints, _label, slider);
+    }
+  return widget;
+}
+
+//-----------------------------------------------------------------------------
+WIDGET_VALUE_WRAPPER(Boolean, QCheckBox, isChecked);
+
+//-----------------------------------------------------------------------------
+QWidget* qSlicerCLIModuleWidgetPrivate::createBooleanTagWidget(const ModuleParameter& moduleParameter)
+{
+  QString valueAsStr = QString::fromStdString(moduleParameter.GetDefault());
+  QCheckBox * widget = new QCheckBox;
+  QString _label = QString::fromStdString(moduleParameter.GetLabel());
+  widget->setChecked(valueAsStr == "true");
+  INSTANCIATE_WIDGET_VALUE_WRAPPER(Boolean, _label, widget);
+  return widget;
+}
+
+//-----------------------------------------------------------------------------
+WIDGET_VALUE_WRAPPER(FloatWithoutConstaints, QDoubleSpinBox, value);
+WIDGET_VALUE_WRAPPER(FloatWithConstaints, qCTKDoubleSlider, value);
+
+//-----------------------------------------------------------------------------
+QWidget* qSlicerCLIModuleWidgetPrivate::createFloatTagWidget(const ModuleParameter& moduleParameter)
+{
+  float value = QString::fromStdString(moduleParameter.GetDefault()).toFloat();
+  float step = 0.1;
+  int min = -std::numeric_limits<float>::max();
+  int max = std::numeric_limits<float>::max();
+  bool withConstraints = !QString::fromStdString(moduleParameter.GetConstraints()).isEmpty();
+  QString _label = QString::fromStdString(moduleParameter.GetLabel());
+  
+  QWidget * widget = 0;
+  if (!withConstraints)
+    {
+    QDoubleSpinBox * spinBox = new QDoubleSpinBox;
+    spinBox->setSingleStep(step);
+    spinBox->setValue(value);
+    spinBox->setRange(min, max);
+    widget = spinBox;
+    INSTANCIATE_WIDGET_VALUE_WRAPPER(FloatWithoutConstaints, _label, spinBox);
+    }
+  else
+    {
+    qCTKDoubleSlider * slider = new qCTKDoubleSlider;
+    slider->setOrientation(Qt::Horizontal);
+    slider->setTickInterval(step);
+    slider->setSingleStep(step);
+    slider->setRange(min, max);
+    slider->setValue(value);
+    widget = slider;
+    INSTANCIATE_WIDGET_VALUE_WRAPPER(FloatWithConstaints, _label, slider);
+    }
+  return widget; 
+}
+
+//-----------------------------------------------------------------------------
+WIDGET_VALUE_WRAPPER(DoubleWithoutConstaints, QDoubleSpinBox, value);
+WIDGET_VALUE_WRAPPER(DoubleWithConstaints, qCTKDoubleSlider, value);
+
+//-----------------------------------------------------------------------------
+QWidget* qSlicerCLIModuleWidgetPrivate::createDoubleTagWidget(const ModuleParameter& moduleParameter)
+{
+  double value = QString::fromStdString(moduleParameter.GetDefault()).toDouble();
+  double step = 0.1;
+  double min = -std::numeric_limits<double>::max();
+  double max = std::numeric_limits<double>::max();
+  bool withConstraints = !QString::fromStdString(moduleParameter.GetConstraints()).isEmpty();
+  QString _label = QString::fromStdString(moduleParameter.GetLabel());
+  
+  QWidget * widget = 0;
+  if (!withConstraints)
+    {
+    QDoubleSpinBox * spinBox = new QDoubleSpinBox;
+    spinBox->setSingleStep(step);
+    spinBox->setValue(value);
+    spinBox->setRange(min, max);
+    widget = spinBox;
+    INSTANCIATE_WIDGET_VALUE_WRAPPER(DoubleWithoutConstaints, _label, spinBox);
+    }
+  else
+    {
+    qCTKDoubleSlider * slider = new qCTKDoubleSlider;
+    slider->setOrientation(Qt::Horizontal);
+    slider->setSingleStep(step);
+    slider->setTickInterval(step);
+    slider->setRange(min, max);
+    slider->setValue(value);
+    widget = slider;
+    INSTANCIATE_WIDGET_VALUE_WRAPPER(DoubleWithConstaints, _label, slider);
+    }
+  return widget; 
+}
+
+//-----------------------------------------------------------------------------
+WIDGET_VALUE_WRAPPER(String, QLineEdit, text);
+
+//-----------------------------------------------------------------------------
+QWidget* qSlicerCLIModuleWidgetPrivate::createStringTagWidget(const ModuleParameter& moduleParameter)
+{
+  QString valueAsStr = QString::fromStdString(moduleParameter.GetDefault());
+  QLineEdit * widget = new QLineEdit;
+  QString _label = QString::fromStdString(moduleParameter.GetLabel());
+  widget->setText(valueAsStr);
+  INSTANCIATE_WIDGET_VALUE_WRAPPER(String, _label, widget);
+  return widget;
+}
+
+//-----------------------------------------------------------------------------
+WIDGET_VALUE_WRAPPER(Point, qMRMLNodeComboBox, currentNodeId);
+
+//-----------------------------------------------------------------------------
+QWidget* qSlicerCLIModuleWidgetPrivate::createPointTagWidget(const ModuleParameter& moduleParameter)
+{
+  QString _label = QString::fromStdString(moduleParameter.GetLabel());
+  qMRMLNodeComboBox * widget = new qMRMLNodeComboBox;
+  widget->setNodeTypes(QStringList("vtkMRMLFiducialListNode"));
+  //TODO - title + " FiducialList"
+  //TODO - tparameter->SetNewNodeEnabled(1);
+  //TODO - tparameter->SetNoneEnabled(noneEnabled);
+  //TODO - tparameter->SetNewNodeName((title+" output").c_str());
+
+  QCTK_P(qSlicerCLIModuleWidget);
+  widget->setMRMLScene(p->mrmlScene());
+  QObject::connect(p, SIGNAL(mrmlSceneChanged(vtkMRMLScene*)),
+                  widget, SLOT(setMRMLScene(vtkMRMLScene*)));
+
+  INSTANCIATE_WIDGET_VALUE_WRAPPER(Point, _label, widget);
+  
+  return widget;
+}
+
+//-----------------------------------------------------------------------------
+WIDGET_VALUE_WRAPPER(Region, qMRMLNodeComboBox, currentNodeId);
+
+//-----------------------------------------------------------------------------
+QWidget* qSlicerCLIModuleWidgetPrivate::createRegionTagWidget(const ModuleParameter& moduleParameter)
+{
+  QString _label = QString::fromStdString(moduleParameter.GetLabel());
+  qMRMLNodeComboBox * widget = new qMRMLNodeComboBox;
+  widget->setNodeTypes(QStringList("vtkMRMLROIListNode"));
+  //TODO - title + " RegionList"
+  //TODO - tparameter->SetNewNodeEnabled(1);
+  //TODO - tparameter->SetNoneEnabled(noneEnabled);
+  QCTK_P(qSlicerCLIModuleWidget);
+  widget->setMRMLScene(p->mrmlScene());
+  QObject::connect(p, SIGNAL(mrmlSceneChanged(vtkMRMLScene*)),
+                   widget, SLOT(setMRMLScene(vtkMRMLScene*)));
+
+  INSTANCIATE_WIDGET_VALUE_WRAPPER(Region, _label, widget);
+  
+  return widget;
+}
+
+//-----------------------------------------------------------------------------
+WIDGET_VALUE_WRAPPER(Image, qMRMLNodeComboBox, currentNodeId);
+
+//-----------------------------------------------------------------------------
+QWidget* qSlicerCLIModuleWidgetPrivate::createImageTagWidget(const ModuleParameter& moduleParameter)
+{
+  QString type = QString::fromStdString(moduleParameter.GetType());
+  QString nodeType = Self::nodeTypeFromMap("vtkMRMLScalarVolumeNode",
+                                           Self::GeometryTypeAttributeToNodeType, type);
+  
+  QString channel = QString::fromStdString(moduleParameter.GetChannel());
+  if (channel == "input")
+    {
+    }
+  else if (channel == "output")
+    {
+    if (type == "any")
+      {
+//     // Add all of the other concrete volume node types
+//     tparameter->AddNodeClass("vtkMRMLVectorVolumeNode",
+//                               attrName, attrValue,
+//                               (title + " VectorVolume").c_str());
+//     tparameter->AddNodeClass("vtkMRMLDiffusionTensorVolumeNode",
+//                               attrName, attrValue,
+//                               (title + " DiffusionTensorVolume").c_str());
+//     tparameter->AddNodeClass("vtkMRMLDiffusionWeightedVolumeNode",
+//                               attrName, attrValue,
+//                               (title + " DiffusionWeightedVolume").c_str());
+      }
+    }
+  else
+    {
+    qWarning() << "ImageTag - Unknown channel:" << channel;
+    return 0;
+    }
+    
+  // TODO - tparameter->SetNoneEnabled(noneEnabled);
+  // TODO - title + " Volume"
+
+  QCTK_P(qSlicerCLIModuleWidget);
+  QString _label = QString::fromStdString(moduleParameter.GetLabel());
+  qMRMLNodeComboBox * widget = new qMRMLNodeComboBox;
+  widget->setNodeTypes(QStringList(nodeType));
+  widget->setMRMLScene(p->mrmlScene());
+  QObject::connect(p, SIGNAL(mrmlSceneChanged(vtkMRMLScene*)),
+                   widget, SLOT(setMRMLScene(vtkMRMLScene*)));
+
+  // Specify factory attributes
+  if (type == "label")
+    {
+    widget->addAttribute(nodeType, "LabelMap",QString("1"));
+    }
+
+  INSTANCIATE_WIDGET_VALUE_WRAPPER(Image, _label, widget);
+  
+  return widget;
+}
+
+//-----------------------------------------------------------------------------
+WIDGET_VALUE_WRAPPER(Geometry, qMRMLNodeComboBox, currentNodeId);
+
+//-----------------------------------------------------------------------------
+QWidget* qSlicerCLIModuleWidgetPrivate::createGeometryTagWidget(const ModuleParameter& moduleParameter)
+{
+  QString type = QString::fromStdString(moduleParameter.GetType());
+  QString nodeType = Self::nodeTypeFromMap("vtkMRMLModelNode",
+                                           Self::GeometryTypeAttributeToNodeType, type);
+                                           
+  bool multiple = (moduleParameter.GetMultiple() == "true");
+  bool aggregate = (moduleParameter.GetAggregate() == "true");
+  bool showHidden = (multiple && aggregate);
+
+  QString channel = QString::fromStdString(moduleParameter.GetChannel());
+  if (channel != "input" && channel != "output")
+    {
+    qWarning() << "GeometryTag - Unknown channel:" << channel;
+    return 0; 
+    }
+
+  if (showHidden)
+    {
+    nodeType = "vtkMRMLModelHierarchyNode";
+    }
+
+  // TODO - title + " Model"
+  // TODO - SetNoneEnabled(noneEnabled)
+  
+  QCTK_P(qSlicerCLIModuleWidget);
+  QString _label = QString::fromStdString(moduleParameter.GetLabel());
+  qMRMLNodeComboBox * widget = new qMRMLNodeComboBox;
+  widget->setShowHidden(showHidden);
+  widget->setNodeTypes(QStringList(nodeType));
+  widget->setMRMLScene(p->mrmlScene());
+  QObject::connect(p, SIGNAL(mrmlSceneChanged(vtkMRMLScene*)),
+                   widget, SLOT(setMRMLScene(vtkMRMLScene*)));
+
+  INSTANCIATE_WIDGET_VALUE_WRAPPER(Geometry, _label, widget);
+  
+  return widget;
+}
+
+//-----------------------------------------------------------------------------
+WIDGET_VALUE_WRAPPER(Table, qMRMLNodeComboBox, currentNodeId);
+
+//-----------------------------------------------------------------------------
+QWidget* qSlicerCLIModuleWidgetPrivate::createTableTagWidget(const ModuleParameter& moduleParameter)
+{
+  QString type = QString::fromStdString(moduleParameter.GetType());
+  QString nodeType = Self::nodeTypeFromMap("", Self::TableTypeAttributeToNodeType, type);
+  if (nodeType.isEmpty())
+    {
+    qWarning() << "TableTag - Unknown type:" << type;
+    return 0; 
+    }
+
+  QString channel = QString::fromStdString(moduleParameter.GetChannel());
+  if (channel != "input" && channel != "output")
+    {
+    qWarning() << "TableTag - Unknown channel:" << channel;
+    return 0; 
+    }
+    
+  // TODO - title + " Table"
+  // TODO - SetNoneEnabled(1)
+
+  QCTK_P(qSlicerCLIModuleWidget);
+  QString _label = QString::fromStdString(moduleParameter.GetLabel());
+  qMRMLNodeComboBox * widget = new qMRMLNodeComboBox;
+  widget->setNodeTypes(QStringList(nodeType));
+  widget->setMRMLScene(p->mrmlScene());
+  QObject::connect(p, SIGNAL(mrmlSceneChanged(vtkMRMLScene*)),
+                   widget, SLOT(setMRMLScene(vtkMRMLScene*)));
+
+  INSTANCIATE_WIDGET_VALUE_WRAPPER(Table, _label, widget);
+  
+  return widget;
+}
+
+//-----------------------------------------------------------------------------
+WIDGET_VALUE_WRAPPER(Transform, qMRMLNodeComboBox, currentNodeId);
+
+//-----------------------------------------------------------------------------
+QWidget* qSlicerCLIModuleWidgetPrivate::createTransformTagWidget(const ModuleParameter& moduleParameter)
+{
+  QString type = QString::fromStdString(moduleParameter.GetType());
+  QString nodeType = Self::nodeTypeFromMap("vtkMRMLTransformNode",
+                                           Self::TransformTypeAttributeToNodeType, type);
+
+  QString channel = QString::fromStdString(moduleParameter.GetChannel());
+  if (channel != "input" && channel != "output")
+    {
+    qWarning() << "TransformTag - Unknown channel:" << channel;
+    return 0; 
+    }
+    
+  // TODO - title + " Transform"
+  // TODO - SetNoneEnabled(noneEnabled);
+
+  QCTK_P(qSlicerCLIModuleWidget);
+  QString _label = QString::fromStdString(moduleParameter.GetLabel());
+  qMRMLNodeComboBox * widget = new qMRMLNodeComboBox;
+  widget->setNodeTypes(QStringList(nodeType));
+  widget->setMRMLScene(p->mrmlScene());
+  QObject::connect(p, SIGNAL(mrmlSceneChanged(vtkMRMLScene*)),
+                   widget, SLOT(setMRMLScene(vtkMRMLScene*)));
+
+  INSTANCIATE_WIDGET_VALUE_WRAPPER(Transform, _label, widget);
+  
+  return widget;
+}
+
+//-----------------------------------------------------------------------------
+QWidget* qSlicerCLIModuleWidgetPrivate::createDirectoryTagWidget(const ModuleParameter& moduleParameter)
+{
+  Q_UNUSED(moduleParameter);
+  QPushButton* widget = new QPushButton("Select directory ...");
+  return widget;
+}
+
+//-----------------------------------------------------------------------------
+QWidget* qSlicerCLIModuleWidgetPrivate::createFileTagWidget(const ModuleParameter& moduleParameter)
+{
+  Q_UNUSED(moduleParameter);
+  QPushButton* widget = new QPushButton("Select file ...");
+  return widget;
+}
+
+//-----------------------------------------------------------------------------
+namespace{
+class ButtonGroupWidgetWrapper: public QWidget
+{
+public:
+  ButtonGroupWidgetWrapper(QWidget* _parent, QButtonGroup* buttonGroup):
+    QWidget(_parent), ButtonGroup(buttonGroup){}
+  QString checkedValue()
+    {
+    Q_ASSERT(this->ButtonGroup);
+    QAbstractButton* button = this->ButtonGroup->checkedButton();
+    Q_ASSERT(button);
+    return button->text(); 
+    }
+  QButtonGroup* ButtonGroup;
+};
+}
+
+//-----------------------------------------------------------------------------
+WIDGET_VALUE_WRAPPER(Enumeration, ButtonGroupWidgetWrapper, checkedValue);
+
+//-----------------------------------------------------------------------------
+QWidget* qSlicerCLIModuleWidgetPrivate::createEnumerationTagWidget(const ModuleParameter& moduleParameter)
+{
+  QString defaultValue = QString::fromStdString(moduleParameter.GetDefault());
+  
+  // iterate over each element in this parameter
+  ElementConstIterator sBeginIt = moduleParameter.GetElements().begin();
+  ElementConstIterator sEndIt = moduleParameter.GetElements().end();
+
+  QString _label = QString::fromStdString(moduleParameter.GetLabel());
+  QWidget * widget = new QWidget;
+  QButtonGroup* buttonGroup = new QButtonGroup(widget); 
+  qCTKFlowLayout * _layout = new qCTKFlowLayout;
+  widget->setLayout(_layout);
+
+  for (ElementConstIterator sIt = sBeginIt; sIt != sEndIt; ++sIt)
+    {
+    QString value = QString::fromStdString(*sIt); 
+    QRadioButton * radio = new QRadioButton(value);
+    _layout->addWidget(radio);
+    radio->setChecked(defaultValue == value);
+    // Add radio button to button group 
+    buttonGroup->addButton(radio); 
+    }
+  INSTANCIATE_WIDGET_VALUE_WRAPPER(Enumeration, _label, new ButtonGroupWidgetWrapper(widget, buttonGroup));
+  return widget;
+}
+
+//-----------------------------------------------------------------------------
+void qSlicerCLIModuleWidgetPrivate::initializeMaps()
+{
+  if (Self::MapInitialized)
     {
     return;
     }
-  // if not, then create a default node
-  this->MRMLCommandLineModuleNodeSelector->addNode();
-  Q_ASSERT(this->CommandLineModuleNode);
-  // and reset the value as it may have changed because of the new node
-  this->CLIModuleUIHelper->setValue(name, value);
+    
+  // Image type attribute mapping
+  Self::ImageTypeAttributeToNodeType["scalar"] = "vtkMRMLScalarVolumeNode";
+  Self::ImageTypeAttributeToNodeType["label"] = "vtkMRMLScalarVolumeNode";
+  Self::ImageTypeAttributeToNodeType["vector"] = "vtkMRMLVectorVolumeNode";
+  Self::ImageTypeAttributeToNodeType["tensor"] = "vtkMRMLDiffusionTensorVolumeNode";
+  Self::ImageTypeAttributeToNodeType["diffusion-weighted"] = "vtkMRMLDiffusionWeightedVolumeNode";
+
+  // Geometry type attribute mapping
+  Self::GeometryTypeAttributeToNodeType["fiberBundle"] = "vtkMRMLFiberBundleNode";
+  Self::GeometryTypeAttributeToNodeType["model"] = "vtkMRMLModelNode";
+
+  // Table type attribute mapping
+  Self::TableTypeAttributeToNodeType["color"] = "vtkMRMLColorNode";
+
+  // Table type attribute mapping
+  Self::TransformTypeAttributeToNodeType["linear"] = "vtkMRMLLinearTransformNode";
+  Self::TransformTypeAttributeToNodeType["nonlinear"] = "vtkMRMLGridTransformNode";
+  Self::TransformTypeAttributeToNodeType["bspline"] = "vtkMRMLBSplineTransformNode";
+
+  Self::MapInitialized = true;
+}
+
+//-----------------------------------------------------------------------------
+QString qSlicerCLIModuleWidgetPrivate::nodeTypeFromMap(const QString& defaultValue,
+  const QHash<QString, QString>& map, const QString& attribute)
+{
+  QHash<QString, QString>::const_iterator i = map.constFind(attribute);
+
+  if (i == map.constEnd())
+    {
+    return defaultValue; 
+    }
+  else
+    {
+    return i.value();
+    }
+}
+
+//---------------------------------------------------------------------------
+void qSlicerCLIModuleWidgetPrivate::updateMRMLCommandLineModuleNode()
+{ 
+  QCTK_P(qSlicerCLIModuleWidget);
+  Q_ASSERT(p->mrmlScene());
+   
+  vtkMRMLCommandLineModuleNode* node = this->commandLineModuleNode();
+  Q_ASSERT(node);
+
+  // Set entry point associated with the module
+  node->GetModuleDescription().SetTarget(this->ModuleEntryPoint.toStdString());
+  
+  // save node parameters for Undo
+  p->mrmlScene()->SaveStateForUndo(node);
+
+  foreach(WidgetValueWrapper* widgetValueWrapper, this->WidgetValueWrappers)
+    {
+    QVariant::Type type = widgetValueWrapper->value().type();
+    if (type == QVariant::Bool)
+      {
+      node->SetParameterAsBool(widgetValueWrapper->label().toStdString(),
+                               widgetValueWrapper->value().toBool());
+      }
+    else if (type == QVariant::Double)
+      {
+      node->SetParameterAsDouble(widgetValueWrapper->label().toStdString(),
+                                 widgetValueWrapper->value().toDouble());
+      }
+    else if (type == QVariant::String)
+      {
+      node->SetParameterAsString(widgetValueWrapper->label().toStdString(),
+                                 widgetValueWrapper->value().toString().toStdString());
+      }
+    else
+      {
+      qDebug() << "Uknown widget value type:" << type;
+      }
+    }
 }
 
 //-----------------------------------------------------------------------------
@@ -258,20 +799,11 @@ void qSlicerCLIModuleWidgetPrivate::onValueChanged(const QString& name, const QV
 
 //-----------------------------------------------------------------------------
 qSlicerCLIModuleWidget::qSlicerCLIModuleWidget(
-  ModuleDescription* desc, QWidget* _parent)
-  : Superclass(_parent)
-  , d_ptr(new qSlicerCLIModuleWidgetPrivate(*this))
+  ModuleDescription* desc, QWidget* _parent):Superclass(_parent)
 {
   Q_ASSERT(desc);
-  Q_D(qSlicerCLIModuleWidget);
-
-  d->ModuleDescriptionObject = *desc;
-
-  d->CLIModuleUIHelper = new qSlicerCLIModuleUIHelper(this);
-  this->connect(d->CLIModuleUIHelper,
-                SIGNAL(valueChanged(const QString&, const QVariant&)),
-                d,
-                SLOT(onValueChanged(const QString&, const QVariant&)));
+  QCTK_INIT_PRIVATE(qSlicerCLIModuleWidget);
+  QCTK_D(qSlicerCLIModuleWidget);
 
   // Set properties
   d->Title = QString::fromStdString(desc->GetTitle());
@@ -283,69 +815,11 @@ qSlicerCLIModuleWidget::qSlicerCLIModuleWidget(
 }
 
 //-----------------------------------------------------------------------------
-qSlicerCLIModuleWidget::~qSlicerCLIModuleWidget()
-{
-}
-
-//-----------------------------------------------------------------------------
 void qSlicerCLIModuleWidget::setup()
 {
-  Q_D(qSlicerCLIModuleWidget);
+  QCTK_D(qSlicerCLIModuleWidget);
   d->setupUi(this);
 }
 
 //-----------------------------------------------------------------------------
-void qSlicerCLIModuleWidget::setCurrentCommandLineModuleNode(
-  vtkMRMLNode* commandLineModuleNode)
-{
-  Q_D(qSlicerCLIModuleWidget);
-  vtkMRMLCommandLineModuleNode * node =
-    vtkMRMLCommandLineModuleNode::SafeDownCast(commandLineModuleNode);
-  if (node == d->CommandLineModuleNode)
-    {
-    return;
-    }
-
-  // Connect node modified event to updateUi that synchronize the values of the
-  // nodes with the Ui
-  this->qvtkReconnect(d->CommandLineModuleNode, node,
-    vtkCommand::ModifiedEvent,
-    d, SLOT(updateUiFromCommandLineModuleNode(vtkObject*)));
-
-  // After we desconnected the Modified event from the old CommandLineModuleNode
-  // we can save the paramaters of the command line module node so they could be
-  // retrieved later on when it becomes current again
-  d->updateCommandLineModuleNodeFromUi(d->CommandLineModuleNode);
-
-  d->CommandLineModuleNode = node;
-  d->updateUiFromCommandLineModuleNode(d->CommandLineModuleNode);
-}
-
-//-----------------------------------------------------------------------------
-CTK_SET_CXX(qSlicerCLIModuleWidget, const QString&, setModuleEntryPoint, ModuleEntryPoint);
-
-//-----------------------------------------------------------------------------
-void qSlicerCLIModuleWidget::apply()
-{
-  Q_D(qSlicerCLIModuleWidget);
-  vtkMRMLCommandLineModuleNode* node = d->commandLineModuleNode();
-  Q_ASSERT(node);
-  d->CLIModuleUIHelper->updateMRMLCommandLineModuleNode(node);
-  d->logic()->Apply(node);
-}
-
-//-----------------------------------------------------------------------------
-void qSlicerCLIModuleWidget::cancel()
-{
-  qDebug() << "qSlicerCLIModuleWidgetPrivate::onCancelButtonPressed";
-}
-
-//-----------------------------------------------------------------------------
-void qSlicerCLIModuleWidget::reset()
-{
-  Q_D(qSlicerCLIModuleWidget);
-  qDebug() << "qSlicerCLIModuleWidgetPrivate::onDefaultButtonPressed";
-  vtkMRMLCommandLineModuleNode* node = d->commandLineModuleNode();
-  Q_ASSERT(node);
-  d->setDefaultNodeValue(node);
-}
+QCTK_SET_CXX(qSlicerCLIModuleWidget, const QString&, setModuleEntryPoint, ModuleEntryPoint);

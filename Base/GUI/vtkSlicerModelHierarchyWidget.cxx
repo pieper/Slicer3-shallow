@@ -303,9 +303,9 @@ void vtkSlicerModelHierarchyWidget::ProcessWidgetEvents ( vtkObject *caller,
       this->ModelDisplayWidget->SetModelNode(model);
       this->ModelDisplayWidget->SetModelHierarchyNode(NULL);
       }
-    else if (hmodel != NULL && hmodel->GetModelDisplayNode() != NULL && this->ModelDisplayWidget)
+    else if (hmodel != NULL && hmodel->GetDisplayNode() != NULL && this->ModelDisplayWidget)
       {
-      this->ModelDisplayWidget->SetModelDisplayNode(hmodel->GetModelDisplayNode());
+      this->ModelDisplayWidget->SetModelDisplayNode(hmodel->GetDisplayNode());
       this->ModelDisplayWidget->SetModelNode(NULL);
       this->ModelDisplayWidget->SetModelHierarchyNode(hmodel);
       }
@@ -749,7 +749,7 @@ void vtkSlicerModelHierarchyWidget::NodeParentChangedCallback(
       vtkMRMLModelHierarchyNode *parentNode = this->ModelHierarchyLogic->GetModelHierarchyNode ( mnode->GetID());
       if (parentNode != NULL)
         {
-        vtkMRMLDisplayNode *dnode = parentNode->GetDisplayNode();
+        vtkMRMLModelDisplayNode *dnode = parentNode->GetDisplayNode();
         if (dnode)
           {
           this->GetMRMLScene()->RemoveNode(dnode);
@@ -802,7 +802,7 @@ void vtkSlicerModelHierarchyWidget::ProcessMRMLEvents(vtkObject *vtkNotUsed(call
 {
   if (((event == vtkMRMLScene::NodeAddedEvent || event == vtkMRMLScene::NodeRemovedEvent) && 
       (reinterpret_cast<vtkMRMLModelNode *>(callData) || reinterpret_cast<vtkMRMLModelHierarchyNode *>(callData))) ||
-      event == vtkMRMLScene::NewSceneEvent || event == vtkMRMLScene::SceneClosedEvent)
+      event == vtkMRMLScene::NewSceneEvent || event == vtkMRMLScene::SceneCloseEvent)
     {
     this->UpdateTreeFromMRML();
     }
@@ -923,7 +923,7 @@ void vtkSlicerModelHierarchyWidget::CreateWidget ( )
   events->InsertNextValue(vtkMRMLScene::NodeAddedEvent);
   events->InsertNextValue(vtkMRMLScene::NodeRemovedEvent);
   events->InsertNextValue(vtkMRMLScene::NewSceneEvent);
-  events->InsertNextValue(vtkMRMLScene::SceneClosedEvent);
+  events->InsertNextValue(vtkMRMLScene::SceneCloseEvent);
   this->SetAndObserveMRMLSceneEvents(this->GetMRMLScene(), events);
   events->Delete();
 

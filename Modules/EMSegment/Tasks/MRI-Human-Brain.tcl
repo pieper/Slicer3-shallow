@@ -22,11 +22,11 @@ namespace eval EMSegmenterParametersStepTcl {
         # Make sure that in the MRML file 
         # EMS id="vtkMRMLEMSNode1"  name="MRI Human Brain"
         # the name is the same as this tcl file name where the spaces are replaced with empty spaces  
-    # puts "DefineMRMLFile Debugging right now" 
-    # return "/share/data/EMSegmentTrainingsm/MRIHumanBrain.mrml"
-    return "http://xnd.slicer.org:8000/data/20100504T005942Z/MRIHumanBrain.mrml"
+
+    # return "http://xnd.slicer.org:8000/data/20100504T005942Z/MRIHumanBrain.mrml"
+    return "http://xnd.slicer.org:8000/data/20100920T105925Z/MRIHumanBrain.mrml"
+    # return "/data/EMSegment_DataSet/3.6/MRIHumanBrain/result/MRIHumanBrain.mrml"
     # old one - did not work
-    # return http://xnd.slicer.org:8000/data/20100427T164324Z/MRIHumanBrain.mrml
     }
 }
 
@@ -444,20 +444,20 @@ namespace eval EMSegmenterPreProcessingTcl {
             set fastFlag 0 
             if { $affineFlag } {
                set registrationType  "${registrationType} Affine"
-           if { $affineType == [$mrmlManager GetRegistrationTypeFromString AtlasToTargetAffineRegistrationRigidMMIFast ] } {
-           set fastFlag 1
-           } else {
-           set fastFlag 0 
-           }
+               if { $affineType == [$mrmlManager GetRegistrationTypeFromString AtlasToTargetAffineRegistrationRigidMMIFast ] } {
+                  set fastFlag 1
+               } else {
+                 set fastFlag 0 
+               }
             }
     
             if { $bSplineFlag } {
                 set registrationType  "${registrationType} BSpline"
-        if { $deformableType == [$mrmlManager GetRegistrationTypeFromString AtlasToTargetDeformableRegistrationBSplineMMIFast ] } {
-           set fastFlag 1
-           } else {
-           set fastFlag 0 
-           }
+                if { $deformableType == [$mrmlManager GetRegistrationTypeFromString AtlasToTargetDeformableRegistrationBSplineMMIFast ] } {
+                    set fastFlag 1
+               } else {
+                   set fastFlag 0 
+               }
             }
     
             set backgroundLevel  [$LOGIC GuessRegistrationBackgroundLevel $movingAtlasVolumeNode]

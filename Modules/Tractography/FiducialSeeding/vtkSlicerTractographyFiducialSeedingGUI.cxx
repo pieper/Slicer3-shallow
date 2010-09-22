@@ -252,7 +252,7 @@ vtkIntArray* vtkSlicerTractographyFiducialSeedingGUI::NewObservableEvents()
 {
   vtkIntArray* events = vtkIntArray::New();
   events->InsertNextValue(vtkMRMLScene::NewSceneEvent);
-  events->InsertNextValue(vtkMRMLScene::SceneClosedEvent);
+  events->InsertNextValue(vtkMRMLScene::SceneCloseEvent);
   events->InsertNextValue(vtkMRMLScene::NodeAddedEvent);
   return events;
 }
@@ -603,7 +603,7 @@ void vtkSlicerTractographyFiducialSeedingGUI::ProcessMRMLEvents ( vtkObject *cal
     {
     return;
     }
-  if (event == vtkMRMLScene::SceneClosedEvent)
+  if (event == vtkMRMLScene::SceneCloseEvent)
     {
     vtkSetAndObserveMRMLNodeMacro( this->TractographyFiducialSeedingNode, NULL);
     this->AddTransformableNodeObserver(NULL);

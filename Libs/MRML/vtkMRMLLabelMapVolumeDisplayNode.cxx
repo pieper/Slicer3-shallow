@@ -104,11 +104,9 @@ void vtkMRMLLabelMapVolumeDisplayNode::UpdateImageDataPipeline()
         }
       }
     }
-  if (lookupTable == NULL && this->ColorNodeID != NULL)
-    {
-    vtkErrorMacro(<< "vtkMRMLLabelMapVolumeDisplayNode: Warning, the color table node: "
-                  << this->ColorNodeID << " can't be found");
-    }
 
-  this->MapToColors->SetLookupTable(lookupTable);
+  if (lookupTable != this->MapToColors->GetLookupTable())
+    {
+    this->MapToColors->SetLookupTable(lookupTable);
+    }
 }

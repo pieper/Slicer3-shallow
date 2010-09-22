@@ -41,6 +41,7 @@
 #include "vtkSlicerSliceControllerWidget.h"
 #include "vtkKWScale.h"
 #include "vtkSlicerSlicesControlGUI.h"
+#include "vtkKWProgressDialog.h"
 
 //----------------------------------------------------------------------------
 vtkStandardNewMacro(vtkEMSegmentRunSegmentationStep);
@@ -288,9 +289,11 @@ void vtkEMSegmentRunSegmentationStep::ShowUserInterface()
     this->RunSegmentationDirectoryFrame->Create();
     this->RunSegmentationDirectoryFrame->SetLabelText("Working Directory");
     }
-  this->Script(
-    "pack %s -side top -anchor nw -fill x -padx 0 -pady 2", 
-    this->RunSegmentationDirectoryFrame->GetWidgetName());
+
+ if (this->GetGUI()->IsSegmentationModeAdvanced())
+   { 
+    this->Script("pack %s -side top -anchor nw -fill x -padx 0 -pady 2", this->RunSegmentationDirectoryFrame->GetWidgetName());
+   }
 
   // Create the frame for the directory sub frame
 
@@ -483,9 +486,10 @@ void vtkEMSegmentRunSegmentationStep::ShowUserInterface()
     this->RunSegmentationMiscFrame->SetLabelText("Misc.");
     }
 
-  this->Script(
-    "pack %s -side top -anchor nw -fill x -padx 2 -pady 2", 
-    this->RunSegmentationMiscFrame->GetWidgetName());
+ if (this->GetGUI()->IsSegmentationModeAdvanced())
+   { 
+      this->Script( "pack %s -side top -anchor nw -fill x -padx 2 -pady 2", this->RunSegmentationMiscFrame->GetWidgetName());
+   }
 
   // Create the multithread button
 
@@ -773,11 +777,25 @@ void vtkEMSegmentRunSegmentationStep::StartSegmentationCallback()
     return;
     }
 
+  // Compute Number of Trainig Samples if they are not set
+  if (this->GetGUI()->GetMRMLManager()->GetAtlasNumberOfTrainingSamples() <= 0 )
+    {
+      this->GetGUI()->GetMRMLManager()->ComputeAtlasNumberOfTrainingSamples();
+    }
+
   // Create output volume 
   this->GetGUI()->GetMRMLManager()->CreateOutputVolumeNode();
 
   // start the segmentation
+  vtkKWProgressDialog* progress = vtkKWProgressDialog::New();
+  progress->SetParent(this->GetGUI()->GetApplicationGUI()->GetMainSlicerWindow());
+  progress->SetMasterWindow(this->GetGUI()->GetApplicationGUI()->GetMainSlicerWindow());
+  progress->Create();
+  progress->SetMessageText("Please wait until segmentation has been finished.");
+  progress->Display();
   logic->StartSegmentationWithoutPreprocessing();
+  progress->SetParent(NULL);
+  progress->Delete();
 
   // display Results 
   vtkSlicerApplicationGUI *applicationGUI  = this->GetGUI()->GetApplicationGUI();
@@ -942,7 +960,11 @@ void vtkEMSegmentRunSegmentationStep::ShowROIGUI(vtkKWWidget* parent)
     this->DefineVOIFrame->Create();
     this->DefineVOIFrame->SetLabelText("Define VOI");
     }
-  this->Script("pack %s -side top -anchor nw -fill x -padx 0 -pady 2", this->DefineVOIFrame->GetWidgetName());
+
+ if (this->GetGUI()->IsSegmentationModeAdvanced())
+   { 
+     this->Script("pack %s -side top -anchor nw -fill x -padx 0 -pady 2", this->DefineVOIFrame->GetWidgetName());
+   }
 
   if(!this->roiNode)
     {
@@ -996,10 +1018,8 @@ void vtkEMSegmentRunSegmentationStep::ShowROIGUI(vtkKWWidget* parent)
     double rasDimensions[3];
     double rasCenter[3];
     double rasBounds[6];
-   
-    // Kilian: Commented out next line bc vtkSlicerSliceLogic does not exist anymore
-    cout << "vtkEMSegmentRunSegmentationStep::ShowROIGUI:DOES not work corectly anymore ! "<< endl;
-    //vtkSlicerSliceLogic::GetVolumeRASBox(volumeNode, rasDimensions, rasCenter);
+
+    vtkSlicerSliceLogic::GetVolumeRASBox(volumeNode, rasDimensions, rasCenter);
     //cout << "Center : " << rasCenter[0] << " " << rasCenter[1] << " " << rasCenter[2] << endl;
     //cout << "Dimension: " << rasDimensions[0] << " " << rasDimensions[1] << " " << rasDimensions[2] << endl;
 
@@ -1690,7 +1710,7 @@ void vtkEMSegmentRunSegmentationStep::ProcessGUIEvents(vtkObject *caller, unsign
        newROIRadius[0] = ceil(roiRadius[0]);
        newROIRadius[1] = ceil(roiRadius[1]);
        newROIRadius[2] = ceil(roiRadius[2]);
-       std::cerr << "ROI XYZ: " << roiXYZ[0] << ", " << roiXYZ[1] << ", " << roiXYZ[2] << std::endl;
+       std::cout << "ROI XYZ: " << roiXYZ[0] << ", " << roiXYZ[1] << ", " << roiXYZ[2] << std::endl;
        roiNode->SetXYZ(newROIXYZ);
        roiNode->SetRadiusXYZ(newROIRadius);
        MRMLUpdateROIFromROINode();

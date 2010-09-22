@@ -1,30 +1,12 @@
-/*==============================================================================
-
-  Program: 3D Slicer
-
-  Copyright (c) 2010 Kitware Inc.
-
-  See Doc/copyright/copyright.txt
-  or http://www.slicer.org/copyright/copyright.txt for details.
-
-  Unless required by applicable law or agreed to in writing, software
-  distributed under the License is distributed on an "AS IS" BASIS,
-  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-  See the License for the specific language governing permissions and
-  limitations under the License.
-
-  This file was originally developed by Jean-Christophe Fillion-Robin, Kitware Inc.
-  and was partially funded by NIH grant 3P41RR013218-12S1
-
-==============================================================================*/
-
 #ifndef __qMRMLLinearTransformSlider_h
 #define __qMRMLLinearTransformSlider_h
 
-// CTK includes
-#include <ctkSliderWidget.h>
-#include <ctkPimpl.h>
-#include <ctkVTKObject.h>
+/// qVTK includes
+#include <qVTKObject.h>
+
+/// qCTK includes
+#include <qCTKSliderSpinBoxWidget.h>
+#include <qCTKPimpl.h>
 
 #include "qMRMLWidgetsExport.h"
 
@@ -32,7 +14,7 @@ class vtkMRMLLinearTransformNode;
 class vtkMatrix4x4;
 class qMRMLLinearTransformSliderPrivate;
 
-class QMRML_WIDGETS_EXPORT qMRMLLinearTransformSlider : public ctkSliderWidget
+class QMRML_WIDGETS_EXPORT qMRMLLinearTransformSlider : public qCTKSliderSpinBoxWidget
 {
   Q_OBJECT
   QVTK_OBJECT
@@ -43,9 +25,9 @@ class QMRML_WIDGETS_EXPORT qMRMLLinearTransformSlider : public ctkSliderWidget
 
 public:
   /// Constructors
-  typedef ctkSliderWidget Superclass;
+  typedef qCTKSliderSpinBoxWidget Superclass;
   explicit qMRMLLinearTransformSlider(QWidget* parent);
-  virtual ~qMRMLLinearTransformSlider();
+  virtual ~qMRMLLinearTransformSlider(){}
 
   /// 
   /// Set/Get Transform type
@@ -89,12 +71,8 @@ protected slots:
   /// Triggered upon MRML scene updates
   void onMRMLTransformNodeModified(vtkObject* caller);
 
-protected:
-  QScopedPointer<qMRMLLinearTransformSliderPrivate> d_ptr;
-
 private:
-  Q_DECLARE_PRIVATE(qMRMLLinearTransformSlider);
-  Q_DISABLE_COPY(qMRMLLinearTransformSlider);
+  QCTK_DECLARE_PRIVATE(qMRMLLinearTransformSlider);
 
 };
 

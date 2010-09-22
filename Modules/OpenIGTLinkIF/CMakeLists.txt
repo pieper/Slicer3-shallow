@@ -61,14 +61,6 @@ set(OpenIGTLinkIF_SRCS
   vtkIGTLToMRMLImage.cxx
   vtkIGTLToMRMLPosition.cxx
   vtkMRMLIGTLConnectorNode.cxx
-  vtkIGTLRemoteDataListWindow.cxx
-  vtkMRMLIGTLQueryNode.cxx
-  vtkMRMLImageMetaListNode.cxx
-  vtkIGTLToMRMLImageMetaList.cxx
-#  vtkMRMLIGTLImageMetaListQueryNode.cxx
-  vtkIGTLToMRMLTrackingData.cxx
-  vtkMRMLIGTLTrackingDataBundleNode.cxx
-  vtkIGTLTrackingDataControllerWindow.cxx
 )
 
 # --------------------------------------------------------------------------

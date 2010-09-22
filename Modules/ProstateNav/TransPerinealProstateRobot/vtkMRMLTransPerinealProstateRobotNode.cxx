@@ -303,10 +303,15 @@ void vtkMRMLTransPerinealProstateRobotNode::Copy(vtkMRMLNode *anode)
   vtkMRMLTransPerinealProstateRobotNode *node = vtkMRMLTransPerinealProstateRobotNode::SafeDownCast(anode);
   if (node!=NULL)
   {
+    this->SetAndObserveRobotCommandNodeID(NULL); // remove observer
     this->SetRobotCommandNodeID(node->RobotCommandNodeID);
+    this->SetAndObserveRobotConnectorNodeID(NULL); // remove observer
     this->SetRobotConnectorNodeID(node->RobotConnectorNodeID);
+    this->SetAndObserveScannerConnectorNodeID(NULL); // remove observer
     this->SetScannerConnectorNodeID(node->ScannerConnectorNodeID);
+    this->SetAndObserveZFrameModelNodeID(NULL); // remove observer
     this->SetZFrameModelNodeID(node->ZFrameModelNodeID);
+    this->SetAndObserveZFrameTransformNodeID(NULL); // remove observer
     this->SetZFrameTransformNodeID(node->ZFrameTransformNodeID);
   }
   else
@@ -442,9 +447,9 @@ void vtkMRMLTransPerinealProstateRobotNode::PrintSelf(ostream& os, vtkIndent ind
 }
 
 
-int vtkMRMLTransPerinealProstateRobotNode::Init(vtkSlicerApplication* app)
+int vtkMRMLTransPerinealProstateRobotNode::Init(vtkSlicerApplication* app, const char* moduleShareDir)
 { 
-  this->Superclass::Init(app);
+  this->Superclass::Init(app, moduleShareDir);
 
   vtkOpenIGTLinkIFGUI* igtlGUI = vtkOpenIGTLinkIFGUI::SafeDownCast(app->GetModuleGUIByName("OpenIGTLink IF"));
   if (igtlGUI)
@@ -1195,26 +1200,7 @@ vtkMRMLLinearTransformNode* vtkMRMLTransPerinealProstateRobotNode::GetZFrameTran
 }
 
 //----------------------------------------------------------------------------
-bool vtkMRMLTransPerinealProstateRobotNode::FindTargetingParams(vtkProstateNavTargetDescriptor *targetDesc)
-{
-  // this is used for coverage area computation (IsOutsideReach means that the target is outside the robot's coverage area)
-
-  // :TODO: perform real targeting parameter computation  
-  double *ras=targetDesc->GetRASLocation();
-  const double center[3]={0,0,0};
-  const double radius2=25*25;
-  targetDesc->SetIsOutsideReach(
-    (ras[0]-center[0])*(ras[0]-center[0])+
-    (ras[1]-center[1])*(ras[1]-center[1])+
-    (ras[2]-center[2])*(ras[2]-center[2])>radius2
-    );
-  return true;
-}
-
-
-
-
-std::string vtkMRMLTransPerinealProstateRobotNode::GetTargetInfoText(vtkProstateNavTargetDescriptor *targetDesc)
+std::string vtkMRMLTransPerinealProstateRobotNode::GetTargetInfoText(vtkProstateNavTargetDescriptor *targetDesc, NeedleDescriptorStruct *needle)
 {
   // :TODO: construct a string that contains useful information for the current target (reachable, etc.)
   return "";

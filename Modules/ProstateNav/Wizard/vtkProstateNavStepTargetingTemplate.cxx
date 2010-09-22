@@ -36,6 +36,7 @@
 #include "vtkSlicerApplication.h"
 #include "vtkSlicerApplicationLogic.h"
 #include "vtkMRMLFiducialListNode.h"
+#include "vtkSlicerSliceLogic.h"
 #include "vtkMRMLSliceNode.h"
 #include "vtkSlicerVolumesGUI.h"
 #include "vtkMRMLInteractionNode.h"
@@ -106,7 +107,7 @@ vtkProstateNavStepTargetingTemplate::vtkProstateNavStepTargetingTemplate()
   this->VolumeSelectorWidget=NULL;
   this->TargetListSelectorWidget=NULL;
   this->TargetPlanningFrame=NULL;
-  this->ShowCoverageButton=NULL;
+  this->ShowWorkspaceButton=NULL;
   this->ShowNeedleButton=NULL;
   this->ShowTemplateButton=NULL;
   this->AddTargetsOnClickButton=NULL;
@@ -150,7 +151,7 @@ vtkProstateNavStepTargetingTemplate::~vtkProstateNavStepTargetingTemplate()
   DELETE_IF_NULL_WITH_SETPARENT_NULL(VolumeSelectorWidget);
   DELETE_IF_NULL_WITH_SETPARENT_NULL(TargetListSelectorWidget);
   DELETE_IF_NULL_WITH_SETPARENT_NULL(TargetPlanningFrame);
-  DELETE_IF_NULL_WITH_SETPARENT_NULL(ShowCoverageButton);
+  DELETE_IF_NULL_WITH_SETPARENT_NULL(ShowWorkspaceButton);
   DELETE_IF_NULL_WITH_SETPARENT_NULL(ShowNeedleButton);
   DELETE_IF_NULL_WITH_SETPARENT_NULL(ShowTemplateButton);
   DELETE_IF_NULL_WITH_SETPARENT_NULL(AddTargetsOnClickButton);
@@ -287,16 +288,16 @@ void vtkProstateNavStepTargetingTemplate::ShowTargetPlanningFrame()
   this->Script("pack %s -side top -anchor nw -expand y -padx 2 -pady 2",
                this->OptionFrame->GetWidgetName());
 
-  if (!this->ShowCoverageButton)
+  if (!this->ShowWorkspaceButton)
   {
-    this->ShowCoverageButton = vtkKWCheckButton::New();
+    this->ShowWorkspaceButton = vtkKWCheckButton::New();
   } 
-  if (!this->ShowCoverageButton->IsCreated()) {
-    this->ShowCoverageButton->SetParent(this->OptionFrame);
-    this->ShowCoverageButton->Create();
-    this->ShowCoverageButton->SelectedStateOff();
-    this->ShowCoverageButton->SetText("Coverage");
-    this->ShowCoverageButton->SetBalloonHelpString("Show coverage volume of the robot");
+  if (!this->ShowWorkspaceButton->IsCreated()) {
+    this->ShowWorkspaceButton->SetParent(this->OptionFrame);
+    this->ShowWorkspaceButton->Create();
+    this->ShowWorkspaceButton->SelectedStateOff();
+    this->ShowWorkspaceButton->SetText("Show workspace");
+    this->ShowWorkspaceButton->SetBalloonHelpString("Show workspace of the robot");
   }
 
   if (!this->AddTargetsOnClickButton)
@@ -337,14 +338,14 @@ void vtkProstateNavStepTargetingTemplate::ShowTargetPlanningFrame()
 
   this->Script("pack %s %s %s %s -side left -expand y -padx 2 -pady 2",
                this->AddTargetsOnClickButton->GetWidgetName(),
-               this->ShowCoverageButton->GetWidgetName(),
+               this->ShowWorkspaceButton->GetWidgetName(),
                this->ShowNeedleButton->GetWidgetName(),
                this->ShowTemplateButton->GetWidgetName());
   //this->Script("grid %s -row 0 -column 0 -columnspan 2 -padx 2 -pady 2 -sticky ew", this->LoadTargetingVolumeButton->GetWidgetName());
   //this->Script("grid %s -row 0 -column 0 -columnspan 2 -padx 2 -pady 2 -sticky ew", this->VolumeSelectorWidget->GetWidgetName());
   //this->Script("grid %s -row 1 -column 0 -columnspan 2 -padx 2 -pady 2 -sticky ew", this->NeedleTypeMenuList->GetWidgetName());
   //this->Script("grid %s -row 0 -column 0 -padx 2 -pady 2", this->AddTargetsOnClickButton->GetWidgetName());
-  //this->Script("grid %s -row 0 -column 1 -padx 2 -pady 2", this->ShowCoverageButton->GetWidgetName());
+  //this->Script("grid %s -row 0 -column 1 -padx 2 -pady 2", this->ShowWorkspaceButton->GetWidgetName());
 
 }
 
@@ -578,7 +579,7 @@ void vtkProstateNavStepTargetingTemplate::ProcessGUIEvents(vtkObject *caller,
 
   /////////
 
-  vtkMRMLProstateNavManagerNode *mrmlNode = this->GetGUI()->GetProstateNavManager();
+  vtkMRMLProstateNavManagerNode *mrmlNode = this->GetGUI()->GetProstateNavManagerNode();
 
   if(!mrmlNode)
       return;
@@ -613,10 +614,10 @@ void vtkProstateNavStepTargetingTemplate::ProcessGUIEvents(vtkObject *caller,
   //  this->GetApplication()->Script("::LoadVolume::ShowDialog");
   //  }
 
-  // show coverage dialog button
-   if (this->ShowCoverageButton && this->ShowCoverageButton == vtkKWCheckButton::SafeDownCast(caller) && (event == vtkKWCheckButton::SelectedStateChangedEvent))
+  // show workspace button
+   if (this->ShowWorkspaceButton && this->ShowWorkspaceButton == vtkKWCheckButton::SafeDownCast(caller) && (event == vtkKWCheckButton::SelectedStateChangedEvent))
     {
-      this->ShowCoverage(this->ShowCoverageButton->GetSelectedState() == 1);
+      this->ShowWorkspaceModel(this->ShowWorkspaceButton->GetSelectedState() == 1);
     }
 
    if (this->ShowNeedleButton && this->ShowNeedleButton == vtkKWCheckButton::SafeDownCast(caller) && (event == vtkKWCheckButton::SelectedStateChangedEvent))
@@ -907,7 +908,7 @@ void vtkProstateNavStepTargetingTemplate::UpdateTargetListGUI()
   // create new target points, if necessary
   this->GetLogic()->UpdateTargetListFromMRML();
 
-  vtkMRMLProstateNavManagerNode *manager = this->GetGUI()->GetProstateNavManager();
+  vtkMRMLProstateNavManagerNode *manager = this->GetGUI()->GetProstateNavManagerNode();
   if (!manager)
   {
     return;
@@ -918,7 +919,7 @@ void vtkProstateNavStepTargetingTemplate::UpdateTargetListGUI()
 
   bool deleteFlag = true;
 
-  if (numPoints != this->TargetList->GetWidget()->GetNumberOfRows())
+  if (this->TargetList && numPoints != this->TargetList->GetWidget()->GetNumberOfRows())
     {
     // clear out the multi column list box and fill it in with the
     // new list
@@ -1009,9 +1010,9 @@ void vtkProstateNavStepTargetingTemplate::AddGUIObservers()
     this->TargetListSelectorWidget->AddObserver ( vtkSlicerNodeSelectorWidget::NodeSelectedEvent, (vtkCommand *)this->GUICallbackCommand);  
     }
 
-  if (this->ShowCoverageButton)
+  if (this->ShowWorkspaceButton)
     {
-      this->ShowCoverageButton->AddObserver(vtkKWCheckButton::SelectedStateChangedEvent, (vtkCommand *)this->GUICallbackCommand);
+      this->ShowWorkspaceButton->AddObserver(vtkKWCheckButton::SelectedStateChangedEvent, (vtkCommand *)this->GUICallbackCommand);
     }
   if (this->ShowNeedleButton)
     {
@@ -1062,9 +1063,9 @@ void vtkProstateNavStepTargetingTemplate::RemoveGUIObservers()
     {
     this->TargetListSelectorWidget->RemoveObserver ((vtkCommand *)this->GUICallbackCommand);  
     }
-  if (this->ShowCoverageButton)
+  if (this->ShowWorkspaceButton)
     {
-    this->ShowCoverageButton->RemoveObserver((vtkCommand *)this->GUICallbackCommand);
+    this->ShowWorkspaceButton->RemoveObserver((vtkCommand *)this->GUICallbackCommand);
     }  
   if (this->ShowNeedleButton)
     {
@@ -1104,16 +1105,16 @@ void vtkProstateNavStepTargetingTemplate::RemoveGUIObservers()
 //--------------------------------------------------------------------------------
 void vtkProstateNavStepTargetingTemplate::UpdateGUI()
 {
-  vtkMRMLProstateNavManagerNode *mrmlNode = this->GetGUI()->GetProstateNavManager();
+  vtkMRMLProstateNavManagerNode *mrmlNode = this->GetGUI()->GetProstateNavManagerNode();
 
   if (!mrmlNode)
   {
     return;
   }
 
-  const char* volNodeID = mrmlNode->GetTargetingVolumeNodeID();
+  const char* volNodeID = mrmlNode->GetTargetingVolumeNodeRef();
   vtkMRMLScalarVolumeNode *volNode=vtkMRMLScalarVolumeNode::SafeDownCast(this->GetLogic()->GetApplicationLogic()->GetMRMLScene()->GetNodeByID(volNodeID));
-  if ( volNode )
+  if (volNode && this->VolumeSelectorWidget)
   {
     this->VolumeSelectorWidget->UpdateMenu();
     this->VolumeSelectorWidget->SetSelected( volNode );
@@ -1121,7 +1122,7 @@ void vtkProstateNavStepTargetingTemplate::UpdateGUI()
 
   const char* targetNodeID = mrmlNode->GetTargetPlanListNodeID();
   vtkMRMLFiducialListNode *targetNode=vtkMRMLFiducialListNode::SafeDownCast(this->GetLogic()->GetApplicationLogic()->GetMRMLScene()->GetNodeByID(targetNodeID));
-  if (targetNode)
+  if (targetNode && this->TargetListSelectorWidget)
     {
     this->TargetListSelectorWidget->UpdateMenu();
     this->TargetListSelectorWidget->SetSelected(targetNode);
@@ -1183,22 +1184,6 @@ void vtkProstateNavStepTargetingTemplate::UpdateGUI()
   //  }
 }
 
-// return:
-//  0=error
-//----------------------------------------------------------------------------
-void vtkProstateNavStepTargetingTemplate::ShowCoverage(bool show) 
-{
-  // :TODO: show/hide depending on show parameter value
-
-  vtkProstateNavLogic *logic=this->GetGUI()->GetLogic();
-  if (!logic)
-  {
-    vtkErrorMacro("Invalid logic object");
-    return;
-  }
-  logic->ShowCoverage(show);
-}
-
 //---------------------------------------------------------------------------
 void vtkProstateNavStepTargetingTemplate::ShowNeedle(bool show)
 {
@@ -1250,10 +1235,10 @@ void vtkProstateNavStepTargetingTemplate::ShowTemplate(bool show)
 
 //----------------------------------------------------------------------------
 void vtkProstateNavStepTargetingTemplate::HideUserInterface()
-{
+{  
+  RemoveMRMLObservers(); // HideUserInterface deletes the reference to the scene, so RemoveMRMLObservers shall be done before calling HideUserInterface
+  RemoveGUIObservers();  
   Superclass::HideUserInterface();
-  RemoveMRMLObservers();
-  RemoveGUIObservers();
 }
 
 //----------------------------------------------------------------------------

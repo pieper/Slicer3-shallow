@@ -254,7 +254,6 @@ void vtkEMSegmentInputChannelsStep::ShowUserInterface()
       this->SourceTaskFiles();
       
       int showCheckList = atoi(this->Script("::EMSegmenterSimpleTcl::CreateCheckList"));
-      // cout << "showCheckList: " <<  showCheckList << endl;
       if (showCheckList) 
       {
           if (!this->CheckListFrame)
@@ -293,6 +292,7 @@ void vtkEMSegmentInputChannelsStep::AlignTargetImagesCallback(int state)
 //----------------------------------------------------------------------------
 void vtkEMSegmentInputChannelsStep::Validate()
 {
+  // cout << "vtkEMSegmentInputChannelsStep::Validate()" << endl;
   vtkKWWizardWorkflow *wizard_workflow = this->GetGUI()->GetWizardWidget()->GetWizardWorkflow();
 
   //-----------------------------------------------
@@ -309,7 +309,8 @@ void vtkEMSegmentInputChannelsStep::Validate()
   // General 
   vtkEMSegmentMRMLManager *mrmlManager = this->GetGUI()->GetMRMLManager();
   vtkMRMLEMSTargetNode *inputNodes = mrmlManager->GetTargetInputNode();
-  if (!inputNodes) 
+  vtkMRMLEMSGlobalParametersNode* globalNode = mrmlManager->GetGlobalParametersNode();
+  if (!inputNodes || !globalNode) 
     {
       vtkKWMessageDialog::PopupMessage(this->GetApplication(),NULL,"Input Channel Error", "Internal Error",
                         vtkKWMessageDialog::ErrorIcon | vtkKWMessageDialog::InvokeAtPointer);
@@ -317,10 +318,10 @@ void vtkEMSegmentInputChannelsStep::Validate()
       wizard_workflow->ProcessInputs();
       return;
     }
-     
+
    //-----------------------------------------------
    // decide if the number of target volumes changed
-   if (this->GetNumberOfInputChannels() != inputNodes->GetNumberOfVolumes() && 
+   if (this->GetNumberOfInputChannels() != mrmlManager->GetGlobalParametersNode()->GetNumberOfTargetInputChannels() && 
        !vtkKWMessageDialog::PopupYesNo(this->GetApplication(), NULL, "Change the number of input channels?",
                        "Are you sure you want to change the number of input images?", 
                        vtkKWMessageDialog::WarningIcon | vtkKWMessageDialog::InvokeAtPointer))
@@ -388,13 +389,34 @@ void vtkEMSegmentInputChannelsStep::Validate()
      }
      }
 
+    //-----------------------------------------------
+    // Check for ambiguous input channel names
+    // number of comparisons: N*(N-1)/2
+    for (int i = 0; i < this->GetNumberOfInputChannels (); i++)
+      {
+        const char *name_i = this->InputChannelDefineLineName[i]->GetWidget ()->GetValue ();
+
+        for (int j = i + 1; j < this->GetNumberOfInputChannels (); j++)
+          {
+            const char *name_j = this->InputChannelDefineLineName[j]->GetWidget ()->GetValue ();
+
+            if (0 == strcmp (name_i, name_j))
+              {
+                //std::cout << "ambiguous: " << name_i << " : " << name_j << std::endl;
+                vtkKWMessageDialog::PopupMessage (this->GetApplication (), NULL,
+                        "Warning",
+                        "Please avoid ambiguous input channel names",
+                        vtkKWMessageDialog::ErrorIcon | vtkKWMessageDialog::InvokeAtPointer);
+              }
+          }
+      }
+
    //-----------------------------------------------
    // Check if they are all different and update MRML Nodes 
 
    // Removes all the input channels
    // std::vector<vtkIdType> resetNull;
    // mrmlManager->ResetTargetSelectedVolumes(resetNull);
-
    for (int i=0;  i < this->GetNumberOfInputChannels(); i++)
      {
        vtkMRMLVolumeNode* cNode = vtkMRMLVolumeNode::SafeDownCast(this->InputChannelDefineLineVolume[i]->GetSelected());
@@ -412,45 +434,54 @@ void vtkEMSegmentInputChannelsStep::Validate()
 
        // i cannot be larger then umver of target volumes bc i starts with 0 !
        if (i ==  mrmlManager->GetTargetNumberOfSelectedVolumes()) 
-     {
-       mrmlManager->AddTargetSelectedVolumeByMRMLID(cNode->GetID());
-     }
+       {
+          mrmlManager->AddTargetSelectedVolumeByMRMLID(cNode->GetID());
+       }
        else 
-     {
-       mrmlManager->SetTargetSelectedVolumeNthMRMLID(i,cNode->GetID());
-     }
-     }
+       {
+           mrmlManager->SetTargetSelectedVolumeNthMRMLID(i,cNode->GetID());
+       }
+   }
 
-   inputNodes->SetNumberOfInputChannelName(this->GetNumberOfInputChannels());
+   // This removes any additional volumes 
+   for (int i= this->GetNumberOfInputChannels();  i < mrmlManager->GetTargetNumberOfSelectedVolumes(); i++)
+     {
+       mrmlManager->RemoveTargetSelectedVolumeIndex(i);
+     } 
+
    for (int i=0;  i < this->GetNumberOfInputChannels(); i++)
      {
-       inputNodes->SetNthInputChannelName(i,this->InputChannelDefineLineName[i]->GetWidget()->GetValue());
+       if (i >= globalNode->GetNumberOfTargetInputChannels())
+     {
+       globalNode->AddTargetInputChannel();
+     } 
+       globalNode->SetNthTargetInputChannelName(i,this->InputChannelDefineLineName[i]->GetWidget()->GetValue());
      }
      
-
-   //
    if (!this->GetGUI()->IsSegmentationModeAdvanced()) 
      {
        if (atoi(this->Script("::EMSegmenterSimpleTcl::ValidateCheckList")) )
        {
          return;
        }
-       
+
        this->UpdateTaskPreprocessingSetting();
+
        mrmlManager->GetWorkingDataNode()->SetAlignedTargetNodeIsValid(0);
        mrmlManager->GetWorkingDataNode()->SetAlignedAtlasNodeIsValid(0);
+
        if (this->GetGUI()->GetPreProcessingStep()) 
-     {
-       this->GetGUI()->GetPreProcessingStep()->askQuestionsBeforeRunningPreprocessingFlagOff();
-     }
+       {
+           this->GetGUI()->GetPreProcessingStep()->askQuestionsBeforeRunningPreprocessingFlagOff();
+       }
      } 
    else 
      {
        if (this->GetGUI()->GetPreProcessingStep()) 
-     {
-       this->GetGUI()->GetPreProcessingStep()->askQuestionsBeforeRunningPreprocessingFlagOn();
-     }
-     }
+       {
+         this->GetGUI()->GetPreProcessingStep()->askQuestionsBeforeRunningPreprocessingFlagOn();
+       }
+      }
 
    // Check Values for 
    this->Superclass::Validate();
@@ -585,17 +616,17 @@ void vtkEMSegmentInputChannelsStep::ChangeNumberOfInputChannel(int newNumLines)
   if ( oldNumLines > newNumLines)
     {
       for (int i=oldNumLines-1;  i >= newNumLines; i--)
-    {
+      {
        this->DeleteInputChannelFrame(i);
-    }
+      }
     } 
 
   if ( oldNumLines < newNumLines)
     {
       for (int i=oldNumLines;  i < newNumLines; i++)
-    {
-       this->CreateInputChannelFrame(i,"",NULL);
-    }
+      {
+         this->CreateInputChannelFrame(i,"",NULL);
+      }
     } 
 }
 
@@ -629,8 +660,8 @@ void vtkEMSegmentInputChannelsStep::UpdateInputChannelsfromMRML()
     }
 
   vtkMRMLEMSTargetNode *inputNodes = mrmlManager->GetTargetInputNode();
-
-  if (!inputNodes) 
+  vtkMRMLEMSGlobalParametersNode* globalNode = mrmlManager->GetGlobalParametersNode();
+  if (!inputNodes || !globalNode) 
     {
       cout << "UpdateInputChannelsfromMRML: no input node" << endl;
       return;
@@ -638,21 +669,13 @@ void vtkEMSegmentInputChannelsStep::UpdateInputChannelsfromMRML()
 
   this->DeleteAllInputChannelFrames();  
 
-  if (!inputNodes->GetNumberOfVolumes()) 
+  for (int i=0; i < globalNode->GetNumberOfTargetInputChannels(); i++)
     {
-      return;
-    } 
-  
-  for (int i=0; i < inputNodes->GetNumberOfVolumes(); i++)
-    {
-      //if (this->GetGUI()->IsSegmentationModeAdvanced()) {
-    this->CreateInputChannelFrame(i,inputNodes->GetNthInputChannelName(i),inputNodes->GetNthVolumeNode(i));
-    //} else {
-    //    this->CreateInputChannelFrame(i,inputNodes->GetNthInputChannelName(i),NULL);
-    //}
+      this->CreateInputChannelFrame(i,globalNode->GetNthTargetInputChannelName(i),inputNodes->GetNthVolumeNode(i));
     }
 }
 
+//----------------------------------------------------------------------------
 int vtkEMSegmentInputChannelsStep::GetNumberOfInputChannels()
 {
   return InputChannelDefineLineFrame.size();
@@ -669,7 +692,12 @@ void vtkEMSegmentInputChannelsStep::UpdateTaskPreprocessingSetting()
     }
 
 
-  std::string oldText = mrmlManager->GetNode()->GetTaskPreprocessingSetting();
+  std::string oldText;
+
+  if ( mrmlManager->GetNode()->GetTaskPreprocessingSetting() ) 
+    {
+      oldText = std::string(mrmlManager->GetNode()->GetTaskPreprocessingSetting());
+    }
 
   vtksys_stl::stringstream defText;
   size_t  startPos =0;
@@ -686,7 +714,7 @@ void vtkEMSegmentInputChannelsStep::UpdateTaskPreprocessingSetting()
 
   for (int i =0 ; i < (int)  this->checkButton.size(); i++)
     {
-      // assumes that the entry with index 0 is used during processin otherwise have problems
+      // assumes that the entry with index 0 is used during processing otherwise have problems
       if (this->checkButton[i]) {
     defText << "|C";
     defText << this->checkButton[i]->GetWidget()->GetSelectedState();

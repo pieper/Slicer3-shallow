@@ -26,4 +26,6 @@
   #define VTKSLICER_STATIC
 #endif
 
-#define ProstateNav_REVISION "@ProstateNav_REVISION@"
+#define ProstateNav_REVISION @ProstateNav_WC_REVISION@
+
+#define PROSTATE_NAV_MODULE_VERSION "2.0.2"

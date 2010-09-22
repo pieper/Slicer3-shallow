@@ -33,10 +33,8 @@ class vtkMRMLRobotNode;
 enum VolumeType
 {
   VOL_GENERIC, // any other than the specific volumes 
-  VOL_CALIBRATION,
   VOL_TARGETING,
   VOL_VERIFICATION,
-  VOL_COVERAGE
 };
 
 class VTK_PROSTATENAV_EXPORT vtkMRMLProstateNavManagerNode : public vtkMRMLNode
@@ -49,22 +47,7 @@ class VTK_PROSTATENAV_EXPORT vtkMRMLProstateNavManagerNode : public vtkMRMLNode
   //----------------------------------------------------------------
 
   //BTX
-
-  struct NeedleDescriptorStruct
-    {
-    std::string NeedleName;
-    // NeedleLength: maximum possible insertion depth, in mm
-    float NeedleLength;
-    // Overshoot: where is the target compared to the needle tip, in mm
-    // if positive, then target is towards the needle base (biopsy)
-    // if negative, then target is in front of the needle tip (seed placement)
-    float NeedleOvershoot; 
-    std::string Description;
-    // LastTargetId stores the last index that was used for adding a target for this needle.
-    // It is useful for generating unique target names.
-    int LastTargetId;
-    };
-
+  
   // Events
   enum {
     CurrentTargetChangedEvent = 200900,
@@ -91,7 +74,7 @@ class VTK_PROSTATENAV_EXPORT vtkMRMLProstateNavManagerNode : public vtkMRMLNode
 
   virtual vtkMRMLNode* CreateNodeInstance();
 
-  void Init();
+  void Init(const char* defaultNeedleListConfig);
 
   // Description:
   // Set node attributes
@@ -122,7 +105,7 @@ class VTK_PROSTATENAV_EXPORT vtkMRMLProstateNavManagerNode : public vtkMRMLNode
   // Description:
   // Get node XML tag name (like Volume, Model)
   virtual const char* GetNodeTagName()
-    {return "ProstateNavManager";};
+    {return "ProstateNavExam";};
 
 
   // Description:
@@ -149,23 +132,11 @@ class VTK_PROSTATENAV_EXPORT vtkMRMLProstateNavManagerNode : public vtkMRMLNode
   // Get current workflow step.
   int GetCurrentStep();
 
-  // Description:
-  // Get previous workflow step.
-  int GetPreviousStep();
+  vtkSetReferenceStringMacro(TargetingVolumeNodeRef);
+  vtkGetStringMacro(TargetingVolumeNodeRef);
 
-  vtkSetReferenceStringMacro(CalibrationVolumeNodeID);
-  vtkGetStringMacro(CalibrationVolumeNodeID);
-
-  vtkSetReferenceStringMacro(TargetingVolumeNodeID);
-  vtkGetStringMacro(TargetingVolumeNodeID);
-
-  vtkSetReferenceStringMacro(VerificationVolumeNodeID);
-  vtkGetStringMacro(VerificationVolumeNodeID);
-
-  vtkSetReferenceStringMacro(CoverageVolumeNodeID);
-  vtkGetStringMacro(CoverageVolumeNodeID);
-
-  bool FindTargetingParams(vtkProstateNavTargetDescriptor *targetDesc);
+  vtkSetReferenceStringMacro(VerificationVolumeNodeRef);
+  vtkGetStringMacro(VerificationVolumeNodeRef);
 
   //----------------------------------------------------------------
   // Needle Management
@@ -186,31 +157,9 @@ class VTK_PROSTATENAV_EXPORT vtkMRMLProstateNavManagerNode : public vtkMRMLNode
   bool SetNeedle(unsigned int needleIndex, NeedleDescriptorStruct needleDesc);
   // returns false if needle info was not found
   bool GetNeedle(unsigned int needleIndex, NeedleDescriptorStruct &needleDesc);
+  NeedleDescriptorStruct* GetNeedle(vtkProstateNavTargetDescriptor *targetDesc);
+  
   //ETX
-
-  //BTX
-  // Description:
-  // get/set methods for storing needle information
-  void SetNeedleType(unsigned int needleIndex, std::string type);
-  std::string GetNeedleType(unsigned int needleIndex);
-  //ETX
-
-  //BTX
-  // Description:
-  // get/set methods for storing needle information
-  void SetNeedleDescription(unsigned int needleIndex, std::string desc);
-  std::string GetNeedleDescription(unsigned int needleIndex);
-  //ETX
-
-  // Description:
-  // get/set methods for storing needle information
-  void SetNeedleLength(unsigned int needleIndex, float length);
-  float GetNeedleLength(unsigned int needleIndex);
-
-  // Description:
-  // get/set methods for storing needle information
-  void SetNeedleOvershoot(unsigned int needleIndex, float overshoot);
-  float GetNeedleOvershoot(unsigned int needleIndex);
 
   //----------------------------------------------------------------
   // Target Management
@@ -222,13 +171,13 @@ class VTK_PROSTATENAV_EXPORT vtkMRMLProstateNavManagerNode : public vtkMRMLNode
 
   //BTX
   // Description:
-  // Get Targeting Fiducials Lists names(used in the wizard steps)
-  std::string GetTargetingFiducialsListName(unsigned int index)
+  // Get Targeting Fiducials Lists names (used in the wizard steps)
+  std::string GetTargetingFiducialsListDescription(unsigned int index)
     {
     if (index < this->NeedlesVector.size())
-      return this->NeedlesVector[index].NeedleName;
+      return this->NeedlesVector[index].mDescription;
     else
-      return NULL;
+      return "";
     }; 
   //ETX
   
@@ -251,6 +200,16 @@ class VTK_PROSTATENAV_EXPORT vtkMRMLProstateNavManagerNode : public vtkMRMLNode
   void SetAndObserveRobotNodeID(const char *robotNodeID);
 
  protected:
+
+  bool ReadNeedleListFromConfigXml(const char* needleListConfigStr);
+
+  vtkStdString GetWorkflowStepsString();
+  bool SetWorkflowStepsFromString(const vtkStdString& workflowStepsString);
+
+  //BTX
+  bool GetAttNameSection(const std::string& attName, const std::string& groupName, unsigned int &sectionInd, std::string &sectionName);
+  //ETX
+
   //----------------------------------------------------------------
   // Constructor and destroctor
   //----------------------------------------------------------------
@@ -266,14 +225,10 @@ class VTK_PROSTATENAV_EXPORT vtkMRMLProstateNavManagerNode : public vtkMRMLNode
   // Data
   //----------------------------------------------------------------
 
-  vtkStdString GetWorkflowStepsString();
-  bool SetWorkflowStepsFromString(const vtkStdString& workflowStepsString);
-
   // List of workflow steps (wizard pages)
   vtkStringArray *StepList;
   
   int CurrentStep;
-  int PreviousStep;
 
   //BTX
   std::vector<NeedleDescriptorStruct> NeedlesVector;
@@ -288,15 +243,12 @@ class VTK_PROSTATENAV_EXPORT vtkMRMLProstateNavManagerNode : public vtkMRMLNode
   char *TargetPlanListNodeID;
   vtkMRMLFiducialListNode* TargetPlanListNode;
 
-  //vtkMRMLRobotNode* RobotNode;
   vtkSetReferenceStringMacro(RobotNodeID);
   char *RobotNodeID;
   vtkMRMLRobotNode* RobotNode;
 
-  char *CalibrationVolumeNodeID;  
-  char *TargetingVolumeNodeID;
-  char *VerificationVolumeNodeID;
-  char *CoverageVolumeNodeID;  
+  char *TargetingVolumeNodeRef;
+  char *VerificationVolumeNodeRef;
 
   bool Initialized;
 };

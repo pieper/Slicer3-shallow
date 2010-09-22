@@ -1,100 +1,69 @@
-/*==============================================================================
-
-  Program: 3D Slicer
-
-  Copyright (c) 2010 Kitware Inc.
-
-  See Doc/copyright/copyright.txt
-  or http://www.slicer.org/copyright/copyright.txt for details.
-
-  Unless required by applicable law or agreed to in writing, software
-  distributed under the License is distributed on an "AS IS" BASIS,
-  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-  See the License for the specific language governing permissions and
-  limitations under the License.
-
-  This file was originally developed by Julien Finet, Kitware Inc.
-  and was partially funded by NIH grant 3P41RR013218-12S1
-
-==============================================================================*/
-
-// QT includes
-#include <QSortFilterProxyModel>
-
-// CTK includes
-#include "ctkModelTester.h"
-
-// qMRML includes
 #include "qMRMLListWidget.h"
 //#include "qMRMLItemModel.h"
 #include "qMRMLSceneModel.h"
-#include "qMRMLSceneTransformModel.h"
+#include "qMRMLTransformProxyModel.h"
+#include <QSortFilterProxyModel>
+#include "qCTKModelTester.h"
 
 //------------------------------------------------------------------------------
-class qMRMLListWidgetPrivate
+class qMRMLListWidgetPrivate: public qCTKPrivate<qMRMLListWidget>
 {
-  Q_DECLARE_PUBLIC(qMRMLListWidget);
-protected:
-  qMRMLListWidget* const q_ptr;
 public:
-  qMRMLListWidgetPrivate(qMRMLListWidget& object);
+  QCTK_DECLARE_PUBLIC(qMRMLListWidget);
   void init();
 };
 
 //------------------------------------------------------------------------------
-qMRMLListWidgetPrivate::qMRMLListWidgetPrivate(qMRMLListWidget& object)
-  : q_ptr(&object)
-{
-}
-
-//------------------------------------------------------------------------------
 void qMRMLListWidgetPrivate::init()
 {
-  Q_Q(qMRMLListWidget);
+  QCTK_P(qMRMLListWidget);
   //p->QListView::setModel(new qMRMLItemModel(p));
   //p->QListView::setModel(new qMRMLSceneModel(p));
-  ///new ctkModelTester(p->model(), p);
+  ///new qCTKModelTester(p->model(), p);
   
-  qMRMLSceneTransformModel* sceneModel = new qMRMLSceneTransformModel(q);
-  QSortFilterProxyModel* sortModel = new QSortFilterProxyModel(q);
-  sortModel->setSourceModel(sceneModel);
+  qMRMLSceneModel* sceneModel = new qMRMLSceneModel(p);
+  qMRMLTransformProxyModel* transformModel = new qMRMLTransformProxyModel(p);
+  transformModel->setSourceModel(sceneModel);
+  QSortFilterProxyModel* sortModel = new QSortFilterProxyModel(p);
+  sortModel->setSourceModel(transformModel);
   sortModel->setDynamicSortFilter(true);
-  q->QListView::setModel(sortModel);
-  q->setWrapping(true);
-  q->setResizeMode(QListView::Adjust);
-  q->setFlow(QListView::TopToBottom);
+  p->QListView::setModel(sortModel);
+  p->setWrapping(true);
+  p->setResizeMode(QListView::Adjust);
+  p->setFlow(QListView::TopToBottom);
   // We have a problem when the model is reset (qMRMLSceneModel::setMRMLScene(0)), 
   // the QSortFilterProxyModel doesn't realize that the rows have disappeared 
   // and QSortFilterProxyModel::rowCount(QModelIndex) returns 1(the mrmlscene), which
-  // is eventually called by the ctkModelTester slot connected to QSortFilterProxyModel
+  // is eventually called by the qCTKModelTester slot connected to QSortFilterProxyModel
   // signal layoutAboutToBeChanged() which eventually calls testData on the valid QModelIndex
-  //new ctkModelTester(p->model(), p);
-    
-  //ctkModelTester* tester = new ctkModelTester(p);
-  //tester->setModel(transformModel);
+  //new qCTKModelTester(p->model(), p);
+  new qCTKModelTester(transformModel,p);
 }
 
 //------------------------------------------------------------------------------
 qMRMLListWidget::qMRMLListWidget(QWidget *_parent)
-  : QListView(_parent)
-  , d_ptr(new qMRMLListWidgetPrivate(*this))
+  :QListView(_parent)
 {
-  Q_D(qMRMLListWidget);
-  d->init();
+  QCTK_INIT_PRIVATE(qMRMLListWidget);
+  qctk_d()->init();
 }
 
 //------------------------------------------------------------------------------
 qMRMLListWidget::~qMRMLListWidget()
 {
+
 }
 
 //------------------------------------------------------------------------------
 void qMRMLListWidget::setMRMLScene(vtkMRMLScene* scene)
 {
   QSortFilterProxyModel* sortModel = qobject_cast<QSortFilterProxyModel*>(this->model());
-  qMRMLSceneModel* mrmlModel = qobject_cast<qMRMLSceneModel*>(sortModel->sourceModel());
+  qMRMLTransformProxyModel* proxyModel = qobject_cast<qMRMLTransformProxyModel*>(sortModel->sourceModel());
+  
+  //qMRMLItemModel* mrmlModel = qobject_cast<qMRMLItemModel*>(this->model());
+  //qMRMLSceneModel* mrmlModel = qobject_cast<qMRMLSceneModel*>(this->model());
+  qMRMLSceneModel* mrmlModel = qobject_cast<qMRMLSceneModel*>(proxyModel->sourceModel());
   Q_ASSERT(mrmlModel);
-
   mrmlModel->setMRMLScene(scene);
   if (scene)
     {
@@ -108,6 +77,6 @@ void qMRMLListWidget::setMRMLScene(vtkMRMLScene* scene)
 vtkMRMLScene* qMRMLListWidget::mrmlScene()const
 {
   QSortFilterProxyModel* sortModel = qobject_cast<QSortFilterProxyModel*>(this->model());
-  Q_ASSERT(qobject_cast<const qMRMLSceneModel*>(sortModel->sourceModel()));
-  return qobject_cast<const qMRMLSceneModel*>(sortModel->sourceModel())->mrmlScene();
+  Q_ASSERT(qobject_cast<const qMRMLTreeProxyModel*>(sortModel->sourceModel()));
+  return qobject_cast<const qMRMLTreeProxyModel*>(sortModel->sourceModel())->mrmlScene();
 }

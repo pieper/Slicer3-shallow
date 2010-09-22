@@ -1,22 +1,15 @@
-/*==============================================================================
+/*=auto=========================================================================
 
-  Program: 3D Slicer
+ Portions (c) Copyright 2005 Brigham and Women's Hospital (BWH) 
+ All Rights Reserved.
 
-  Copyright (c) 2010 Kitware Inc.
+ See Doc/copyright/copyright.txt
+ or http://www.slicer.org/copyright/copyright.txt for details.
 
-  See Doc/copyright/copyright.txt
-  or http://www.slicer.org/copyright/copyright.txt for details.
+ Program:   3D Slicer
 
-  Unless required by applicable law or agreed to in writing, software
-  distributed under the License is distributed on an "AS IS" BASIS,
-  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-  See the License for the specific language governing permissions and
-  limitations under the License.
+=========================================================================auto=*/
 
-  This file was originally developed by Jean-Christophe Fillion-Robin, Kitware Inc.
-  and was partially funded by NIH grant 3P41RR013218-12S1
-
-==============================================================================*/
 
 #include "qSlicerCLIModule.h"
 
@@ -32,9 +25,10 @@
 #include <ModuleDescriptionParser.h>
 
 //-----------------------------------------------------------------------------
-class qSlicerCLIModulePrivate
+class qSlicerCLIModulePrivate: public qCTKPrivate<qSlicerCLIModule>
 {
 public:
+  QCTK_DECLARE_PUBLIC(qSlicerCLIModule);
   typedef qSlicerCLIModulePrivate Self;
   qSlicerCLIModulePrivate();
 
@@ -63,19 +57,14 @@ qSlicerCLIModulePrivate::qSlicerCLIModulePrivate()
 
 //-----------------------------------------------------------------------------
 qSlicerCLIModule::qSlicerCLIModule(QWidget* _parent):Superclass(_parent)
-  , d_ptr(new qSlicerCLIModulePrivate)
 {
-}
-
-//-----------------------------------------------------------------------------
-qSlicerCLIModule::~qSlicerCLIModule()
-{
+  QCTK_INIT_PRIVATE(qSlicerCLIModule);
 }
 
 //-----------------------------------------------------------------------------
 void qSlicerCLIModule::setup()
 {
-  Q_D(qSlicerCLIModule);
+  QCTK_D(qSlicerCLIModule);
   
   // Temporary directory should be set before the module is initialized
   Q_ASSERT(!d->TempDirectory.isEmpty());
@@ -86,9 +75,9 @@ void qSlicerCLIModule::setup()
 }
 
 //-----------------------------------------------------------------------------
-qSlicerAbstractModuleRepresentation * qSlicerCLIModule::createWidgetRepresentation()
+qSlicerAbstractModuleWidget * qSlicerCLIModule::createWidgetRepresentation()
 {
-  Q_D(qSlicerCLIModule);
+  QCTK_D(qSlicerCLIModule);
   return new qSlicerCLIModuleWidget(&d->Desc);
 }
 
@@ -99,19 +88,18 @@ vtkSlicerLogic* qSlicerCLIModule::createLogic()
 }
 
 //-----------------------------------------------------------------------------
-CTK_GET_CXX(qSlicerCLIModule, QString, title, Title);
-CTK_GET_CXX(qSlicerCLIModule, QString, category, Category);
-CTK_GET_CXX(qSlicerCLIModule, QString, contributor, Contributor);
-CTK_GET_CXX(qSlicerCLIModule, QString, acknowledgementText, Acknowledgement);
-CTK_GET_CXX(qSlicerCLIModule, QString, helpText, Help);
-CTK_SET_CXX(qSlicerCLIModule, const QString&, setTempDirectory, TempDirectory);
+QCTK_GET_CXX(qSlicerCLIModule, QString, title, Title);
+QCTK_GET_CXX(qSlicerCLIModule, QString, category, Category);
+QCTK_GET_CXX(qSlicerCLIModule, QString, contributor, Contributor);
+QCTK_GET_CXX(qSlicerCLIModule, QString, acknowledgementText, Acknowledgement);
+QCTK_GET_CXX(qSlicerCLIModule, QString, helpText, Help);
+QCTK_SET_CXX(qSlicerCLIModule, const QString&, setTempDirectory, TempDirectory);
 
 //-----------------------------------------------------------------------------
 void qSlicerCLIModule::setXmlModuleDescription(const char* xmlModuleDescription)
 {
-  Q_D(qSlicerCLIModule);
+  QCTK_D(qSlicerCLIModule);
   //qDebug() << "xmlModuleDescription:" << xmlModuleDescription;
-  Q_ASSERT(!this->entryPoint().isEmpty());
 
   // Parse module description
   ModuleDescription desc;
@@ -138,12 +126,6 @@ void qSlicerCLIModule::setXmlModuleDescription(const char* xmlModuleDescription)
   d->Help = help.arg(
     QString::fromStdString(desc.GetDescription())).arg(
     QString::fromStdString(desc.GetDocumentationURL()));
-
-  // Set module type
-  desc.SetType(this->moduleType().toStdString());
-  
-  // Set module entry point
-  desc.SetTarget(this->entryPoint().toStdString());
 
   d->Desc = desc; 
 }

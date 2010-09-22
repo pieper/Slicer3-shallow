@@ -23,8 +23,6 @@
 #include <vector>
 #include <string>
 
-class vtkMRMLIGTLQueryNode;
-
 class VTK_OPENIGTLINKIF_EXPORT vtkIGTLToMRMLBase : public vtkObject
 {
 
@@ -49,20 +47,8 @@ class VTK_OPENIGTLINKIF_EXPORT vtkIGTLToMRMLBase : public vtkObject
   void PrintSelf(ostream& os, vtkIndent indent);
 
   virtual int          GetConverterType() { return TYPE_NORMAL; };
-
-  // IGTL Device / MRML Tag names
   virtual const char*  GetIGTLName()      { return NULL;};
   virtual const char*  GetMRMLName()      { return NULL;};
-
-  // Following functions are implemented only if exists in OpenIGTLink specification
-  virtual const char*  GetIGTLStartQueryName() { return NULL; };
-  virtual const char*  GetIGTLStopQueryName()  { return NULL; };
-  virtual const char*  GetIGTLGetQueryName()   { return NULL; };
-  virtual const char*  GetIGTLStatusName()     { return NULL; };
-
-  // Description:
-  // GetNodeEvents() returns a list of events, which an IGTLConnector should react to.
-  // The first element should be an event to export data, although multiple events can be defined.
   virtual vtkIntArray* GetNodeEvents()    { return NULL; };
   virtual vtkMRMLNode* CreateNewNode(vtkMRMLScene* vtkNotUsed(scene), const char* vtkNotUsed(name))
     { return NULL; };
@@ -71,23 +57,12 @@ class VTK_OPENIGTLINKIF_EXPORT vtkIGTLToMRMLBase : public vtkObject
   int                  GetNumberOfIGTLNames()   { return this->IGTLNames.size(); };
   const char*          GetIGTLName(int index)   { return this->IGTLNames[index].c_str(); };
 
-  // Description:
-  // Functions to convert OpenIGTLink message to MRML node.
-  // If mrmlNode is QueryNode, the function will generate query node. (event is not used.)
   //BTX
   virtual int          IGTLToMRML(igtl::MessageBase::Pointer vtkNotUsed(buffer),
                                   vtkMRMLNode* vtkNotUsed(node)) { return 0; };
   //ETX
-
-  // Description:
-  // Functions to generate an OpenIGTLink message
-  // If mrmlNode is QueryNode, the function will generate query node. (event is not used.)
   virtual int          MRMLToIGTL(unsigned long vtkNotUsed(event), vtkMRMLNode* vtkNotUsed(mrmlNode),
                                   int* vtkNotUsed(size), void** vtkNotUsed(igtlMsg)){ return 0; };
-
-  // Check query que (called periodically by timer)
-  // (implemeted only if ncessary)
-  virtual int CheckQueryQue(double ctime) { return true; }
 
   vtkGetMacro( CheckCRC, int );
   vtkSetMacro( CheckCRC, int );
@@ -102,7 +77,7 @@ class VTK_OPENIGTLINKIF_EXPORT vtkIGTLToMRMLBase : public vtkObject
   // list of IGTL names (used only when the class supports multiple IGTL names)
   std::vector<std::string>  IGTLNames;
   //ETX
-
+  
   int CheckCRC;
   
 };

@@ -1,41 +1,16 @@
-/*==============================================================================
-
-  Program: 3D Slicer
-
-  Copyright (c) 2010 Kitware Inc.
-
-  See Doc/copyright/copyright.txt
-  or http://www.slicer.org/copyright/copyright.txt for details.
-
-  Unless required by applicable law or agreed to in writing, software
-  distributed under the License is distributed on an "AS IS" BASIS,
-  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-  See the License for the specific language governing permissions and
-  limitations under the License.
-
-  This file was originally developed by Jean-Christophe Fillion-Robin, Kitware Inc.
-  and was partially funded by NIH grant 3P41RR013218-12S1
-
-==============================================================================*/
-
-// Qt includes
-#include <QDebug>
-#include <QColor>
-#include <QStyle>
-#include <QPainter>
-
-// qMRML includes
 #include "qMRMLUtils.h"
 
 // MRML includes
 #include <vtkMRMLNode.h>
-#include <vtkMRMLViewNode.h>
 #include <vtkMRMLLinearTransformNode.h>
 
 // VTK includes
 #include <vtkTransform.h>
 #include <vtkSmartPointer.h>
 #include <vtkMatrix4x4.h>
+
+// QT includes
+#include <QDebug>
 
 //------------------------------------------------------------------------------
 void qMRMLUtils::vtkMatrixToQVector(vtkMatrix4x4* matrix, QVector<double> & vector)
@@ -98,62 +73,16 @@ void qMRMLUtils::getTransformInCoordinateSystem(vtkMRMLLinearTransformNode* tran
 }
 
 //------------------------------------------------------------------------------
-int qMRMLUtils::countVisibleViewNode(vtkMRMLScene* scene)
-{
-  Q_ASSERT(scene);
-  int numberOfVisibleNodes = 0;
-  const char* className = "vtkMRMLViewNode";
-  int nnodes = scene->GetNumberOfNodesByClass(className);
-  for (int n = 0; n < nnodes; n++)
-    {
-    vtkMRMLViewNode * node = vtkMRMLViewNode::SafeDownCast(scene->GetNthNodeByClass(n, className));
-    if (node && node->GetVisibility())
-      {
-      numberOfVisibleNodes++;
-      }
-    }
-  return numberOfVisibleNodes;
-}
-
-// ----------------------------------------------------------------
-QIcon qMRMLUtils::createIcon(QStyle * style, const QColor &color)
-{
-  if (!style)
-    {
-    return QIcon();
-    }
-
-  const int size = style->pixelMetric(QStyle::PM_ButtonIconSize) - 5;
-
-  // Create a pixmap
-  QPixmap colorFieldPixmap(size, size);
-
-  // Fill it with the color
-  colorFieldPixmap.fill(color);
-
-  // Make a black rectangle on the border
-  QPainter painter(&colorFieldPixmap);
-  painter.drawRect(0, 0, size - 1, size - 1);
-
-  // Which finally allows to create this icon
-  QIcon colorField(colorFieldPixmap);
-
-  return colorField;
-}
-
-//------------------------------------------------------------------------------
 vtkMRMLNode* qMRMLUtils::topLevelNthNode(vtkMRMLScene* scene, int nodeIndex)
 {
   if (scene == 0)
     {
     return 0;
     }
-  vtkCollection* sceneCollection = scene->GetCurrentScene();
-  vtkMRMLNode* node = 0;
-  vtkCollectionSimpleIterator it;
-  for (sceneCollection->InitTraversal(it);
-       (node = (vtkMRMLNode*)sceneCollection->GetNextItemAsObject(it)) ;)
+  for (int i = 0; i < scene->GetNumberOfNodes(); ++i)
     {
+    vtkMRMLNode* node = scene->GetNthNode(i);
+    Q_ASSERT(node);
     vtkMRMLNode* parent = qMRMLUtils::parentNode(node);
     if (parent != 0)
       {
@@ -178,12 +107,11 @@ vtkMRMLNode* qMRMLUtils::childNode(vtkMRMLNode* node, int childIndex)
     }
   // MRML Transformable nodes
   QString nodeId = QString(node->GetID());
-  vtkCollection* sceneCollection = node->GetScene()->GetCurrentScene();
-  vtkMRMLNode* n = 0;
-  vtkCollectionSimpleIterator it;
-  for (sceneCollection->InitTraversal(it);
-       (n = (vtkMRMLNode*)sceneCollection->GetNextItemAsObject(it)) ;)
+  vtkMRMLScene* scene = node->GetScene();
+  for (int i = 0; i < scene->GetNumberOfNodes(); ++i)
     {
+    vtkMRMLNode* n = scene->GetNthNode(i);
+    Q_ASSERT(n);
     vtkMRMLNode* parent = qMRMLUtils::parentNode(n);
     if (parent == 0)
       {
@@ -218,26 +146,23 @@ vtkMRMLNode* qMRMLUtils::parentNode(vtkMRMLNode* node)
 //------------------------------------------------------------------------------
 int qMRMLUtils::nodeIndex(vtkMRMLNode* node)
 {
-  const char* nodeId = node ? node->GetID() : 0;
-  if (nodeId == 0)
+  if (!node)
     {
     return -1;
     }
-  const char* nId = 0;
-  int index = -1;
+  QString nodeId = node->GetID();
   vtkMRMLNode* parent = qMRMLUtils::parentNode(node);
-  vtkCollection* sceneCollection = node->GetScene()->GetCurrentScene();
-  vtkMRMLNode* n = 0;
-  vtkCollectionSimpleIterator it;
-  for (sceneCollection->InitTraversal(it);
-       (n = (vtkMRMLNode*)sceneCollection->GetNextItemAsObject(it)) ;)
+  vtkMRMLScene* scene = node->GetScene();
+  int index = -1;
+  for (int i = 0; scene->GetNumberOfNodes();++i)
     {
+    vtkMRMLNode* n = scene->GetNthNode(i);
+    Q_ASSERT(n);
     // note: parent can be NULL, it means that the scene is the parent
     if (parent == qMRMLUtils::parentNode(n))
       {
       ++index;
-      nId = n->GetID();
-      if (nId && !strcmp(nodeId, nId))
+      if (nodeId == n->GetID())
         {
         return index;
         }
@@ -257,13 +182,12 @@ int qMRMLUtils::childCount(vtkMRMLNode* node)
     }
   // MRML Transformable nodes
   QString nodeId = QString(node->GetID());
+  vtkMRMLScene* scene = node->GetScene();
   int childCount = 0;
-  vtkCollection* sceneCollection = node->GetScene()->GetCurrentScene();
-  vtkMRMLNode* n = 0;
-  vtkCollectionSimpleIterator it;
-  for (sceneCollection->InitTraversal(it);
-       (n = (vtkMRMLNode*)sceneCollection->GetNextItemAsObject(it)) ;)
+  for (int i = 0; i < scene->GetNumberOfNodes(); ++i)
     {
+    vtkMRMLNode* n = scene->GetNthNode(i);
+    Q_ASSERT(n);
     vtkMRMLNode* parent = qMRMLUtils::parentNode(n);
     if (parent == 0)
       {
@@ -287,12 +211,10 @@ int qMRMLUtils::childCount(vtkMRMLScene* scene)
     }
   // MRML Transformable nodes
   int childCount = 0;
-  vtkCollection* sceneCollection = scene->GetCurrentScene();
-  vtkMRMLNode* n = 0;
-  vtkCollectionSimpleIterator it;
-  for (sceneCollection->InitTraversal(it);
-       (n = (vtkMRMLNode*)sceneCollection->GetNextItemAsObject(it)) ;)
+  for (int i = 0; i < scene->GetNumberOfNodes(); ++i)
     {
+    vtkMRMLNode* n = scene->GetNthNode(i);
+    Q_ASSERT(n);
     vtkMRMLNode* parent = qMRMLUtils::parentNode(n);
     if (parent)
       {

@@ -60,6 +60,10 @@ public:
     virtual void Init(vtkVolumeRenderingGUI *gui);
 
     // Description:
+    // Called everytime a mouse button is pressed
+    void SetButtonDown(int isDown);
+
+    // Description:
     // Own callback command for volume rendering related events
     vtkCallbackCommand* GUICallbackCommand;
 
@@ -115,7 +119,7 @@ public:
     void UpdateVolumePropertyFg();
 
     void UpdateROI();
-    
+
 protected:
     // Description:
     // Use ::New() to get a new instance.
@@ -259,6 +263,10 @@ protected:
     //--------------------------------------------------------------------------
     // Rendering Logic
     //--------------------------------------------------------------------------
+
+    // Description:
+    // if cpu ray casting is in interaction mode
+    int VolumeRenderingInteractionFlag;
 
     // Description:
     // Indicates if the VolumeRendering is Paused or not

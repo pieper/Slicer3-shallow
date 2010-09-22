@@ -39,7 +39,7 @@ private:
   qSlicerModuleManager(const qSlicerModuleManager&);  // Not implemented.
   void operator=(const qSlicerModuleManager&);  // Not implemented.
 
-  CTK_DECLARE_PRIVATE(qSlicerModuleManager);
+  QCTK_DECLARE_PRIVATE(qSlicerModuleManager);
 };
 
 

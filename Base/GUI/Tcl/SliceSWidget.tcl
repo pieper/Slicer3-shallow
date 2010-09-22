@@ -26,15 +26,6 @@ if { [itcl::find class SliceSWidget] == "" } {
     destructor {}
 
     public variable sliceStep 1  ;# the size of the slice increment/decrement
-    public variable calculateAnnotations 1  ;# include annotation calculation (turned off for slicer4)
-    #
-    # These are widgets that track the state of a node in the MRML Scene
-    # - for each of these we update things each time a node or scene is added
-    #
-    public variable swidgetTypes {
-      { ModelSWidget -modelID vtkMRMLModelNode }
-      { RulerSWidget -rulerID vtkMRMLMeasurementsRulerNode }
-    }
 
     variable _actionStartRAS "0 0 0"
     variable _actionStartXY "0 0"
@@ -132,14 +123,12 @@ itcl::body SliceSWidget::constructor {sliceGUI} {
   # model intersection displays as needed
   set NodeAddedEvent 66000
   set NodeRemovedEvent 66001
-  set SceneClosedEvent 66003
-  set SceneAboutToBeClosedEvent 66004
-  set SceneImportedEvent 66011
+  set SceneCloseEvent 66003
+  set SceneClosingEvent 66004
   $::slicer3::Broker AddObservation $::slicer3::MRMLScene $NodeAddedEvent "::SWidget::ProtectedCallback $this processEvent $::slicer3::MRMLScene NodeAddedEvent"
   $::slicer3::Broker AddObservation $::slicer3::MRMLScene $NodeRemovedEvent "::SWidget::ProtectedCallback $this processEvent $::slicer3::MRMLScene NodeRemovedEvent"
-  $::slicer3::Broker AddObservation $::slicer3::MRMLScene $SceneClosedEvent "::SWidget::ProtectedCallback $this processEvent $::slicer3::MRMLScene SceneClosedEvent"
-  $::slicer3::Broker AddObservation $::slicer3::MRMLScene $SceneAboutToBeClosedEvent "::SWidget::ProtectedCallback $this processEvent $::slicer3::MRMLScene SceneAboutToBeClosedEvent"
-  $::slicer3::Broker AddObservation $::slicer3::MRMLScene $SceneImportedEvent "::SWidget::ProtectedCallback $this processEvent $::slicer3::MRMLScene SceneImportedEvent"
+  $::slicer3::Broker AddObservation $::slicer3::MRMLScene $SceneCloseEvent "::SWidget::ProtectedCallback $this processEvent $::slicer3::MRMLScene SceneCloseEvent"
+  $::slicer3::Broker AddObservation $::slicer3::MRMLScene $SceneClosingEvent "::SWidget::ProtectedCallback $this processEvent $::slicer3::MRMLScene SceneClosingEvent"
 
   # put the other widgets last the events in this widget get natural
   # priority over the same event to a child widget
@@ -149,10 +138,11 @@ itcl::body SliceSWidget::constructor {sliceGUI} {
   $gridSWidget configure -layer "label"
   lappend _swidgets $gridSWidget
   lappend _swidgets [CrosshairSWidget #auto $sliceGUI]
-  lappend _swidgets [VolumeDisplaySWidget #auto $sliceGUI]
   lappend _swidgets [SlicePlaneSWidget #auto $sliceGUI]
+  lappend _swidgets [VolumeDisplaySWidget #auto $sliceGUI]
 
   #lappend _swidgets [RegionsSWidget #auto $sliceGUI] ;# not used
+
 }
 
 
@@ -179,7 +169,16 @@ itcl::body SliceSWidget::destructor {} {
 #
 itcl::body SliceSWidget::updateSWidgets {} {
 
-  # this part is generic, based on the types configured for this class to manage
+  #
+  # These are widgets that track the state of a node in the MRML Scene
+  # - for each of these we update things each time a node or scene is added
+  #
+  set swidgetTypes {
+    { ModelSWidget -modelID vtkMRMLModelNode }
+    { RulerSWidget -rulerID vtkMRMLMeasurementsRulerNode }
+  }
+
+  # this part is generic, based on the types listed above
   foreach swidgetType $swidgetTypes {
     foreach {swidgetClass configVar nodeClass} $swidgetType {}
     array set sws ""
@@ -250,6 +249,7 @@ itcl::body SliceSWidget::resizeSliceNode {} {
   set pokedRenderer [$_renderWidget GetRenderer]  
   foreach {w h} [$pokedRenderer GetSize] {}
 
+
   foreach {nodeW nodeH nodeD} [$_sliceNode GetDimensions] {}
   foreach {nodefovx nodefovy nodefovz} [$_sliceNode GetFieldOfView] {}
   if { [catch "expr $nodefovx"] } {
@@ -300,7 +300,9 @@ itcl::body SliceSWidget::resizeSliceNode {} {
           $w == $nodeW && $h == $nodeH && [expr abs($sliceStep - ($nodefovz / (1. * $nodeD)))] < $epsilon} {
       return
     }
+    #puts "node parameters changed"
     set disabled [$_sliceNode GetDisableModifiedEvent]
+    #puts "$_sliceNode $disabled"
     $_sliceNode DisableModifiedEventOn
     $_sliceNode SetDimensions $w $h $nodeD
     $_sliceNode SetFieldOfView $fovx $fovy $fovz
@@ -308,6 +310,7 @@ itcl::body SliceSWidget::resizeSliceNode {} {
     if { $disabled == 0 } {
         $_sliceNode InvokePendingModifiedEvent
         $_sliceNode DisableModifiedEventOff
+        [$sliceGUI GetSliceViewer] RequestRender
     }
   }
 }
@@ -316,10 +319,6 @@ itcl::body SliceSWidget::resizeSliceNode {} {
 # handle interactor events
 #
 itcl::body SliceSWidget::processEvent { {caller ""} {event ""} } {
-
-  if { $enabled != "true" } {
-    return
-  }
 
   if { [info command $sliceGUI] == "" || [$sliceGUI GetLogic] == "" } {
     # the sliceGUI was deleted behind our back, so we need to 
@@ -333,19 +332,11 @@ itcl::body SliceSWidget::processEvent { {caller ""} {event ""} } {
     return
   }
 
-  if { [$::slicer3::MRMLScene GetIsClosing] ||
-        [$::slicer3::MRMLScene GetIsConnecting] ||
-        [$::slicer3::MRMLScene GetIsImporting] ||
-        [$::slicer3::MRMLScene GetIsRestoring] ||
-        [$::slicer3::MRMLScene GetIsUpdating] } {
-    return
-  }
-
+  
   # MRML Scene update probably means we need to create a new model intersection SWidget
   if { $caller == $::slicer3::MRMLScene && 
-       ((($event == "NodeAddedEvent" || $event == "NodeRemovedEvent") && ![$::slicer3::MRMLScene GetIsUpdating]) || 
-        $event == "SceneClosedEvent" || $event == "SceneAboutToBeClosedEvent" ||
-        $event == "SceneImportedEvent") } {
+       ($event == "NodeAddedEvent" || $event == "NodeRemovedEvent" ||
+         $event == "SceneCloseEvent" || $event == "SceneClosingEvent") } {
     $this updateSWidgets
   }
 
@@ -410,41 +401,37 @@ itcl::body SliceSWidget::processEvent { {caller ""} {event ""} } {
   #
   if { $caller != $_sliceNode } {
     $this resizeSliceNode
-  } 
-
-  if { $calculateAnnotations } {
-
-    # TODO: the annotations seem to be very time consuming to calculate
-    # but most of the time they will not be displayed - instead we should
-    # move the calculation into the DelayedAnnotation method
-
-    #
-    # cancel any scheduled annotations
-    #
-    if { [itcl::find class ::SliceSWidget] == "::SliceSWidget"} {
-        set swidgets [itcl::find objects -class ::SliceSWidget]
-        foreach sw $swidgets {
-            $sw cancelDelayedAnnotation
-        }
-    }
-
-
-    #
-    # update the annotations even if they aren't currently visible
-    # - this way the values will be correct when the corner annotation
-    #   are eventually made visible
-    #
-    set annotationsUpdated false
-    set link [$_sliceCompositeNode GetLinkedControl]
-    if { $link == 1 && [$this isCompareViewMode] == 1 && 
-          ([$this isCompareViewer] == 1 || [$_sliceNode GetSingletonTag] == "Red") } {
-        $this updateAnnotations $r $a $s
-        set annotationsUpdated true
-    } else {
-        $this updateAnnotation $r $a $s
-        set annotationsUpdated true
-    }
   }
+
+
+  #
+  # cancel any scheduled annotations
+  #
+  if { [itcl::find class ::SliceSWidget] == "::SliceSWidget"} {
+      set swidgets [itcl::find objects -class ::SliceSWidget]
+      foreach sw $swidgets {
+          # does this cause us to render every widget every event?
+          $sw cancelDelayedAnnotation
+      }
+  }
+
+  #
+  # update the annotations even if they aren't currently visible
+  # - this way the values will be correct when the corner annotation
+  #   are eventually made visible
+  #
+  set annotationsUpdated false
+  set link [$_sliceCompositeNode GetLinkedControl]
+  if { $link == 1 && [$this isCompareViewMode] == 1 && ([$this isCompareViewer] == 1 || [$_sliceNode GetSingletonTag] == "Red") } {
+      #puts "annnotations"
+      $this updateAnnotations $r $a $s
+      set annotationsUpdated true
+  } else {
+      #puts "just one annotation"
+      $this updateAnnotation $r $a $s
+      set annotationsUpdated true
+  }
+
 
   #
   # if another widget has the grab, let this go unless
@@ -463,6 +450,7 @@ itcl::body SliceSWidget::processEvent { {caller ""} {event ""} } {
       }
     }
   }
+
 
   switch $event {
 
@@ -552,7 +540,8 @@ itcl::body SliceSWidget::processEvent { {caller ""} {event ""} } {
             $sliceGUI SetGUICommandAbortFlag 1
            }
           default {
-            # nothing needs to be done by default
+            # need to render to show the annotation
+            [$sliceGUI GetSliceViewer] RequestRender
           }
         }
       }
@@ -691,6 +680,7 @@ itcl::body SliceSWidget::processEvent { {caller ""} {event ""} } {
       $this resizeSliceNode
     }
     "EnterEvent" { 
+      #puts "Enter"
       set _inWidget 1
       $_renderWidget CornerAnnotationVisibilityOn
       [$::slicer3::ApplicationGUI GetMainSlicerWindow]  SetStatusText "Middle Button: Pan; Right Button: Zoom"
@@ -713,6 +703,7 @@ itcl::body SliceSWidget::processEvent { {caller ""} {event ""} } {
           $snode DisableModifiedEventOn
       }
       # modify each slice node
+      #puts "Current node $_sliceNode Current gui $sliceGUI Current SliceWidget $this"
       $_sliceNode SetSliceSpacingModeToAutomatic
       foreach gui $sliceGUIs {
           set snode [$gui GetSliceNode]
@@ -735,8 +726,9 @@ itcl::body SliceSWidget::processEvent { {caller ""} {event ""} } {
       }
     }
     "LeaveEvent" { 
+      #puts "Leave"
       set _inWidget 0
- 
+
       set sliceGUIs [$this getLinkedSliceGUIs]
       # cancel annotation requests before doing anything else
       foreach gui $sliceGUIs {
@@ -886,6 +878,14 @@ itcl::body SliceSWidget::processEvent { {caller ""} {event ""} } {
     }
     "ExitEvent" { }
   }
+
+
+#  if { $annotationsUpdated == false && [$this getInWidget] } {
+#      set xyToRAS [$_sliceNode GetXYToRAS]
+#      set ras [$xyToRAS MultiplyPoint $x $y $z 1]
+#      foreach {r a s t} $ras {}
+#      $this updateAnnotation $r $a $s
+#  }
 }
 
 
@@ -897,9 +897,6 @@ itcl::body SliceSWidget::updateAnnotations {r a s} {
   $this queryLayers $x $y $z
 
   set ssgui [[$::slicer3::ApplicationGUI GetApplication] GetModuleGUIByName "Slices"]
-  if { $ssgui == "" } {
-    return
-  }
   set numsgui [$ssgui GetNumberOfSliceGUI]
   for { set i 0 } { $i < $numsgui } { incr i } {
     if { $i == 0} {
@@ -1051,7 +1048,6 @@ itcl::body SliceSWidget::updateAnnotation {r a s} {
     # need a composite node to be able to do anything
     return
   }
-
 
   set foregroundname "None"
   set backgroundname "None"
@@ -1358,8 +1354,8 @@ itcl::body SliceSWidget::getLinkedSliceLogics { } {
 
     set logics ""
     set link [$_sliceCompositeNode GetLinkedControl]
-    set ssgui [[$::slicer3::ApplicationGUI GetApplication] GetModuleGUIByName "Slices"]
-    if { $ssgui != "" && $link == 1 && [$this isCompareViewMode] == 1 && ([$sliceNode GetSingletonTag] == "Red" || [$this isCompareViewer] == 1) } {
+    if { $link == 1 && [$this isCompareViewMode] == 1 && ([$sliceNode GetSingletonTag] == "Red" || [$this isCompareViewer] == 1) } {
+        set ssgui [[$::slicer3::ApplicationGUI GetApplication] GetModuleGUIByName "Slices"]
         set layout [$::slicer3::ApplicationGUI GetGUILayoutNode]
         set viewArrangement [$layout GetViewArrangement]
 
@@ -1405,8 +1401,8 @@ itcl::body SliceSWidget::getLinkedSliceGUIs { } {
 
     set guis ""
     set link [$_sliceCompositeNode GetLinkedControl]
-    set ssgui [[$::slicer3::ApplicationGUI GetApplication] GetModuleGUIByName "Slices"]
-    if { $ssgui != "" && $link == 1 && [$this isCompareViewMode] == 1 && ([$sliceNode GetSingletonTag] == "Red" || [$this isCompareViewer] == 1) } {
+    if { $link == 1 && [$this isCompareViewMode] == 1 && ([$sliceNode GetSingletonTag] == "Red" || [$this isCompareViewer] == 1) } {
+        set ssgui [[$::slicer3::ApplicationGUI GetApplication] GetModuleGUIByName "Slices"]
         set layout [$::slicer3::ApplicationGUI GetGUILayoutNode]
         set viewArrangement [$layout GetViewArrangement]
 
@@ -1434,6 +1430,7 @@ itcl::body SliceSWidget::getLinkedSliceGUIs { } {
     } else {
         lappend guis $sliceGUI
     }
+
   return $guis
 }
 

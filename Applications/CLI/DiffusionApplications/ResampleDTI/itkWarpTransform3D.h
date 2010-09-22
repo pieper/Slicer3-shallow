@@ -3,7 +3,7 @@
 
 #include <itkTransform.h>
 #include "dtiprocessFiles/dtitypes.h"
-#include <itkImage.h>
+#include <itkOrientedImage.h>
 #include "itkConstNeighborhoodIterator.h"
 
 

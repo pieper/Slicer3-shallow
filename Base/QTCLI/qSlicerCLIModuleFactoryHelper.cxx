@@ -1,24 +1,15 @@
-/*==============================================================================
+/*=auto=========================================================================
 
-  Program: 3D Slicer
+ Portions (c) Copyright 2005 Brigham and Women's Hospital (BWH) 
+ All Rights Reserved.
 
-  Copyright (c) 2010 Kitware Inc.
+ See Doc/copyright/copyright.txt
+ or http://www.slicer.org/copyright/copyright.txt for details.
 
-  See Doc/copyright/copyright.txt
-  or http://www.slicer.org/copyright/copyright.txt for details.
+ Program:   3D Slicer
 
-  Unless required by applicable law or agreed to in writing, software
-  distributed under the License is distributed on an "AS IS" BASIS,
-  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-  See the License for the specific language governing permissions and
-  limitations under the License.
+=========================================================================auto=*/
 
-  This file was originally developed by Jean-Christophe Fillion-Robin, Kitware Inc.
-  and was partially funded by NIH grant 3P41RR013218-12S1
-
-==============================================================================*/
-
-// QtCLI includes
 #include "qSlicerCLIModuleFactoryHelper.h"
 
 // SlicerQT includes
@@ -36,7 +27,7 @@ const QStringList qSlicerCLIModuleFactoryHelper::modulePaths()
 
   // slicerHome shouldn't be empty
   Q_ASSERT(!app->slicerHome().isEmpty());
-
+  
   QStringList defaultCmdLineModulePaths;
 
   // On Win32, *both* paths have to be there, since scripts are installed
@@ -55,5 +46,7 @@ const QStringList qSlicerCLIModuleFactoryHelper::modulePaths()
     {
     app->addLibraryPath(path);
     }
+    
+  //qDebug() << "cmdLineModulePaths:" << cmdLineModulePaths;
   return cmdLineModulePaths; 
 }

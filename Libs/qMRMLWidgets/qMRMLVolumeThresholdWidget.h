@@ -1,12 +1,15 @@
 #ifndef __qMRMLVolumeThresholdWidget_h
 #define __qMRMLVolumeThresholdWidget_h
 
-/// Qt includes
-#include <QWidget>
 
-/// CTK includes
-#include <ctkPimpl.h>
-#include <ctkVTKObject.h>
+/// qVTK includes
+#include <qVTKObject.h>
+
+/// qCTK includes
+#include <qCTKPimpl.h>
+
+/// QT includes
+#include <QWidget>
 
 #include "qMRMLWidgetsExport.h"
 
@@ -28,15 +31,9 @@ public:
   /// Constructors
   typedef QWidget Superclass;
   explicit qMRMLVolumeThresholdWidget(QWidget* parent);
-  virtual ~qMRMLVolumeThresholdWidget();
+  virtual ~qMRMLVolumeThresholdWidget(){}
 
-  /// 0: Manual
-  /// 1: Auto
-  /// 2: Off
   int autoThreshold() const;
-
-  /// Is the thresholding activated
-  bool isOff()const;
 
   /// 
   /// Get lowerThreshold
@@ -76,6 +73,9 @@ public slots:
   /// Set lowerThreshold/upperThreshold in once
   void setThreshold(double lowerThreshold, double upperThreshold);
 
+  // TODO remove when range becomes double
+  void setMinMaxRange(int min, int max);
+
   /// 
   /// Set the MRML node of interest
   void setMRMLVolumeNode(vtkMRMLScalarVolumeNode* displayNode);
@@ -103,12 +103,8 @@ protected:
   void setMaximum(double max);
 
 
-protected:
-  QScopedPointer<qMRMLVolumeThresholdWidgetPrivate> d_ptr;
-
 private:
-  Q_DECLARE_PRIVATE(qMRMLVolumeThresholdWidget);
-  Q_DISABLE_COPY(qMRMLVolumeThresholdWidget);
+  QCTK_DECLARE_PRIVATE(qMRMLVolumeThresholdWidget);
 
   vtkMRMLScalarVolumeNode* VolumeNode;
   vtkMRMLScalarVolumeDisplayNode* VolumeDisplayNode;

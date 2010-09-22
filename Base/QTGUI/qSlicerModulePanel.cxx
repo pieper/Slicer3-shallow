@@ -1,24 +1,17 @@
-/*==============================================================================
+#include "qSlicerModulePanel.h"
+#include "ui_qSlicerModulePanel.h"
 
-  Program: 3D Slicer
+// SlicerQT includes
+#include "qSlicerApplication.h"
+#include "qSlicerModuleManager.h"
+#include "qSlicerAbstractModule.h"
+#include "qSlicerAbstractModuleWidget.h"
 
-  Copyright (c) 2010 Kitware Inc.
+// qCTK includes
+#include <qCTKCollapsibleButton.h>
+#include <qCTKFittedTextBrowser.h>
 
-  See Doc/copyright/copyright.txt
-  or http://www.slicer.org/copyright/copyright.txt for details.
-
-  Unless required by applicable law or agreed to in writing, software
-  distributed under the License is distributed on an "AS IS" BASIS,
-  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-  See the License for the specific language governing permissions and
-  limitations under the License.
-
-  This file was originally developed by Julien Finet, Kitware Inc.
-  and was partially funded by NIH grant 3P41RR013218-12S1
-
-==============================================================================*/
-
-// Qt includes
+// QT includes
 #include <QDebug>
 #include <QLabel>
 #include <QResizeEvent>
@@ -29,20 +22,9 @@
 #include <QVBoxLayout>
 #include <QWebView>
 
-// CTK includes
-#include <ctkCollapsibleButton.h>
-#include <ctkFittedTextBrowser.h>
-
-// SlicerQt includes
-#include "qSlicerModulePanel.h"
-#include "ui_qSlicerModulePanel.h"
-#include "qSlicerApplication.h"
-#include "qSlicerModuleManager.h"
-#include "qSlicerAbstractCoreModule.h"
-#include "qSlicerAbstractModuleWidget.h"
-
 //---------------------------------------------------------------------------
-class qSlicerModulePanelPrivate: public Ui_qSlicerModulePanel
+class qSlicerModulePanelPrivate: public qCTKPrivate<qSlicerModulePanel>
+                               , public Ui_qSlicerModulePanel
 {
 public:
   /*
@@ -52,43 +34,38 @@ public:
   //QWebView*              HelpLabel;
   QBoxLayout*            Layout;
   QScrollArea*           ScrollArea;
-  ctkCollapsibleButton* HelpCollapsibleButton;
+  qCTKCollapsibleButton* HelpCollapsibleButton;
   */
 };
 
 //---------------------------------------------------------------------------
 qSlicerModulePanel::qSlicerModulePanel(QWidget* _parent, Qt::WindowFlags f)
   :qSlicerAbstractModulePanel(_parent, f)
-  , d_ptr(new qSlicerModulePanelPrivate)
 {
-  Q_D(qSlicerModulePanel);
+  QCTK_INIT_PRIVATE(qSlicerModulePanel);
+  QCTK_D(qSlicerModulePanel);
   d->setupUi(this);
-}
-
-//---------------------------------------------------------------------------
-qSlicerModulePanel::~qSlicerModulePanel()
-{
 }
 
 //---------------------------------------------------------------------------
 void qSlicerModulePanel::setModule(const QString& moduleName)
 {
-  Q_D(qSlicerModulePanel);
+  QCTK_D(qSlicerModulePanel);
 
-  qSlicerAbstractCoreModule * module = 0;
-
+  qSlicerAbstractModule * module = 0;
+  
   if (!moduleName.isEmpty())
     {
     module = qSlicerApplication::application()->moduleManager()->module(moduleName);
     Q_ASSERT(module);
     }
-
+  
   // Retrieve current module associated with the module panel
-  QBoxLayout* scrollAreaLayout =
+  QBoxLayout* scrollAreaLayout = 
     qobject_cast<QBoxLayout*>(d->ScrollArea->widget()->layout());
   Q_ASSERT(scrollAreaLayout);
   QLayoutItem* item = scrollAreaLayout->itemAt(1);
-  qSlicerAbstractModuleWidget* currentModuleWidget =
+  qSlicerAbstractModuleWidget* currentModuleWidget = 
     item ? qobject_cast<qSlicerAbstractModuleWidget*>(item->widget()) : 0;
 
   // If module is already set, return.
@@ -100,7 +77,7 @@ void qSlicerModulePanel::setModule(const QString& moduleName)
   if (currentModuleWidget)
     {
     // Remove the current module
-    this->removeModule(currentModuleWidget->moduleName());
+    this->removeModule(currentModuleWidget->name());
     }
 
   if (module)
@@ -118,23 +95,15 @@ void qSlicerModulePanel::setModule(const QString& moduleName)
 //---------------------------------------------------------------------------
 void qSlicerModulePanel::addModule(const QString& moduleName)
 {
-  qSlicerAbstractCoreModule* module =
-    qSlicerApplication::application()->moduleManager()->module(moduleName);
+  qSlicerAbstractModule * module =
+    qSlicerApplication::application()->moduleManager()->module(moduleName); 
   Q_ASSERT(module);
-
-  qSlicerAbstractModuleWidget* moduleWidget =
-    dynamic_cast<qSlicerAbstractModuleWidget*>(module->widgetRepresentation());
-  if (moduleWidget == 0)
-    {
-    qDebug() << "Warning, there is no UI for the module"<< moduleName;
-    emit moduleAdded(module->name());
-    return;
-    }
-
-  Q_ASSERT(!moduleWidget->moduleName().isEmpty());
-
-  Q_D(qSlicerModulePanel);
-
+  
+  qSlicerAbstractModuleWidget * moduleWidget = module->widgetRepresentation();
+  Q_ASSERT(moduleWidget);
+  
+  QCTK_D(qSlicerModulePanel);
+  
   // Update module layout
   if (moduleWidget->layout())
     {
@@ -146,7 +115,7 @@ void qSlicerModulePanel::addModule(const QString& moduleName)
     }
 
   // Insert module in the panel
-  QBoxLayout* scrollAreaLayout =
+  QBoxLayout* scrollAreaLayout = 
     qobject_cast<QBoxLayout*>(d->ScrollArea->widget()->layout());
   Q_ASSERT(scrollAreaLayout);
   scrollAreaLayout->insertWidget(1, moduleWidget,1);
@@ -158,8 +127,6 @@ void qSlicerModulePanel::addModule(const QString& moduleName)
   d->HelpCollapsibleButton->setVisible(!help.isEmpty());
   d->HelpLabel->setHtml(help);
   //d->HelpLabel->load(QString("http://www.slicer.org/slicerWiki/index.php?title=Modules:Transforms-Documentation-3.4&useskin=chick"));
-  QString acknowledgement = module->acknowledgementText();
-  d->AcknowledgementLabel->setHtml(acknowledgement);
 
   emit moduleAdded(module->name());
 }
@@ -167,17 +134,16 @@ void qSlicerModulePanel::addModule(const QString& moduleName)
 //---------------------------------------------------------------------------
 void qSlicerModulePanel::removeModule(const QString& moduleName)
 {
-  qSlicerAbstractCoreModule * module =
-    qSlicerApplication::application()->moduleManager()->module(moduleName);
+  qSlicerAbstractModule * module =
+    qSlicerApplication::application()->moduleManager()->module(moduleName); 
   Q_ASSERT(module);
-
-  qSlicerAbstractModuleWidget * moduleWidget =
-    dynamic_cast<qSlicerAbstractModuleWidget*>(module->widgetRepresentation());
+  
+  qSlicerAbstractModuleWidget * moduleWidget = module->widgetRepresentation();
   Q_ASSERT(moduleWidget);
+  
+  QCTK_D(qSlicerModulePanel);
 
-  Q_D(qSlicerModulePanel);
-
-  QBoxLayout* scrollAreaLayout =
+  QBoxLayout* scrollAreaLayout = 
     qobject_cast<QBoxLayout*>(d->ScrollArea->widget()->layout());
   Q_ASSERT(scrollAreaLayout);
   int index = scrollAreaLayout->indexOf(moduleWidget);
@@ -218,19 +184,19 @@ void qSlicerModulePanel::removeAllModule()
 void qSlicerModulePanelPrivate::setupUi(QWidget * widget)
 {
   QWidget* panel = new QWidget;
-  this->HelpCollapsibleButton = new ctkCollapsibleButton("Help");
+  this->HelpCollapsibleButton = new qCTKCollapsibleButton("Help");
   this->HelpCollapsibleButton->setCollapsed(true);
   this->HelpCollapsibleButton->setSizePolicy(
     QSizePolicy::Ignored, QSizePolicy::Minimum);
-
-  // Note: QWebView could be used as an alternative to ctkFittedTextBrowser ?
+    
+  // Note: QWebView could be used as an alternative to qCTKFittedTextBrowser ?
   //this->HelpLabel = new QWebView;
-  this->HelpLabel = static_cast<QTextBrowser*>(new ctkFittedTextBrowser);
+  this->HelpLabel = static_cast<QTextBrowser*>(new qCTKFittedTextBrowser);
   this->HelpLabel->setOpenExternalLinks(true);
   this->HelpLabel->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
   this->HelpLabel->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
   this->HelpLabel->setFrameShape(QFrame::NoFrame);
-
+  
   QPalette p = this->HelpLabel->palette();
   p.setBrush(QPalette::Window, QBrush ());
   this->HelpLabel->setPalette(p);
@@ -241,14 +207,14 @@ void qSlicerModulePanelPrivate::setupUi(QWidget * widget)
   this->Layout = new QVBoxLayout(panel);
   this->Layout->addWidget(this->HelpCollapsibleButton);
   this->Layout->addItem(
-    new QSpacerItem(0, 0, QSizePolicy::Minimum,
+    new QSpacerItem(0, 0, QSizePolicy::Minimum, 
                     QSizePolicy::MinimumExpanding));
 
   this->ScrollArea = new QScrollArea;
   this->ScrollArea->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
   this->ScrollArea->setWidget(panel);
   this->ScrollArea->setWidgetResizable(true);
-
+  
   QGridLayout* gridLayout = new QGridLayout;
   gridLayout->addWidget(this->ScrollArea);
   gridLayout->setContentsMargins(0,0,0,0);

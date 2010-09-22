@@ -28,7 +28,7 @@
 #include <itkPoint.h>
 #include <itkImageFileReader.h>
 #include <itkImageIOBase.h>
-#include <itkImage.h>
+#include <itkOrientedImage.h>
 #include <itkTransformFileReader.h>
 #include "ResampleDTICLP.h"
 #include <itkDiffusionTensor3D.h>
@@ -86,7 +86,7 @@ struct parameters
   double defaultPixelValue ;
   std::string imageCenter ;
   std::string transformsOrder ;
-  bool notbulk ;
+  bool bulk ;
 };
 
 
@@ -131,7 +131,7 @@ InterpolationTypeFct( std::string interpolationType ,
     NearestNeighborhoodInterpolatorType ;
   typedef itk::DiffusionTensor3DLinearInterpolateFunction< PixelType >
     LinearInterpolatorType ;
-  typedef itk::ConstantBoundaryCondition< itk::Image< PixelType,3 > >
+  typedef itk::ConstantBoundaryCondition< itk::OrientedImage< PixelType,3 > >
     BoundaryConditionType ;
   typedef itk::Function::HammingWindowFunction< RADIUS > 
     HammingwindowFunctionType ;
@@ -246,7 +246,7 @@ SetListFromTransform( const typename itk::MatrixOffsetTransformBase< PixelType ,
 
 template< class PixelType >
 itk::Point< double >
-ImageCenter( const typename itk::Image< itk::DiffusionTensor3D< PixelType > , 3 >
+ImageCenter( const typename itk::OrientedImage< itk::DiffusionTensor3D< PixelType > , 3 >
              ::Pointer &image
            )
 {
@@ -275,7 +275,7 @@ ImageCenter( const typename itk::Image< itk::DiffusionTensor3D< PixelType > , 3 
 template< class PixelType >
 itk::Matrix< double , 4 , 4 >
 ComputeTransformMatrix( const parameters &list ,
-                        const typename itk::Image< itk::DiffusionTensor3D< PixelType > , 3 >
+                        const typename itk::OrientedImage< itk::DiffusionTensor3D< PixelType > , 3 >
                           ::Pointer &image ,
                           const itk::Point< double > &outputImageCenter
                       )
@@ -370,7 +370,7 @@ FSOrPPD( const std::string &ppd , itk::Matrix< double , 4 , 4 > *matrix = NULL )
 template< class PixelType >
 typename itk::DiffusionTensor3DTransform< PixelType >::Pointer
 SetUpTransform( const parameters &list ,
-                const typename itk::Image< itk::DiffusionTensor3D< PixelType > , 3 >
+                const typename itk::OrientedImage< itk::DiffusionTensor3D< PixelType > , 3 >
                   ::Pointer &image ,
                 const typename itk::DiffusionTensor3DNonRigidTransform< PixelType >::TransformType
                   ::Pointer &nonRigidFile ,
@@ -419,7 +419,7 @@ SetUpTransform( const parameters &list ,
 template< class PixelType >
 typename itk::DiffusionTensor3DTransform< PixelType >::Pointer
 SetTransformAndOrder( parameters &list ,
-              const typename itk::Image< itk::DiffusionTensor3D< PixelType > , 3 >
+              const typename itk::OrientedImage< itk::DiffusionTensor3D< PixelType > , 3 >
                 ::Pointer &image ,
               typename itk::DiffusionTensor3DNonRigidTransform< PixelType >
                                          ::TransformType::Pointer &transform ,
@@ -529,7 +529,7 @@ SetTransformAndOrder( parameters &list ,
 template< class PixelType >
 typename itk::DiffusionTensor3DTransform< PixelType >::Pointer
 SetTransform( parameters &list ,
-              const typename itk::Image< itk::DiffusionTensor3D< PixelType > , 3 >
+              const typename itk::OrientedImage< itk::DiffusionTensor3D< PixelType > , 3 >
                 ::Pointer &image ,
               itk::TransformFileReader::Pointer &transformFile ,
               const itk::Point< double > &outputImageCenter
@@ -572,7 +572,7 @@ SetTransform( parameters &list ,
 //handle, the function returns -1
 template< class PixelType >
 int ReadTransform( parameters &list ,
-                   const typename itk::Image< itk::DiffusionTensor3D< PixelType > , 3 >::Pointer &image ,
+                   const typename itk::OrientedImage< itk::DiffusionTensor3D< PixelType > , 3 >::Pointer &image ,
                    itk::TransformFileReader::Pointer &transformFile
                  )
 {
@@ -608,11 +608,11 @@ template< class PixelType >
 void SetOutputParameters( const parameters &list ,
                           typename itk::DiffusionTensor3DResample< PixelType , PixelType >
                             ::Pointer &resampler ,
-                          const typename itk::Image< itk::DiffusionTensor3D< PixelType > , 3 >
+                          const typename itk::OrientedImage< itk::DiffusionTensor3D< PixelType > , 3 >
                             ::Pointer &image
                         )
 {
-  typedef itk::Image< unsigned char , 3 > ImageType ;
+  typedef itk::OrientedImage< unsigned char , 3 > ImageType ;
   typedef itk::ImageFileReader< ImageType > ReaderType ;
   typedef itk::DiffusionTensor3DResample< PixelType , PixelType > ResamplerType ;
   typedef typename ReaderType::Pointer ReaderTypePointer ;
@@ -732,10 +732,10 @@ void SetOutputParameters( const parameters &list ,
 
 
 template< class PixelType >
-void RASLPS( typename itk::Image< itk::DiffusionTensor3D< PixelType > , 3 >::Pointer &image )
+void RASLPS( typename itk::OrientedImage< itk::DiffusionTensor3D< PixelType > , 3 >::Pointer &image )
 {
-  typename itk::Image< PixelType, 3 >::PointType m_Origin ;
-  typename itk::Image< PixelType, 3 >::DirectionType m_Direction ;
+  typename itk::OrientedImage< PixelType, 3 >::PointType m_Origin ;
+  typename itk::OrientedImage< PixelType, 3 >::DirectionType m_Direction ;
   m_Origin = image->GetOrigin() ;
   m_Direction = image->GetDirection() ;
   m_Origin[ 0 ] = -m_Origin[ 0 ] ;
@@ -800,7 +800,7 @@ void ResampleDeformationField( DeformationImageType::Pointer &field ,
 template< class PixelType >
 int Do( parameters list )
 {
-    typedef itk::Image< itk::DiffusionTensor3D< PixelType > , 3 >
+    typedef itk::OrientedImage< itk::DiffusionTensor3D< PixelType > , 3 >
       InputImageType ;
     typename InputImageType::Pointer image ;
     typedef itk::DiffusionTensor3DWrite< PixelType > WriterType ;
@@ -885,7 +885,32 @@ int Do( parameters list )
     }
     //If more than one transform or if hfield, add all transforms and compute the deformation field
     TransformTypePointer transform ;
-   if( ( list.transformationFile.compare( "" )
+   if( list.bulk )//Check if transform file contains a BSpline 
+   {
+     bool error = true ;
+     if( nonRigidTransforms > 0 && transformFile->GetTransformList()->size() == 2 )
+     {
+       transform = SetTransform< PixelType > ( list , image , transformFile , outputImageCenter ) ;
+       //order=3 for the BSpline seems to be standard among tools in Slicer3 and BRAINTools       
+       typedef itk::BSplineDeformableTransform< double , 3  , 3 > BSplineDeformableTransformType ;
+       BSplineDeformableTransformType::Pointer BSplineTransform ;
+       BSplineTransform = dynamic_cast< BSplineDeformableTransformType* > (transform->GetTransform().GetPointer() ) ;
+       if( BSplineTransform )
+       {
+         typename TransformType::Pointer bulkTransform ;
+         bulkTransform = SetTransform< PixelType > ( list , image , transformFile , outputImageCenter  ) ;
+         BSplineTransform->SetBulkTransform ( bulkTransform->GetTransform() ) ;
+         error = false ;
+       }
+     }
+     if( error )
+     {
+       //if it comes here it means that there was an problem with loading and setting the bulk transform
+       std::cerr << "Bulk transform is only valid if the transform file contains only two transforms and the second one is a BSpline transform" << std::endl ;
+       return EXIT_FAILURE ;
+     }
+   }
+    else if( ( list.transformationFile.compare( "" )
                && transformFile->GetTransformList()->size() > 1
                && nonRigidTransforms > 0
              )
@@ -925,21 +950,6 @@ int Do( parameters list )
         typedef itk::TransformDeformationFieldFilter< double , double , 3 > itkTransformDeformationFieldFilterType ;
         typename itkTransformDeformationFieldFilterType::Pointer transformDeformationFieldFilter = itkTransformDeformationFieldFilterType::New() ;
         transform = SetTransform< PixelType > ( list , image , transformFile , outputImageCenter ) ;
-        //check if there is a bspline transform and a bulk transform with it
-        if( !list.notbulk && transform->GetTransform()->GetTransformTypeAsString() == "BSplineDeformableTransform_double_3_3"  && transformFile->GetTransformList()->size() )//Check if transform file contains a BSpline 
-        {
-          //transform = SetTransform< PixelType > ( list , image , transformFile , outputImageCenter ) ;
-          //order=3 for the BSpline seems to be standard among tools in Slicer3 and BRAINTools       
-          typedef itk::BSplineDeformableTransform< double , 3  , 3 > BSplineDeformableTransformType ;
-          BSplineDeformableTransformType::Pointer BSplineTransform ;
-          BSplineTransform = dynamic_cast< BSplineDeformableTransformType* > (transform->GetTransform().GetPointer() ) ;
-          if( BSplineTransform )
-          {
-            typename TransformType::Pointer bulkTransform ;
-            bulkTransform = SetTransform< PixelType > ( list , image , transformFile , outputImageCenter  ) ;
-            BSplineTransform->SetBulkTransform ( bulkTransform->GetTransform() ) ;
-          }
-        }
         if( list.numberOfThread ) 
         {
           transformDeformationFieldFilter->SetNumberOfThreads( list.numberOfThread ) ;
@@ -1125,7 +1135,13 @@ int main( int argc , char * argv[] )
   list.defaultPixelValue = defaultPixelValue ;
   list.imageCenter = imageCenter ;
   list.transformsOrder = transformsOrder ;
-  list.notbulk = notbulk ;
+  list.bulk = bulk ;
+  if( list.deffield.compare( "" ) && list.bulk )
+  {
+    std::cerr << "Cannot apply both a deformation field transform\
+ and a BSpline transform with a bulk transform at the same time" << std::endl ;
+    return EXIT_FAILURE ;
+  }
   //verify if all the vector parameters have the good length
   if( list.outputImageSpacing.size() != 3 || list.outputImageSize.size() != 3
       || ( list.outputImageOrigin.size() != 3 

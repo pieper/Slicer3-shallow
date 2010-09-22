@@ -1,26 +1,17 @@
-/*==============================================================================
+/*=auto=========================================================================
 
-  Program: 3D Slicer
-
-  Copyright (c) 2010 Kitware Inc.
+  Portions (c) Copyright 2005 Brigham and Women's Hospital (BWH) All Rights Reserved.
 
   See Doc/copyright/copyright.txt
   or http://www.slicer.org/copyright/copyright.txt for details.
 
-  Unless required by applicable law or agreed to in writing, software
-  distributed under the License is distributed on an "AS IS" BASIS,
-  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-  See the License for the specific language governing permissions and
-  limitations under the License.
+  Program:   3D Slicer
 
-  This file was originally developed by Jean-Christophe Fillion-Robin, Kitware Inc.
-  and was partially funded by NIH grant 3P41RR013218-12S1
-
-==============================================================================*/
+=========================================================================auto=*/
 
 // SlicerQT includes
 #include "qSlicerCoreApplication.h"
-#include "qSlicerModuleManager.h"
+#include "qSlicerModuleManager.h" 
 #include "qSlicerCoreIOManager.h"
 #include "qSlicerCoreCommandOptions.h"
 
@@ -28,13 +19,16 @@
 #include "vtkSlicerConfigure.h" // For Slicer3_USE_KWWIDGETS
 #include "vtkSlicerApplicationLogic.h"
 
+// qCTK includes
+#include <qCTKSettings.h>
+
 // MRML includes
 #include "vtkMRMLScene.h"
 
 // VTK includes
 #include "vtkSmartPointer.h"
 
-// STD includes
+// STL includes
 #include <stdlib.h>
 
 #include "TestingMacros.h"
@@ -80,7 +74,7 @@ int qSlicerCoreApplicationTest1(int argc, char * argv [] )
     return EXIT_FAILURE;
     }
 
-  QSettings * settings = app.settings();
+  qCTKSettings * settings = app.settings();
   if( settings == 0 )
     {
     std::cerr << "Problem with settings()" << std::endl;
@@ -158,6 +152,21 @@ int qSlicerCoreApplicationTest1(int argc, char * argv [] )
     }
 
   std::cout << "Slicer Home Directory = " << qPrintable( homeDirectory ) << std::endl;
+
+  QString newHome = homeDirectory;
+
+  app.setSlicerHome( newHome );
+
+  QString newHome1 = app.slicerHome();
+
+  if( newHome1 != newHome )
+    {
+    std::cerr << "Error in setSlicerHome()/slicerHome() " << std::endl;
+    return EXIT_FAILURE;
+    }
+
+  app.setSlicerHome( homeDirectory );
+
 
   vtkSlicerApplicationLogic * logic1 = app.appLogic();
 

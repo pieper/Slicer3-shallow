@@ -68,7 +68,7 @@ vtkEventBroker* vtkEventBroker::New()
 }
 
 //----------------------------------------------------------------------------
-// Return the single instance of the vtkEventBroker
+// Return the single instance of the vtkOutputWindow
 vtkEventBroker* vtkEventBroker::GetInstance()
 {
   if(!vtkEventBrokerInstance)
@@ -101,7 +101,6 @@ vtkEventBroker::vtkEventBroker()
   this->CompressCallData = 0;
   this->LogFileName = NULL;
   this->ScriptHandler = NULL;
-  this->ScriptHandlerClientData = NULL;
 }
 
 //----------------------------------------------------------------------------
@@ -838,15 +837,9 @@ void vtkEventBroker::InvokeObservation ( vtkObservation *observation, void *call
 
   // Invoke the observation
   // - run script is available, otherwise run callback command
-  //  -- pass back the client data to the script handler (for
-  //     example it could be the interpreter to use)
   if ( observation->GetScript() != NULL )
     {
-    if ( this->ScriptHandler )
-      {
-      (*(this->ScriptHandler)) ( 
-          observation->GetScript(), this->ScriptHandlerClientData );
-      }
+    (*(this->ScriptHandler)) ( observation->GetScript() );
     }
   else
     {

@@ -37,8 +37,8 @@ CreateNodeInstance()
 
 vtkMRMLEMSAtlasNode::vtkMRMLEMSAtlasNode()
 {
-  // ask Kilian...
-  NumberOfTrainingSamples = 82;
+  // Not defined yet 
+  NumberOfTrainingSamples = -1;
 }
 
 vtkMRMLEMSAtlasNode::~vtkMRMLEMSAtlasNode()

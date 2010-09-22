@@ -1,8 +1,14 @@
+
 // QT includes
 #include <QtPlugin>
 
+// MRML includes
+#include "vtkMRMLScene.h"
+#include "vtkMRMLNode.h"
+
 // Tractography Logic includes
 #include "vtkSlicerTractographyFiducialSeedingLogic.h"
+#include "vtkMRMLTractographyFiducialSeedingNode.h"
 
 // Tractography QTModule includes
 #include "qSlicerTractographyFiducialSeedingModule.h"
@@ -18,7 +24,7 @@ qSlicerTractographyFiducialSeedingModule(QObject* _parent):Superclass(_parent)
 }
 
 //-----------------------------------------------------------------------------
-qSlicerAbstractModuleRepresentation* qSlicerTractographyFiducialSeedingModule::createWidgetRepresentation()
+qSlicerAbstractModuleWidget* qSlicerTractographyFiducialSeedingModule::createWidgetRepresentation()
 {
   return new qSlicerTractographyFiducialSeedingModuleWidget;
 }

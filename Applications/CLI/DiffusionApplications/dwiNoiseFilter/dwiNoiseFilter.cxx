@@ -20,7 +20,7 @@
 #include <itkVectorImage.h>
 #include <math.h>
 
-#include "localPluginUtilities.h"
+#include "itkPluginUtilities.h"
 
 #include "itkLMMSEVectorImageFilter.h"
 

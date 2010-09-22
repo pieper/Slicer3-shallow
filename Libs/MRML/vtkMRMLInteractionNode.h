@@ -38,7 +38,7 @@ public:
   void SetCurrentInteractionMode ( int mode );
   vtkGetMacro (LastInteractionMode, int );
   void SetLastInteractionMode (int mode );
-
+  
   vtkGetMacro (PickModePersistence, int );
   vtkGetMacro (PlaceModePersistence, int);
   vtkGetMacro (TransformModePersistence, int );
@@ -81,7 +81,6 @@ public:
       ViewZoom,
       ViewRotate,
       ViewTransform,
-      CustomTag,
     };
   /// events
   enum

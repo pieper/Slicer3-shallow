@@ -16,8 +16,7 @@
 // MRML includes
 #include <vtkMRMLScene.h>
 #include <vtkMRMLModelNode.h>
-
-// STD includes
+// STL includes
 #include <stdlib.h>
 
 #include "TestingMacros.h"

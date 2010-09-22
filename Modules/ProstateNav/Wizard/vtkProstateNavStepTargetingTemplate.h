@@ -66,7 +66,6 @@ protected:
   void ShowTargetListFrame();
   void ShowTargetControlFrame();
 
-  void ShowCoverage(bool show);
   void ShowNeedle(bool show);
   void ShowTemplate(bool show);
 
@@ -104,7 +103,7 @@ protected:
   vtkSlicerNodeSelectorWidget* VolumeSelectorWidget;
   vtkSlicerNodeSelectorWidget* TargetListSelectorWidget;
   vtkKWFrame *LoadVolumeDialogFrame;
-  vtkKWCheckButton *ShowCoverageButton;
+  vtkKWCheckButton *ShowWorkspaceButton;
   vtkKWCheckButton *AddTargetsOnClickButton;
   vtkKWCheckButton *ShowNeedleButton;
   vtkKWCheckButton *ShowTemplateButton;

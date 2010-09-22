@@ -205,10 +205,6 @@ itcl::body RulerSWidget::updateAnnotation {} {
 
 itcl::body RulerSWidget::processEvent { {caller ""} {event ""} } {
 
-  if { $enabled != "true" } {
-    return
-  }
-
   if { [info command $sliceGUI] == "" || [$sliceGUI GetLogic] == "" } {
     # the sliceGUI was deleted behind our back, so we need to 
     # self destruct

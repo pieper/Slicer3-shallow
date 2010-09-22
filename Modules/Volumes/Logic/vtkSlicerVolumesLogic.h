@@ -28,7 +28,7 @@
 #include "vtkMRML.h"
 #include "vtkMRMLVolumeNode.h"
 
-// STD includes
+// STL includes
 #include <stdlib.h>
 
 #include "vtkSlicerVolumesModuleLogicExport.h"

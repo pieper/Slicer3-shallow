@@ -12,13 +12,11 @@
 
 =========================================================================auto=*/
 
+#include "vtkObjectFactory.h"
 #include "vtkSlicerLogic.h"
 
-// VTK includes
-#include <vtkObjectFactory.h>
-#include <vtkCallbackCommand.h>
+#include "vtkCallbackCommand.h"
 
-//----------------------------------------------------------------------------
 vtkCxxRevisionMacro(vtkSlicerLogic, "$Revision$");
 vtkStandardNewMacro(vtkSlicerLogic);
 
@@ -39,7 +37,6 @@ vtkSlicerLogic::vtkSlicerLogic()
   this->LogicCallbackCommand->SetClientData( reinterpret_cast<void *> (this) );
   this->LogicCallbackCommand->SetCallback(vtkSlicerLogic::LogicCallback);
 
-  this->MRMLCallbackCommand = this->MRMLObserverManager->GetCallbackCommand();
 }
 
 //----------------------------------------------------------------------------
@@ -70,80 +67,15 @@ void vtkSlicerLogic::PrintSelf(ostream& os, vtkIndent indent)
   os << indent << "MRMLScene: " << this->GetMRMLScene() << "\n";
 }
 
-//----------------------------------------------------------------------------
-vtkMRMLScene* vtkSlicerLogic::GetMRMLScene()
-{
-  return this->MRMLScene;
-}
 
 //----------------------------------------------------------------------------
-void vtkSlicerLogic::SetMRMLScene(vtkMRMLScene *newScene)
-{
-  vtkObject *oldValue = this->MRMLScene;
-
-  this->SetMRMLSceneInternal(newScene);
-
-  this->RegisterNodes();
-
-  if (oldValue != this->MRMLScene)
-    {
-    this->InvokeEvent (vtkCommand::ModifiedEvent);
-    }
-}
-
-//----------------------------------------------------------------------------
-void vtkSlicerLogic::SetMRMLSceneInternal(vtkMRMLScene* newScene)
-{
-  this->MRMLObserverManager->SetObject(vtkObjectPointer(&this->MRMLScene), newScene);
-}
-
-//----------------------------------------------------------------------------
-void vtkSlicerLogic::SetAndObserveMRMLScene(vtkMRMLScene *newScene)
-{
-  vtkObject *oldValue = this->MRMLScene;
-
-  this->SetAndObserveMRMLSceneInternal(newScene);
-
-  this->RegisterNodes();
-
-  if (oldValue != this->MRMLScene)
-    {
-    this->InvokeEvent (vtkCommand::ModifiedEvent);
-    }
-}
-
-//----------------------------------------------------------------------------
-void vtkSlicerLogic::SetAndObserveMRMLSceneInternal(vtkMRMLScene* newScene)
-{
-  this->MRMLObserverManager->SetAndObserveObject(vtkObjectPointer(&this->MRMLScene), newScene);
-}
-
-//----------------------------------------------------------------------------
-void vtkSlicerLogic::SetAndObserveMRMLSceneEvents(vtkMRMLScene *newScene, vtkIntArray *events)
-{
-  vtkObject *oldValue = this->MRMLScene;
-
-  this->SetAndObserveMRMLSceneEventsInternal(newScene, events);
-
-  this->RegisterNodes();
-
-  if (oldValue != this->MRMLScene)
-    {
-    this->InvokeEvent(vtkCommand::ModifiedEvent);
-    }
-}
-
-//----------------------------------------------------------------------------
-void vtkSlicerLogic::SetAndObserveMRMLSceneEventsInternal(vtkMRMLScene* newScene,
-                                                          vtkIntArray *events)
-{
-  this->MRMLObserverManager->SetAndObserveObjectEvents(
-      vtkObjectPointer(&this->MRMLScene), newScene, events);
-}
-
-//----------------------------------------------------------------------------
-void vtkSlicerLogic::MRMLCallback(vtkObject *caller, unsigned long eid,
-                                  void *clientData, void *callData)
+// Description:
+// the MRMLCallback is a static function to relay modified events from the 
+// observed mrml node back into the gui layer for further processing
+//
+void 
+vtkSlicerLogic::MRMLCallback(vtkObject *caller, 
+            unsigned long eid, void *clientData, void *callData)
 {
   vtkSlicerLogic *self = reinterpret_cast<vtkSlicerLogic *>(clientData);
 
@@ -163,8 +95,13 @@ void vtkSlicerLogic::MRMLCallback(vtkObject *caller, unsigned long eid,
 }
 
 //----------------------------------------------------------------------------
-void vtkSlicerLogic::LogicCallback(vtkObject *caller, unsigned long eid,
-                                   void *clientData, void *callData)
+// Description:
+// the LogicCallback is a static function to relay modified events from the 
+// observed mrml node back into the gui layer for further processing
+//
+void 
+vtkSlicerLogic::LogicCallback(vtkObject *caller, 
+            unsigned long eid, void *clientData, void *callData)
 {
   vtkSlicerLogic *self = reinterpret_cast<vtkSlicerLogic *>(clientData);
 
@@ -182,6 +119,7 @@ void vtkSlicerLogic::LogicCallback(vtkObject *caller, unsigned long eid,
   self->ProcessLogicEvents(caller, eid, callData);
   self->SetInLogicCallbackFlag(0);
 }
+
 
 //----------------------------------------------------------------------------
 void vtkSlicerLogic::RegisterNodes()

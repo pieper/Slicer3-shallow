@@ -352,7 +352,7 @@ void vtkSlicerScalarVolumeDisplayWidget::ProcessMRMLEvents ( vtkObject *caller,
     this->UpdateWidgetFromMRML();
     }
 
-  if (event == vtkMRMLScene::SceneClosedEvent ||
+  if (event == vtkMRMLScene::SceneCloseEvent ||
        (event == vtkMRMLScene::NodeRemovedEvent && 
        (reinterpret_cast<vtkMRMLVolumeNode *>(callData) != NULL ) &&
        (reinterpret_cast<vtkMRMLVolumeNode *>(callData) == this->VolumeNode ) )  )

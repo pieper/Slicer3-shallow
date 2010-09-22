@@ -3,7 +3,7 @@
 
 #include "vtkMRML.h"
 #include "vtkMRMLNode.h"
-#include "vtkMRMLEMS.h"
+#include "vtkEMSegment.h"
 #include "vtkMRMLEMSTemplateNode.h"
 #include "vtkMRMLEMSWorkingDataNode.h"
 #include "vtkMRMLEMSAtlasNode.h"
@@ -11,7 +11,7 @@
 
 class vtkMRMLScalarVolumeNode;
 
-class VTK_MRMLEMS_EXPORT vtkMRMLEMSSegmenterNode : 
+class VTK_EMSEGMENT_EXPORT vtkMRMLEMSSegmenterNode : 
   public vtkMRMLNode
 {
 public:

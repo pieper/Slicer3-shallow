@@ -1,14 +1,19 @@
+#include "vtkObject.h"
+#include "vtkObjectFactory.h"
+#include "vtkCommand.h"
+#include "vtkCornerAnnotation.h"
+#include "vtkImageViewer.h"
+#include "vtkRenderWindow.h"
+#include "vtkImageActor.h"
 
-
-
-// Slicer includes
-#include "vtkSlicerApplication.h"
 #include "vtkSlicerInteractorStyle.h"
 #include "vtkSlicerSliceGUI.h"
 #include "vtkSlicerSliceViewer.h"
 #include "vtkSlicerSliceControllerWidget.h"
+#include "vtkSlicerSliceLogic.h"
+#include "vtkSlicerApplication.h"
+#include "vtkMRMLSliceNode.h"
 
-// KWWidgets includes
 #include "vtkKWApplication.h"
 #include "vtkKWEvent.h"
 #include "vtkKWWidget.h"
@@ -21,18 +26,6 @@
 #include "vtkKWMenuButtonWithLabel.h"
 #include "vtkKWPushButton.h"
 #include "vtkKWRenderWidget.h"
-
-// MRML includes
-#include "vtkMRMLSliceNode.h"
-
-// VTK includes
-#include "vtkObject.h"
-#include "vtkObjectFactory.h"
-#include "vtkCommand.h"
-#include "vtkCornerAnnotation.h"
-#include "vtkImageViewer.h"
-#include "vtkRenderWindow.h"
-#include "vtkImageActor.h"
 
 
 //---------------------------------------------------------------------------
@@ -249,7 +242,7 @@ void vtkSlicerSliceGUI::ProcessLogicEvents ( vtkObject *caller,
     }
 
   // process Logic changes
-  vtkMRMLSliceLogic *sliceLogic = vtkMRMLSliceLogic::SafeDownCast(caller);
+  vtkSlicerSliceLogic *sliceLogic = vtkSlicerSliceLogic::SafeDownCast(caller);
   vtkSlicerApplicationLogic *appLogic = vtkSlicerApplicationLogic::SafeDownCast ( caller );
   
   if ( appLogic == this->GetApplicationLogic ( ) )
@@ -317,6 +310,8 @@ void vtkSlicerSliceGUI::ProcessLogicEvents ( vtkObject *caller,
     }
 }
 
+
+
 //---------------------------------------------------------------------------
 void vtkSlicerSliceGUI::ProcessMRMLEvents ( vtkObject *caller,
                                                unsigned long event, void * vtkNotUsed(callData) )
@@ -330,7 +325,7 @@ void vtkSlicerSliceGUI::ProcessMRMLEvents ( vtkObject *caller,
   vtkMRMLDisplayNode* dnode= vtkMRMLDisplayNode::SafeDownCast(caller);
   if ( this->GetLogic() && dnode )
     {
-    vtkMRMLSliceLogic *sliceLogic = this->GetLogic ( );
+    vtkSlicerSliceLogic *sliceLogic = this->GetLogic ( );
 
     vtkSlicerSliceViewer *sliceViewer = this->GetSliceViewer( );
     // vtkKWRenderWidget *rw = sliceViewer->GetRenderWidget ();
@@ -345,6 +340,15 @@ void vtkSlicerSliceGUI::ProcessMRMLEvents ( vtkObject *caller,
     LookupTableCollection->RemoveAllItems();
     LookupTableCollection->Delete();
 
+      /*
+    vtkMRMLSliceNode *snode = this->GetLogic()->GetSliceNode();
+
+    this->SetAndObserveMRMLNode( snode );
+    this->SetupViewerAndController();
+    vtkMRMLSliceCompositeNode *scnode = this->GetLogic()->GetSliceCompositeNode();
+    this->GetSliceController()->SetSliceNode (snode);
+    this->GetSliceController()->SetSliceCompositeNode (scnode);
+    */
     sliceViewer->RequestRender ( );
     }
 
@@ -359,7 +363,7 @@ void vtkSlicerSliceGUI::ProcessMRMLEvents ( vtkObject *caller,
 
 }
 
-//---------------------------------------------------------------------------
+
 void vtkSlicerSliceGUI::RemoveMRMLObservers ( )
 {
   for(unsigned int i=0; i<this->DisplayNodes.size(); i++)

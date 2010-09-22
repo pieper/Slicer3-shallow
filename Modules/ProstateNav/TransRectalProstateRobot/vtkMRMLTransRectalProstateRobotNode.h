@@ -20,12 +20,13 @@
 #include "vtkMRMLStorageNode.h"
 #include "vtkSmartPointer.h"
 #include "vtkLineSource.h"
-
+#include "vtkTransRectalFiducialCalibrationAlgo.h"
 #include "vtkObject.h"
 #include "vtkProstateNavWin32Header.h" 
-#include "vtkTransRectalFiducialCalibrationAlgo.h"
 
 class vtkPolyData;
+class vtkMRMLFiducialListNode;
+class vtkMRMLScalarVolumeNode;
 
 class VTK_PROSTATENAV_EXPORT vtkMRMLTransRectalProstateRobotNode : public vtkMRMLRobotNode
 {
@@ -40,7 +41,7 @@ class VTK_PROSTATENAV_EXPORT vtkMRMLTransRectalProstateRobotNode : public vtkMRM
   
   // Description:
   // Initialize the robot
-  virtual int Init(vtkSlicerApplication* app);
+  virtual int Init(vtkSlicerApplication* app, const char* moduleShareDir);
 
   void PrintSelf(ostream& os, vtkIndent indent);
 
@@ -58,6 +59,12 @@ class VTK_PROSTATENAV_EXPORT vtkMRMLTransRectalProstateRobotNode : public vtkMRM
   // Copy the node's attributes to this object
   virtual void Copy(vtkMRMLNode *node);
 
+  virtual void UpdateReferenceID(const char *oldID, const char *newID);
+  virtual void UpdateReferences();
+  virtual void UpdateScene(vtkMRMLScene *scene);
+
+  virtual void RemoveChildNodes();
+
   // Description:
   // Get node XML tag name (like Volume, Model)
   virtual const char* GetNodeTagName()
@@ -69,30 +76,49 @@ class VTK_PROSTATENAV_EXPORT vtkMRMLTransRectalProstateRobotNode : public vtkMRM
   // method to propagate events generated in mrml
   virtual void ProcessMRMLEvents ( vtkObject *caller, unsigned long event, void *callData );
 
-  virtual bool FindTargetingParams(vtkProstateNavTargetDescriptor *targetDesc);
-  virtual bool ShowRobotAtTarget(vtkProstateNavTargetDescriptor *targetDesc);
+  virtual bool GetNeedleDirectionAtTarget(vtkProstateNavTargetDescriptor *targetDesc, NeedleDescriptorStruct *needle, double* needleDirection);
+  virtual bool ShowRobotAtTarget(vtkProstateNavTargetDescriptor *targetDesc, NeedleDescriptorStruct *needle);
   //BTX
-  virtual std::string GetTargetInfoText(vtkProstateNavTargetDescriptor *targetDesc);
+  virtual std::string GetTargetInfoText(vtkProstateNavTargetDescriptor *targetDesc, NeedleDescriptorStruct *needle);
   //ETX
 
   // Description:
-  void GetCalibrationMarker(unsigned int markerNr, double &r, double &a, double &s, bool &valid);
-  void SetCalibrationMarker(unsigned int markerNr, double markerRAS[3]);
   void RemoveAllCalibrationMarkers();
 
   void ResetCalibrationData();
   const TRProstateBiopsyCalibrationData& GetCalibrationData() { return this->CalibrationData; }
-  void SetCalibrationData(const TRProstateBiopsyCalibrationData& calibData);
+
+  void SetAndObserveCalibrationPointListNodeID(const char *childNodeID);
+  vtkGetStringMacro(CalibrationPointListNodeID);
+  vtkMRMLFiducialListNode* GetCalibrationPointListNode();
+
+  void SetAndObserveCalibrationVolumeNodeID(const char *childNodeID);  
+  vtkMRMLScalarVolumeNode* GetCalibrationVolumeNode();
 
   //BTX
-  bool SegmentRegisterMarkers(vtkMRMLScalarVolumeNode *calibVol, double thresh[4], double fidDimsMm[3], double radiusMm, bool bUseRadius, double initialAngle, std::string &resultDetails, bool enableAutomaticCenterpointAdjustment);
+  void SetCalibrationInputs(const char *calibVolRef, double thresh[CALIB_MARKER_COUNT], double fidDimsMm[3], double radiusMm, double initialAngle, bool enableAutomaticCenterpointAdjustment);
   //ETX
  
- virtual const char* GetRobotModelId() {return GetRobotModelNodeID(); };
+ virtual const char* GetRobotModelId() {return GetRobotModelNodeRef(); };
  virtual bool GetRobotBaseTransform(vtkMatrix4x4* transform);
+
+ virtual const char* GetWorkspaceObjectModelId() { return GetWorkspaceModelNodeRef(); };
 
  void SetModelAxesVisible(bool visible);
  vtkGetMacro(ModelAxesVisible, bool);
+
+ vtkGetStringMacro(CalibrationVolumeNodeID);
+
+ vtkGetMacro(EnableAutomaticMarkerCenterpointAdjustment, bool);
+
+ vtkGetStringMacro(CalibrationStatusDescription);
+
+ double GetMarkerSegmentationThreshold(int i);
+ vtkGetVectorMacro(MarkerDimensionsMm, double, 3);
+ vtkGetMacro(MarkerRadiusMm, double);
+ vtkGetMacro(RobotInitialAngle, double);
+
+ virtual void ApplyTransform(vtkMatrix4x4* transformMatrix); 
 
  protected:
   //----------------------------------------------------------------
@@ -100,45 +126,73 @@ class VTK_PROSTATENAV_EXPORT vtkMRMLTransRectalProstateRobotNode : public vtkMRM
   //----------------------------------------------------------------
   
   vtkMRMLTransRectalProstateRobotNode();
-  ~vtkMRMLTransRectalProstateRobotNode();
+  virtual ~vtkMRMLTransRectalProstateRobotNode();
   vtkMRMLTransRectalProstateRobotNode(const vtkMRMLTransRectalProstateRobotNode&);
   void operator=(const vtkMRMLTransRectalProstateRobotNode&);  
 
-  vtkGetStringMacro(RobotModelNodeID);
-  vtkMRMLModelNode* GetRobotModelNode();
-  void SetAndObserveRobotModelNodeID(const char *nodeID);
+  const char* AddModelNode(const char* nodeName, double colorR=0.7, double colorG=0.7, double colorB=0.7); 
+    
+  vtkGetStringMacro(RobotModelNodeRef);
+  vtkSetReferenceStringMacro(RobotModelNodeRef); 
+  vtkMRMLModelNode* GetRobotModelNode();    
 
-  const char* AddRobotModel(const char* nodeName); 
+  vtkGetStringMacro(WorkspaceModelNodeRef);
+  vtkSetReferenceStringMacro(WorkspaceModelNodeRef); 
+  vtkMRMLModelNode* GetWorkspaceModelNode();    
+
 
  protected:
 
-  void UpdateModel();
-  void UpdateModelAxes();
-  void UpdateModelProbe();
-  void UpdateModelMarkers();
-  void UpdateModelNeedle(vtkProstateNavTargetDescriptor *targetDesc);
+  vtkSetStringMacro(CalibrationStatusDescription);  
 
+  void UpdateRobotModel();
+  void UpdateRobotModelAxes();
+  void UpdateRobotModelProbe();
+  void UpdateRobotModelMarker(int markerInd, vtkImageData *imagedata, vtkMatrix4x4* ijkToRAS);
+  void UpdateRobotModelNeedle(vtkProstateNavTargetDescriptor *targetDesc, NeedleDescriptorStruct *needle);
+
+  void UpdateWorkspaceModel();
+
+  void UpdateCalibration();
+
+  virtual void TransformCalibrationData(vtkMatrix4x4 *transformMatrix);
+  virtual void TransformRobotModelMarkers(vtkMatrix4x4* transformMatrix);
+
+  ///////////////////////////////
+  // persistent data
+
+  bool EnableAutomaticMarkerCenterpointAdjustment;
+  double MarkerSegmentationThreshold[CALIB_MARKER_COUNT];
+  double MarkerDimensionsMm[3];
+  double MarkerRadiusMm;
+  double RobotInitialAngle;
+
+  bool ModelAxesVisible;
+  char *RobotModelNodeRef;
+  
+  char *WorkspaceModelNodeRef;
 
   TRProstateBiopsyCalibrationData CalibrationData;
+  char *CalibrationStatusDescription;
 
-  //BTX
-  vtkSmartPointer<vtkTransRectalFiducialCalibrationAlgo> CalibrationAlgo;  
-  //ETX
+  // Description:
+  // CalibrationPointListNode is used for displaying 4 fiducial points that defines the calibration marker initial positions
+  vtkSetReferenceStringMacro(CalibrationPointListNodeID);
+  char *CalibrationPointListNodeID;
+  vtkMRMLFiducialListNode* CalibrationPointListNode;
 
-  double CalibrationMarkerPositions[CALIB_MARKER_COUNT][3];
-  bool CalibrationMarkerValid[CALIB_MARKER_COUNT];
+  vtkSetReferenceStringMacro(CalibrationVolumeNodeID);
+  char *CalibrationVolumeNodeID;
+  vtkMRMLScalarVolumeNode* CalibrationVolumeNode;
+
+  ///////////////////////////////
+  // temporarily stored data (cached for performance reasons only)
 
   // Robot model components
   vtkPolyData* ModelMarkers[CALIB_MARKER_COUNT];
   vtkPolyData* ModelAxes;
   vtkPolyData* ModelProbe;
-  vtkPolyData* ModelNeedle;
-
-  bool ModelAxesVisible;
-
-  vtkSetReferenceStringMacro(RobotModelNodeID);
-  char *RobotModelNodeID;
-  vtkMRMLModelNode* RobotModelNode;
+  vtkPolyData* ModelNeedle;  
   
 };
 

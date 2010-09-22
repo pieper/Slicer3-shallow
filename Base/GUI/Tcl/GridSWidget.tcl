@@ -102,21 +102,10 @@ itcl::body GridSWidget::destructor {} {
 #
 itcl::body GridSWidget::processEvent { {caller ""} {event ""} } {
 
-  if { $enabled != "true" } {
-    return
-  }
-
   if { [info command $sliceGUI] == "" || [$sliceGUI GetLogic] == "" } {
     # the sliceGUI was deleted behind our back, so we need to 
     # self destruct
     ::SWidget::ProtectedDelete $this
-    return
-  }
-
-  if { ![$_sliceCompositeNode GetLabelGrid] || [$_sliceCompositeNode GetLabelVolumeID] == "" } {
-    # avoid any computation if we are not currently visible
-    $o(gridActor) SetVisibility 0
-    [$sliceGUI GetSliceViewer] RequestRender
     return
   }
 
@@ -188,14 +177,13 @@ itcl::body GridSWidget::addGridLine { startPoint endPoint } {
 #
 itcl::body GridSWidget::updateGrid { } {
 
+  $this resetGrid
 
   if { ![$_sliceCompositeNode GetLabelGrid] || [$_sliceCompositeNode GetLabelVolumeID] == "" } {
     $o(gridActor) SetVisibility 0
     [$sliceGUI GetSliceViewer] RequestRender
     return
   }
-
-  $this resetGrid
 
   #
   # check the size cutoff

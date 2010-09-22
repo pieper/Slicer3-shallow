@@ -1270,7 +1270,7 @@ itcl::body LoadVolume::populateDICOMTree {directoryName arrayName} {
   update
 
   set n 0 ;# serial number of node
-  foreach patient [lsort -dictionary $tree(patients)] {
+  foreach patient $tree(patients) {
     set patientNode $n-patient-[$this safeNodeName $patient]
     set tree(subscriptName,$patientNode) $patient
     incr n
@@ -1279,7 +1279,7 @@ itcl::body LoadVolume::populateDICOMTree {directoryName arrayName} {
     }
     $t AddNode "" $patientNode $tree(patients,displayName,$patient)
     $t OpenNode $patientNode
-    foreach study [lsort -dictionary $tree($patient,studies)] {
+    foreach study $tree($patient,studies) {
       set studyNode $n-study-[$this safeNodeName $study]
       set tree(subscriptName,$studyNode) $study
       incr n
@@ -1288,7 +1288,7 @@ itcl::body LoadVolume::populateDICOMTree {directoryName arrayName} {
       }
       $t AddNode $patientNode $studyNode $tree($patient,studies,displayName,$study)
       $t OpenNode $studyNode
-      foreach series [lsort -dictionary $tree($patient,$study,series)] {
+      foreach series $tree($patient,$study,series) {
         set seriesNode $n-series-[$this safeNodeName $series]
         set tree(subscriptName,$seriesNode) $series
         incr n
@@ -1298,7 +1298,7 @@ itcl::body LoadVolume::populateDICOMTree {directoryName arrayName} {
           set tree($patient,$study,series,displayName,$series) $series
         }
         $t AddNode $studyNode $seriesNode "$tree($patient,$study,series,displayName,$series) ($fileCount $countString)"
-        foreach file [lsort -dictionary $tree($patient,$study,$series,files)] {
+        foreach file $tree($patient,$study,$series,files) {
           set fileNode $n-$seriesNode-file-[$this safeNodeName $file]
           set tree(subscriptName,$fileNode) $file
           incr n

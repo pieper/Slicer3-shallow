@@ -100,8 +100,6 @@ IF(BUILD_SHARED_LIBS)
        \"../lib/MGHImageIO\",                                       \\
        \"../lib/MRML\",                                             \\
        \"../lib/MRMLCLI\",                                          \\
-       \"../lib/MRMLLogic\",                                        \\
-       \"../lib/MRMLDisplayableManager\",                           \\
        \"../lib/ModuleDescriptionParser\",                          \\
        \"../lib/MRMLIDImageIO\",                                    \\
        \"../lib/Qdec\",                                             \\
@@ -182,26 +180,19 @@ ENDIF(SlicerQT_NEED_SHARED_FORWARD)
 # Sources
 #
 SET(SlicerQT_SRCS
-  qSlicerAboutDialog.cxx
-  qSlicerAboutDialog.h
-
-  qSlicerMainWindow.cxx
   qSlicerMainWindow.h
-  qSlicerMainWindowCore.cxx
+  qSlicerMainWindow.cxx
   qSlicerMainWindowCore.h
-  qSlicerMainWindowCore_p.h
+  qSlicerMainWindowCore.cxx
   )
 
 SET(SlicerQT_MOC_SRCS
-  qSlicerAboutDialog.h
-
   qSlicerMainWindow.h
   qSlicerMainWindowCore.h
   qSlicerMainWindowCore_p.h
   )
   
 SET(SlicerQT_UI_SRCS
-  Resources/UI/qSlicerAboutDialog.ui
   Resources/UI/qSlicerMainWindow.ui
   )
 
@@ -504,6 +495,6 @@ INSTALL(TARGETS SlicerQT${SlicerQT_EXE_SUFFIX}
 # --------------------------------------------------------------------------
 # Testing
 #
-IF(Slicer3_BUILD_TESTING)
-  ADD_SUBDIRECTORY(Testing)
-ENDIF(Slicer3_BUILD_TESTING)
+# if(Slicer3_BUILD_TESTING)
+#   ADD_SUBDIRECTORY(Testing)
+# endif(Slicer3_BUILD_TESTING)

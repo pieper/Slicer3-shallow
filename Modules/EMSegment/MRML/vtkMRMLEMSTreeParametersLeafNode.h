@@ -3,12 +3,12 @@
 
 #include "vtkMRML.h"
 #include "vtkMRMLNode.h"
-#include "vtkMRMLEMS.h"
+#include "vtkEMSegment.h"
 #include "vtkMRMLScene.h"
 
 #include <vector>
 
-class VTK_MRMLEMS_EXPORT vtkMRMLEMSTreeParametersLeafNode : 
+class VTK_EMSEGMENT_EXPORT vtkMRMLEMSTreeParametersLeafNode : 
   public vtkMRMLNode
 {
 public:

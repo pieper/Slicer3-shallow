@@ -3,7 +3,7 @@
 
 #include "vtkSlicerModuleGUI.h"
 #include "vtkChangeTracker.h"
-#include "vtkMRMLSliceLogic.h"
+#include "vtkSlicerSliceLogic.h"
 #include "vtkKWScale.h"
 
 #define TUTORIAL_XNAT_SCENE "http://xnd.slicer.org:8000/data/20090803T130148Z/ChangetrackerTutorial2009.mrml"
@@ -135,7 +135,7 @@ public:
 
   // Description:
   // accessor
-  vtkGetObjectMacro(SliceLogic, vtkMRMLSliceLogic);
+  vtkGetObjectMacro(SliceLogic, vtkSlicerSliceLogic);
   vtkGetObjectMacro(SliceController_OffsetScale, vtkKWScale); 
 
   void PropagateVolumeSelection();
@@ -173,16 +173,16 @@ private:
 
   // Description:
   // The wizard widget and steps
-  vtkKWWizardWidget                    *WizardWidget;
+  vtkKWWizardWidget                      *WizardWidget;
   vtkChangeTrackerFirstScanStep        *FirstScanStep;
   vtkChangeTrackerROIStep              *ROIStep;
   vtkChangeTrackerSegmentationStep     *SegmentationStep;
   vtkChangeTrackerTypeStep             *TypeStep;
   vtkChangeTrackerAnalysisStep         *AnalysisStep;
 
-  vtkMRMLSliceLogic *  SliceLogic;
-  vtkKWScale *         SliceController_OffsetScale;
-  vtkCallbackCommand * SliceLogicCallbackCommand;
+  vtkSlicerSliceLogic *SliceLogic;
+  vtkKWScale *SliceController_OffsetScale;
+  vtkCallbackCommand *SliceLogicCallbackCommand;
 
   vtkKWPushButton *TutorialButton;
 

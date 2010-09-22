@@ -19,18 +19,9 @@ namespace eval SWidget {
 # utility to run method only if instance hasn't already been deleted
 # (this is useful in event handling)
 #
-namespace eval SWidget set CALLBACK_LEVEL 0
-namespace eval SWidget set VERBOSE_CALLBACKS 0
-namespace eval SWidget set DEBUG_CALLBACKS 1
+namespace eval SWidget set DEBUG_CALLBACKS 0
 namespace eval SWidget {
   proc ProtectedCallback {instance args} {
-    if { $::SWidget::VERBOSE_CALLBACKS } {
-      for {set sp 0} {$sp < $::SWidget::CALLBACK_LEVEL} {incr sp} {
-        puts -nonewline " "
-      }
-      puts "callback for $instance with $args"
-    }
-    incr ::SWidget::CALLBACK_LEVEL
     if { [info command $instance] != "" } {
       if { $::SWidget::DEBUG_CALLBACKS } {
         eval $instance $args
@@ -41,7 +32,6 @@ namespace eval SWidget {
         }
       }
     }
-    incr ::SWidget::CALLBACK_LEVEL -1
   }
 }
 
@@ -80,8 +70,6 @@ if { [itcl::find class SWidget] == "" } {
     public variable state ""  ;# the interaction state of the SWidget
     public variable description ""  ;# a status string describing the current state
     public variable sliceGUI ""  ;# the sliceGUI on which the SWidget lives
-
-    public variable enabled "true"  ;# if not enabled, subclasses should not process events
 
     variable _vtkObjects ""
     variable _pickState "outside"
@@ -289,19 +277,9 @@ itcl::body SWidget::queryLayers { x y {z 0} } {
   }
 }
 
-namespace eval SWidget set getTensorPixelWarning 0
-
 itcl::body SWidget::getTensorPixel { node i j k } {
 
   if { ![info exists o(dtiMath)] } {
-    # TODO: in slicer4 this class is not available - need to figure out why...
-    if { [info command vtkDiffusionTensorMathematicsSimple] == "" } {
-      if { !$::SWidget::getTensorPixelWarning } {
-        puts "$this: TODO: in slicer4 vtkDiffusionTensorMathematicsSimple class is not available - need to figure out why..."
-        set ::SWidget::getTensorPixelWarning 1
-      }
-      return
-    }
     set o(dtiMath) [vtkNew vtkDiffusionTensorMathematicsSimple]
     set o(dtiPixelImage) [vtkNew vtkImageData]
     set o(dtiPixelTensors) [vtkNew vtkDoubleArray]
@@ -450,6 +428,7 @@ itcl::body SWidget::cancelDelayedAnnotation { } {
         after cancel $_annotationTaskID
         set _annotationTaskID ""
         [$sliceGUI GetSliceViewer] RequestRender
+        #puts "requesting a render on $this [expr rand()]"
     }
 }
 

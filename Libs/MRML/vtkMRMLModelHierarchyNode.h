@@ -22,15 +22,15 @@
 #include "vtkMRMLHierarchyNode.h"
 #include "vtkMRMLModelNode.h"
 #include "vtkMRMLModelDisplayNode.h"
-#include "vtkMRMLDisplayableHierarchyNode.h"
+
 
 class vtkCallbackCommand;
 
-class VTK_MRML_EXPORT vtkMRMLModelHierarchyNode : public vtkMRMLDisplayableHierarchyNode
+class VTK_MRML_EXPORT vtkMRMLModelHierarchyNode : public vtkMRMLHierarchyNode
 {
 public:
   static vtkMRMLModelHierarchyNode *New();
-  vtkTypeMacro(vtkMRMLModelHierarchyNode,vtkMRMLDisplayableHierarchyNode);
+  vtkTypeMacro(vtkMRMLModelHierarchyNode,vtkMRMLHierarchyNode);
   void PrintSelf(ostream& os, vtkIndent indent);
   
   //--------------------------------------------------------------------------
@@ -81,13 +81,25 @@ public:
 
 
   /// 
+  /// String ID of the display MRML node
+  void SetAndObserveDisplayNodeID(const char *DisplayNodeID);
+  vtkGetStringMacro(DisplayNodeID);
+
+
+  /// 
   /// Get associated model MRML node
   vtkMRMLModelNode* GetModelNode();
 
   /// 
   /// Get associated display MRML node
-  vtkMRMLModelDisplayNode* GetModelDisplayNode();
+  vtkMRMLModelDisplayNode* GetDisplayNode();
     
+
+  /// 
+  /// Indicates if the node is expanded
+  vtkBooleanMacro(Expanded, int);
+  vtkGetMacro(Expanded, int);
+  vtkSetMacro(Expanded, int);
 
   /// 
   /// Get the first parent node in hierarchy which is not expanded
@@ -112,6 +124,14 @@ public:
                                    unsigned long /*event*/, 
                                    void * /*callData*/ );
 
+//BTX
+  /// 
+  /// DisplayModifiedEvent is generated when display node parameters is changed
+  enum
+    {
+      DisplayModifiedEvent = 17000
+    };
+//ETX
 
 protected:
   vtkMRMLModelHierarchyNode();
@@ -119,13 +139,17 @@ protected:
   vtkMRMLModelHierarchyNode(const vtkMRMLModelHierarchyNode&);
   void operator=(const vtkMRMLModelHierarchyNode&);
 
+  vtkSetReferenceStringMacro(DisplayNodeID);
+
 
   /// Data
 
   char *ModelNodeID;
+  char *DisplayNodeID;
 
   vtkMRMLModelDisplayNode *ModelDisplayNode;
 
+  int Expanded;
 };
 
 #endif

@@ -329,15 +329,15 @@ void vtkMRMLTractographyFiducialSeedingNode::PrintSelf(ostream& os, vtkIndent in
 //----------------------------------------------------------------------------
 void vtkMRMLTractographyFiducialSeedingNode::UpdateReferenceID(const char *oldID, const char *newID)
 {
-  if (this->InputVolumeRef && !strcmp(oldID, this->InputVolumeRef))
+  if (!strcmp(oldID, this->InputVolumeRef))
     {
     this->SetInputVolumeRef(newID);
     }
-  if (this->InputFiducialRef && !strcmp(oldID, this->InputFiducialRef))
+  if (!strcmp(oldID, this->InputFiducialRef))
     {
     this->SetInputFiducialRef(newID);
     }
-  if (this->OutputFiberRef && !strcmp(oldID, this->OutputFiberRef))
+  if (!strcmp(oldID, this->OutputFiberRef))
     {
     this->SetOutputFiberRef(newID);
     }

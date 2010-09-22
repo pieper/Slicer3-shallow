@@ -74,7 +74,7 @@ void vtkSlicerColorLogic::ProcessMRMLEvents(vtkObject * vtkNotUsed(caller),
   vtkDebugMacro("vtkSlicerColorLogic::ProcessMRMLEvents: got an event " << event);
   
   // when there's a new scene, add the default nodes
-  //if (event == vtkMRMLScene::NewSceneEvent || event == vtkMRMLScene::SceneClosedEvent)
+  //if (event == vtkMRMLScene::NewSceneEvent || event == vtkMRMLScene::SceneCloseEvent)
   if (event == vtkMRMLScene::NewSceneEvent)
     {
     vtkDebugMacro("vtkSlicerColorLogic::ProcessMRMLEvents: got a NewScene event " << event);
@@ -114,8 +114,6 @@ void vtkSlicerColorLogic::AddDefaultColorNodes()
     return;
     }
   
-  this->GetMRMLScene()->SetIsImporting(1);
-
   vtkMRMLColorTableNode *basicNode = vtkMRMLColorTableNode::New();
 
   // add the labels first
@@ -137,9 +135,7 @@ void vtkSlicerColorLogic::AddDefaultColorNodes()
   for (int i = basicNode->GetFirstType(); i <= basicNode->GetLastType(); i++)
     {
     // don't add a second Lables node, File node or the old atlas node
-    if (i != vtkMRMLColorTableNode::Labels &&
-        i != vtkMRMLColorTableNode::File &&
-        i != vtkMRMLColorTableNode::Obsolete)
+    if (i != basicNode->Labels && i != basicNode->File && i != 11)
       {
       vtkMRMLColorTableNode *node = vtkMRMLColorTableNode::New();
       node->SetType(i);
@@ -305,7 +301,7 @@ void vtkSlicerColorLogic::AddDefaultColorNodes()
       }
     else
       {
-      vtkErrorMacro("Unable to read freesurfer colour file " << (node->GetFileName() ? node->GetFileName() : ""));
+      vtkErrorMacro("Unable to read freesurfer colour file " << node->GetFileName());
       }
     }
   // node->Delete();
@@ -499,7 +495,6 @@ void vtkSlicerColorLogic::AddDefaultColorNodes()
     ctnode->Delete();
     }
   vtkDebugMacro("Done adding default color nodes");
-  this->GetMRMLScene()->SetIsImporting(0);
 }
 
 //----------------------------------------------------------------------------
@@ -516,10 +511,10 @@ void vtkSlicerColorLogic::RemoveDefaultColorNodes()
   vtkMRMLColorTableNode *node;
   for (int i = basicNode->GetFirstType(); i <= basicNode->GetLastType(); i++)
     {
-    // don't have a File node...
-    if (i != vtkMRMLColorTableNode::File
-        && i != vtkMRMLColorTableNode::Obsolete)
+    // don't have a File node
+    if (i != basicNode->File)
       {
+      basicNode->SetType(i);
       //std::string id = std::string(this->GetDefaultColorTableNodeID(i));
       const char* id = this->GetDefaultColorTableNodeID(i);
       vtkDebugMacro("vtkSlicerColorLogic::RemoveDefaultColorNodes: trying to find node with id " << id << endl);
@@ -530,7 +525,6 @@ void vtkSlicerColorLogic::RemoveDefaultColorNodes()
         }
       }
     }
-  basicNode->Delete();
 
   // remove freesurfer nodes
   vtkMRMLFreeSurferProceduralColorNode *basicFSNode = vtkMRMLFreeSurferProceduralColorNode::New();
@@ -679,31 +673,31 @@ const char * vtkSlicerColorLogic::GetDefaultdGEMRICColorNodeID(int type)
 //----------------------------------------------------------------------------
 const char *vtkSlicerColorLogic::GetDefaultVolumeColorNodeID()
 {
-  return vtkSlicerColorLogic::GetDefaultColorTableNodeID(vtkMRMLColorTableNode::Grey);
+  return this->GetDefaultColorTableNodeID(vtkMRMLColorTableNode::Grey);
 }
 
 //----------------------------------------------------------------------------
 const char *vtkSlicerColorLogic::GetDefaultLabelMapColorNodeID()
 {
-  return vtkSlicerColorLogic::GetDefaultFileColorNodeID("GenericColors.txt");
+  return this->GetDefaultFileColorNodeID("GenericColors.txt");
 }
 
 //----------------------------------------------------------------------------
 const char *vtkSlicerColorLogic::GetDefaultEditorColorNodeID()
 {
-  return vtkSlicerColorLogic::GetDefaultFileColorNodeID("GenericAnatomyColors.txt");
+  return this->GetDefaultFileColorNodeID("GenericAnatomyColors.txt");
 }
 
 //----------------------------------------------------------------------------
 const char *vtkSlicerColorLogic::GetDefaultModelColorNodeID()
 {
-  return vtkSlicerColorLogic::GetDefaultFreeSurferColorNodeID(vtkMRMLFreeSurferProceduralColorNode::Heat);
+  return this->GetDefaultFreeSurferColorNodeID(vtkMRMLFreeSurferProceduralColorNode::Heat);
 }
 
 //----------------------------------------------------------------------------
 const char * vtkSlicerColorLogic::GetDefaultFreeSurferLabelMapColorNodeID()
 {
-  return vtkSlicerColorLogic::GetDefaultFreeSurferColorNodeID(vtkMRMLFreeSurferProceduralColorNode::Labels);
+  return this->GetDefaultFreeSurferColorNodeID(vtkMRMLFreeSurferProceduralColorNode::Labels);
 }
 
 //----------------------------------------------------------------------------
@@ -971,24 +965,7 @@ int vtkSlicerColorLogic::LoadColorFile(const char *fileName, const char *nodeNam
       this->GetMRMLScene()->RemoveNode(node);
       }
     }
-  vtkDebugMacro("LoadColorFile: failed to reaad color file " << fileName << ", returning null");
+  vtkDebugMacro("LoadColorFile: failed to read color file " << fileName << ", returning false");
   return 0;
 }
 
-//------------------------------------------------------------------------------
-void vtkSlicerColorLogic::SetMRMLSceneInternal(vtkMRMLScene* newScene)
-{
-  // This code is only executed in SlicerQT via:
-  // colorLogic->SetMRMLScene(scene)
-  // Slicer in KWWidget runs the old style:
-  //   colorLogic->SetAndObserveMRMLSceneEvents(scene, events)
-  vtkIntArray* sceneEvents = vtkIntArray::New();
-  sceneEvents->InsertNextValue(vtkMRMLScene::NewSceneEvent);
-
-  this->SetAndObserveMRMLSceneEventsInternal(newScene, sceneEvents);
-  sceneEvents->Delete();
-  if (newScene)
-    {
-    this->AddDefaultColorNodes();
-    }
-}

@@ -1,50 +1,35 @@
-/*==============================================================================
+/*=auto=========================================================================
 
-  Program: 3D Slicer
+ Portions (c) Copyright 2005 Brigham and Women's Hospital (BWH) 
+ All Rights Reserved.
 
-  Copyright (c) 2010 Kitware Inc.
+ See Doc/copyright/copyright.txt
+ or http://www.slicer.org/copyright/copyright.txt for details.
 
-  See Doc/copyright/copyright.txt
-  or http://www.slicer.org/copyright/copyright.txt for details.
+ Program:   3D Slicer
 
-  Unless required by applicable law or agreed to in writing, software
-  distributed under the License is distributed on an "AS IS" BASIS,
-  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-  See the License for the specific language governing permissions and
-  limitations under the License.
-
-  This file was originally developed by Jean-Christophe Fillion-Robin, Kitware Inc.
-  and was partially funded by NIH grant 3P41RR013218-12S1
-
-==============================================================================*/
+=========================================================================auto=*/
 
 #ifndef __qSlicerCoreCommandOptions_h
 #define __qSlicerCoreCommandOptions_h
 
-// CTK includes
-#include <ctkPimpl.h>
-#include <ctkCommandLineParser.h>
+/// qCTK includes
+#include <qCTKPimpl.h>
+
+/// qVTK includes
+#include <qVTKCommandOptions.h>
 
 #include "qSlicerBaseQTCoreExport.h"
 
 class QSettings;
 class qSlicerCoreCommandOptionsPrivate;
 
-class Q_SLICER_BASE_QTCORE_EXPORT qSlicerCoreCommandOptions : public ctkCommandLineParser
+class Q_SLICER_BASE_QTCORE_EXPORT qSlicerCoreCommandOptions : public qVTKCommandOptions
 {
 public:
-  typedef ctkCommandLineParser Superclass;
+  typedef qVTKCommandOptions Superclass;
   qSlicerCoreCommandOptions(QSettings* _settings);
   virtual ~qSlicerCoreCommandOptions();
-
-  /// Convenient method allowing to parse arguments
-  bool parse(const QStringList& arguments);
-
-  /// Return True if slicer should display help and exit
-  bool displayHelpAndExit()const;
-
-  /// Return True if the ignore rest argument has been passed
-  bool ignoreRest() const;
 
   /// Return True if the loading of Command Line Modules should be disabled
   bool disableCLIModule()const;
@@ -61,12 +46,6 @@ public:
   /// Return True if slicer should display home path and exit
   bool displayHomePathAndExit()const;
 
-  /// Return True if slicer should display settings path and exit
-  bool displaySettingsPathAndExit()const;
-
-  /// Return True if slicer should display details regarding the module discovery process
-  bool verboseModuleDiscovery()const;
-
   /// Return temp directory
   /// Try to read the value from the setting, if no value is found it defaults to
   /// the value returned by QDir::tempPath()
@@ -74,20 +53,18 @@ public:
   QString tempDirectory()const;
 
 protected:
-  /// Add arguments - Called from parse() method
-  /// \sa parse(const QStringList&)
-  virtual void addArguments();
+  /// Initialize arguments
+  virtual void initialize();
 
-  /// Return the parsed arguments
-  /// \sa qSlicerCoreCommandOptions::parse(const QStringList&)
-  QHash<QString, QVariant> parsedArgs() const;
+  // Disable current settings
+  virtual void disableCurrentSettings();
 
-protected:
-  QScopedPointer<qSlicerCoreCommandOptionsPrivate> d_ptr;
+  /// This method is called when wrong argument is found. If it returns False, then
+  /// the parsing will fail.
+  virtual bool wrongArgument(const char* argument);
 
 private:
-  Q_DECLARE_PRIVATE(qSlicerCoreCommandOptions);
-  Q_DISABLE_COPY(qSlicerCoreCommandOptions);
+  QCTK_DECLARE_PRIVATE(qSlicerCoreCommandOptions);
 
 };
 

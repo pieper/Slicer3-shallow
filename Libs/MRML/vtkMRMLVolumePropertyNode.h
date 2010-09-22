@@ -53,8 +53,7 @@ public:
     vtkTypeMacro(vtkMRMLVolumePropertyNode,vtkMRMLStorableNode);
     void PrintSelf(ostream& os, vtkIndent indent);
 
-    vtkVolumeProperty* GetVolumeProperty(){return VolumeProperty;};
-    //vtkGetObjectMacro(VolumeProperty,vtkVolumeProperty);
+    vtkGetObjectMacro(VolumeProperty,vtkVolumeProperty);
 
     //--------------------------------------------------------------------------
     /// MRMLNode methods

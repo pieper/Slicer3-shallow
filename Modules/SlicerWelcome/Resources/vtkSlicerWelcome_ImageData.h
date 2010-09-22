@@ -926,7 +926,6 @@ static const unsigned char image_WelcomeModules[] =
   "KKqab8UtLoxx1Zg0VsJ94l94eRkWHrhPJzcfdmqLxLq9Vst1u3XWd6WMKvs3d9wpybeZwh"
   "SfpB/AyDBQsWLFgwX/YfMTte+A==";
 
-
 /* 
  * Resource generated for file:
  *    WelcomeMouseModes.png (zlib, base64) (image file)
@@ -1132,7 +1131,6 @@ static const unsigned char image_WelcomeSlicesControl[] =
   "2Ywq5EEy1EvQXwehe+W5iLOKbWVeFRXim6kgNvHUX5OVHcqLjXE6xWa2NjI19yQv3o0aP9"
   "/f2i3hTmlfKj8uiwK+lK/nAFKscekBSL1lH0z/Vg+/r67HZ7Z2cnX3JCfbavB6tWV4HBMQ"
   "dJJc0Ax2h9flqfX/WuFHKM1ucPSNFJIZFIJBKJRCKRSCQSiUQikdTSf7SBMLY=";
-
 
 /* 
  * Resource generated for file:

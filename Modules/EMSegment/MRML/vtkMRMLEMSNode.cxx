@@ -43,7 +43,6 @@ vtkMRMLEMSNode::vtkMRMLEMSNode()
   this->TemplateFilename              = NULL;
   this->SaveTemplateAfterSegmentation = 0;
   this->TclTaskFilename = NULL;
-  this->PyTaskFilename = NULL;
   this->TaskPreprocessingSetting = NULL;
 
   this->SetTclTaskFilename(this->GetDefaultTclTaskFilename());
@@ -55,7 +54,6 @@ vtkMRMLEMSNode::~vtkMRMLEMSNode()
   this->SetSegmenterNodeID(NULL);
   this->SetTemplateFilename(NULL);
   this->SetTclTaskFilename(NULL);
-  this->SetPyTaskFilename(NULL);
   this->SetTaskPreprocessingSetting(NULL);
 }
 
@@ -75,8 +73,6 @@ void vtkMRMLEMSNode::WriteXML(ostream& of, int nIndent)
      << (this->TclTaskFilename ? this->TclTaskFilename  : "NULL") << "\" ";
   of << indent << "TaskPreprocessingSetting=\"" 
      << (this->TaskPreprocessingSetting ? this->TaskPreprocessingSetting : "NULL") << "\" ";
-     of << indent << "PyTaskFilename=\""
-        << (this->PyTaskFilename ? this->PyTaskFilename  : "NULL") << "\" ";
 
 }
 
@@ -137,15 +133,11 @@ void vtkMRMLEMSNode::ReadXMLAttributes(const char** attrs)
       }
     else if (!strcmp(key, "TclTaskFilename"))
       {
-      this->SetTclTaskFilename(val);
-      }
-    else if (!strcmp(key, "PyTaskFilename"))
-      {
-      this->SetPyTaskFilename(val);
+    this->SetTclTaskFilename(val);
       }
     else if (!strcmp(key, "TaskPreprocessingSetting"))
       {
-      this->SetTaskPreprocessingSetting(val);
+    this->SetTaskPreprocessingSetting(val);
       }
     }
 }
@@ -160,7 +152,6 @@ void vtkMRMLEMSNode::Copy(vtkMRMLNode *rhs)
   this->SetTemplateFilename(node->TemplateFilename);
   this->SetSaveTemplateAfterSegmentation(node->SaveTemplateAfterSegmentation);
   this->SetTclTaskFilename(node->TclTaskFilename);
-  this->SetPyTaskFilename(node->PyTaskFilename);
   this->SetTaskPreprocessingSetting(node->TaskPreprocessingSetting);
 }
 
@@ -177,8 +168,6 @@ void vtkMRMLEMSNode::PrintSelf(ostream& os, vtkIndent indent)
      << this->SaveTemplateAfterSegmentation << "\n";
   os << indent << "TclTaskFilename: " <<
     (this->TclTaskFilename ? this->TclTaskFilename : "(none)") << "\n";
-  os << indent << "PyTaskFilename: " <<
-    (this->PyTaskFilename ? this->PyTaskFilename : "(none)") << "\n";
   os << indent << "TaskPreprocessingSetting: " <<
     (this->TaskPreprocessingSetting ? this->TaskPreprocessingSetting : "(none)") << "\n";
 

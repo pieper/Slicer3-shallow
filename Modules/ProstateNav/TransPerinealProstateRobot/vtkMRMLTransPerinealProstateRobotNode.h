@@ -94,7 +94,7 @@ class VTK_PROSTATENAV_EXPORT vtkMRMLTransPerinealProstateRobotNode : public vtkM
 
   // Description:
   // Initialize the robot
-  virtual int Init(vtkSlicerApplication* app);
+  virtual int Init(vtkSlicerApplication* app, const char* moduleShareDir);
 
   vtkGetStringMacro(RobotCommandNodeID);
   vtkMRMLBrpRobotCommandNode* GetRobotCommandNode();
@@ -126,9 +126,8 @@ class VTK_PROSTATENAV_EXPORT vtkMRMLTransPerinealProstateRobotNode : public vtkM
 
   virtual int OnTimer();
 
-  virtual bool FindTargetingParams(vtkProstateNavTargetDescriptor *targetDesc);
   //BTX
-  virtual std::string GetTargetInfoText(vtkProstateNavTargetDescriptor *targetDesc);
+  virtual std::string GetTargetInfoText(vtkProstateNavTargetDescriptor *targetDesc, NeedleDescriptorStruct *needle);
   //ETX
 
   virtual const char* GetCalibrationObjectModelId() { return GetZFrameModelNodeID(); };
@@ -144,7 +143,7 @@ class VTK_PROSTATENAV_EXPORT vtkMRMLTransPerinealProstateRobotNode : public vtkM
  protected:
 
   vtkMRMLTransPerinealProstateRobotNode();
-  ~vtkMRMLTransPerinealProstateRobotNode();
+  virtual ~vtkMRMLTransPerinealProstateRobotNode();
   vtkMRMLTransPerinealProstateRobotNode(const vtkMRMLTransPerinealProstateRobotNode&);
   void operator=(const vtkMRMLTransPerinealProstateRobotNode&);
 

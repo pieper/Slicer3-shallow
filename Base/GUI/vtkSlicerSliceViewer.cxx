@@ -15,7 +15,7 @@
 #include "vtkSlicerGUILayout.h"
 
 #include "vtkKWWidget.h"
-#include "vtkKWRenderWidget.h"
+#include "vtkSlicerRenderWidget.h"
 #include "vtkKWFrame.h"
 
 #include "vtkImageMapper.h"
@@ -234,8 +234,7 @@ void vtkSlicerSliceViewer::RequestRender()
     }
 
   this->SetRenderPending(1);
-  this->Script("after cancel { if {[info command %s] != {}} {%s Render} }", this->GetTclName(), this->GetTclName());
-  this->Script("after idle { if {[info command %s] != {}} {%s Render} }", this->GetTclName(), this->GetTclName());
+  this->Script("after idle \"%s Render\"", this->GetTclName());
 }
 
 //---------------------------------------------------------------------------

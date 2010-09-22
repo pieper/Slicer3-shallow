@@ -1151,6 +1151,28 @@ void vtkEMSegmentAnatomicalStructureStep::PopupNodeContextMenuCallback(
 //----------------------------------------------------------------------------
 void vtkEMSegmentAnatomicalStructureStep::DeleteNodeCallback(vtkIdType sel_vol_id)
 {
+  vtkKWTree *tree = this->AnatomicalStructureTree->GetWidget();
+  vtksys_stl::string sel_node(tree->FindNodeWithUserDataAsInt(NULL, sel_vol_id));
+  vtksys_stl::string parent_node(tree->GetNodeParent(sel_node.c_str()));
+
+  // Check whether user wants to delete the root node
+  if (parent_node.compare("root") == 0)
+    {
+    vtkKWMessageDialog::PopupMessage (this->GetApplication (), NULL,
+        "Error",
+        "Root node cannot be deleted",
+        vtkKWMessageDialog::ErrorIcon | vtkKWMessageDialog::InvokeAtPointer);
+    return;
+    }
+
+  // Check if MRML manager exists
+  vtkEMSegmentMRMLManager *mrmlManager = this->GetGUI()->GetMRMLManager();
+  if (!mrmlManager)
+    {
+    return;
+    }
+
+  // Delete node if user agrees
   if (vtkKWMessageDialog::PopupYesNo( 
         this->GetApplication(), 
         NULL, 
@@ -1158,15 +1180,6 @@ void vtkEMSegmentAnatomicalStructureStep::DeleteNodeCallback(vtkIdType sel_vol_i
         "Are you sure you want to delete this sub-class and its children?",
         vtkKWMessageDialog::WarningIcon | vtkKWMessageDialog::InvokeAtPointer))
     {
-    vtkEMSegmentMRMLManager *mrmlManager = this->GetGUI()->GetMRMLManager();
-    if (!mrmlManager)
-      {
-      return;
-      }
-    vtkKWTree *tree = this->AnatomicalStructureTree->GetWidget();
-    vtksys_stl::string sel_node(
-      tree->FindNodeWithUserDataAsInt(NULL, sel_vol_id));
-    vtksys_stl::string parent_node(tree->GetNodeParent(sel_node.c_str()));
     tree->DeleteNode(sel_node.c_str());
     tree->SelectSingleNode(parent_node.c_str());
     mrmlManager->RemoveTreeNode(sel_vol_id);

@@ -32,9 +32,6 @@ add_executable(GenerateCLP ${GENERATECLP_SOURCE})
 get_target_property(GenerateCLP_EXE_PATH GenerateCLP LOCATION)
 
 target_link_libraries(GenerateCLP
-  # Appearently windows does not like static libs mixed with shared libs ModuleDescriptionParser-static
-  # A different solution will have to be investigated for makeing GenerateCLP work without
-  # shared libs.
   ModuleDescriptionParser
   itksys
   ITKEXPAT)

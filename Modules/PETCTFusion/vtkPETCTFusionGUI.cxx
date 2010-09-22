@@ -366,7 +366,7 @@ vtkIntArray *vtkPETCTFusionGUI::NewObservableEvents()
  vtkIntArray *events = vtkIntArray::New();
   events->InsertNextValue(vtkMRMLScene::MetadataAddedEvent);
   events->InsertNextValue(vtkMRMLScene::NodeRemovedEvent);
-  events->InsertNextValue(vtkMRMLScene::SceneClosedEvent);
+  events->InsertNextValue(vtkMRMLScene::SceneCloseEvent);
   // Slicer3.cxx calls delete on events
   return events;
 }

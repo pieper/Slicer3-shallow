@@ -231,10 +231,9 @@ public:
   /// 
   /// Sets the method pointer to be used for processing script observations
   //BTX
-  void SetScriptHandler ( void (*scriptHandler) (const char* script, void *clientData), void *clientData )
+  void SetScriptHandler ( void (*scriptHandler) (const char* script) )
     {
     this->ScriptHandler = scriptHandler;
-    this->ScriptHandlerClientData = clientData;
     }
   //ETX
 
@@ -273,8 +272,7 @@ protected:
   //ETX
   
   //BTX
-  void (*ScriptHandler) (const char* script, void* clientData);
-  void *ScriptHandlerClientData;
+  void (*ScriptHandler) (const char* script);
   //ETX
 
   int EventLogging;

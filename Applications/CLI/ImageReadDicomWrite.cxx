@@ -9,7 +9,7 @@ command line processing and additional features have been added.
 #pragma warning ( disable : 4786 )
 #endif
 
-#include "itkImage.h"
+#include "itkOrientedImage.h"
 #include "itkImageFileReader.h"
 #include "itkImageFileWriter.h"
 #include "itkExtractImageFilter.h"
@@ -43,7 +43,7 @@ int main( int argc, char* argv[] )
   PARSE_ARGS;
 
 
-  typedef itk::Image<short,3>               Image3DType;
+  typedef itk::OrientedImage<short,3>               Image3DType;
   typedef itk::Image<short,2>               Image2DType;
   typedef itk::ImageFileReader< Image3DType > ReaderType;
   typedef itk::ExtractImageFilter< Image3DType, Image2DType > ExtractType;
@@ -272,17 +272,12 @@ int main( int argc, char* argv[] )
     itk::EncapsulateMetaData<std::string>(dictionary, "0028|1051", value.str());
 
     WriterType::Pointer writer = WriterType::New();
-      char imageNumber[BUFSIZ];
-#if WIN32
-#define snprintf sprintf_s
-#endif
-      snprintf (imageNumber, BUFSIZ, dicomNumberFormat.c_str(), i+1);
       value.str("");
-      value << dicomDirectory << "/" << dicomPrefix << imageNumber << ".dcm";
+      value << dicomDirectory << "/" << dicomPrefix << i + 1 << ".dcm";
       writer->SetFileName(value.str().c_str());
 
       writer->SetInput(extract->GetOutput());
-      writer->SetUseCompression(useCompression);
+      writer->SetUseCompression(1);
       try
         {
         writer->SetImageIO(gdcmIO);

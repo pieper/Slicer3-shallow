@@ -233,10 +233,7 @@ vtkMRMLFiducialListNode *vtkSlicerFiducialsLogic::LoadFiducialList(const char* p
     return NULL;
     }
 
-  // the name is set before adding to the scene so that node selectors will be updated
-  std::string name = vtksys::SystemTools::GetFilenameWithoutExtension(path);
-  std::string uname( this->MRMLScene->GetUniqueNameByString(name.c_str()));
-  node->SetName(uname.c_str());
+  // the name is set after reading the file
 
   this->GetMRMLScene()->AddNode(node);
   node->Delete();
@@ -247,18 +244,13 @@ vtkMRMLFiducialListNode *vtkSlicerFiducialsLogic::LoadFiducialList(const char* p
   snode->SetFileName(path);
   this->GetMRMLScene()->AddNode(snode);
   
-  listNode->SetAndObserveStorageNodeID(snode->GetID());
-  int retval = snode->ReadData(listNode);
 
-  if (retval == 0)
-    {
-      vtkErrorMacro("LoadFiducialList: error reading fiducial file " << path);
-      // remove the nodes
-      this->GetMRMLScene()->RemoveNode(snode);
-      this->GetMRMLScene()->RemoveNode(listNode);
-      snode->Delete();
-      return NULL;
-    }
+  listNode->SetAndObserveStorageNodeID(snode->GetID());
+  snode->ReadData(listNode);
+
+  std::string name = vtksys::SystemTools::GetFilenameName(path);
+  std::string uname( this->MRMLScene->GetUniqueNameByString(name.c_str()));
+  listNode->SetName(uname.c_str());
 
   snode->Delete();
   

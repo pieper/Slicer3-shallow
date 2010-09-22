@@ -38,7 +38,7 @@
 #include "vtkSlicerVolumePropertyWidget.h"
 #include "vtkSlicerVolumeTextureMapper3D.h"
 #include "vtkSlicerROIDisplayWidget.h"
-#include "vtkMRMLSliceLogic.h"
+#include "vtkSlicerSliceLogic.h"
 
 extern "C" int Volumerenderingreplacements1_Init(Tcl_Interp *interp);
 
@@ -487,7 +487,7 @@ void vtkVolumeRenderingGUI::BuildGUI(void)
   //Delete frames
   if ( this->GetApplicationGUI() &&  this->GetApplicationGUI()->GetMRMLScene())
     {
-    this->GetApplicationGUI()->GetMRMLScene()->AddObserver( vtkMRMLScene::SceneClosedEvent, this->MRMLCallbackCommand );
+    this->GetApplicationGUI()->GetMRMLScene()->AddObserver( vtkMRMLScene::SceneCloseEvent, this->MRMLCallbackCommand );
     this->MRMLScene->AddObserver(vtkMRMLScene::NodeAddedEvent, (vtkCommand *)this->MRMLCallbackCommand);
     this->MRMLScene->AddObserver(vtkMRMLScene::NodeRemovedEvent, (vtkCommand *)this->MRMLCallbackCommand);
     }
@@ -551,7 +551,7 @@ void vtkVolumeRenderingGUI::AddMRMLObservers(void)
   //Remove the MRML observer
   if ( this->GetApplicationGUI() )
     {
-    this->GetApplicationGUI()->GetMRMLScene()->AddObserver(vtkMRMLScene::SceneClosedEvent, this->MRMLCallbackCommand);
+    this->GetApplicationGUI()->GetMRMLScene()->AddObserver(vtkMRMLScene::SceneCloseEvent, this->MRMLCallbackCommand);
     this->GetApplicationGUI()->GetMRMLScene()->AddObserver(vtkMRMLScene::NodeAddedEvent, this->MRMLCallbackCommand);
     this->GetApplicationGUI()->GetMRMLScene()->AddObserver(vtkMRMLScene::NodeRemovedEvent, this->MRMLCallbackCommand);
     }
@@ -562,7 +562,7 @@ void vtkVolumeRenderingGUI::RemoveMRMLObservers(void)
   //Remove the MRML observer
   if ( this->GetApplicationGUI() )
     {
-    this->GetApplicationGUI()->GetMRMLScene()->RemoveObservers(vtkMRMLScene::SceneClosedEvent, this->MRMLCallbackCommand);
+    this->GetApplicationGUI()->GetMRMLScene()->RemoveObservers(vtkMRMLScene::SceneCloseEvent, this->MRMLCallbackCommand);
     this->GetApplicationGUI()->GetMRMLScene()->RemoveObservers(vtkMRMLScene::NodeAddedEvent, this->MRMLCallbackCommand);
     this->GetApplicationGUI()->GetMRMLScene()->RemoveObservers(vtkMRMLScene::NodeRemovedEvent, this->MRMLCallbackCommand);
     }
@@ -854,7 +854,7 @@ void vtkVolumeRenderingGUI::ProcessMRMLEvents(vtkObject *caller, unsigned long e
     return;
     }
          
-  if (event == vtkMRMLScene::SceneClosedEvent)
+  if (event == vtkMRMLScene::SceneCloseEvent)
     {
     vtkSetAndObserveMRMLNodeMacro(this->ParametersNode, NULL);
     }
@@ -973,7 +973,7 @@ void vtkVolumeRenderingGUI::FitROIToVolume()
     double xyz[3];
     double center[3];
 
-    vtkMRMLSliceLogic::GetVolumeRASBox(volumeNode, xyz,  center);
+    vtkSlicerSliceLogic::GetVolumeRASBox(volumeNode, xyz,  center);
     for (int i=0; i<3; i++)
       {
       xyz[i] /= 2;

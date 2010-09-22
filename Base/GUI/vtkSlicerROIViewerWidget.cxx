@@ -121,8 +121,8 @@ void vtkSlicerROIViewerWidget::AddMRMLObservers ()
   
  // observe scene for add/remove nodes
   vtkIntArray *events = vtkIntArray::New();
-  events->InsertNextValue(vtkMRMLScene::SceneClosedEvent);
-  events->InsertNextValue(vtkMRMLScene::SceneAboutToBeClosedEvent);
+  events->InsertNextValue(vtkMRMLScene::SceneCloseEvent);
+  events->InsertNextValue(vtkMRMLScene::SceneClosingEvent);
 
   events->InsertNextValue(vtkMRMLScene::NodeAddedEvent);
   events->InsertNextValue(vtkMRMLScene::NodeRemovedEvent);
@@ -185,7 +185,7 @@ void vtkSlicerROIViewerWidget::ProcessMRMLEvents ( vtkObject *caller,
   vtkMRMLScene *callScene = vtkMRMLScene::SafeDownCast(caller);
 
 
-  if (callScene != NULL && event == vtkMRMLScene::SceneClosedEvent)
+  if (callScene != NULL && event == vtkMRMLScene::SceneCloseEvent)
     {
     this->RemoveBoxWidgets();
     this->ProcessingMRMLEvent = 0;
@@ -236,8 +236,8 @@ void vtkSlicerROIViewerWidget::RequestRender()
 {
   if (this->MainViewerWidget)
     {
-    this->MainViewerWidget->RequestRender();
-    }
+  this->MainViewerWidget->RequestRender();
+}
 }
 
 //---------------------------------------------------------------------------
@@ -245,8 +245,8 @@ void vtkSlicerROIViewerWidget::Render()
 {
   if (this->MainViewerWidget)
     {
-    this->MainViewerWidget->RequestRender(); /* let the viewer manage actual render time*/
-    }
+  this->MainViewerWidget->Render();
+}
 }
 
 //---------------------------------------------------------------------------

@@ -6,9 +6,6 @@
 #include <vtksys/SystemTools.hxx>
 #include <vtksys/Directory.hxx>
 
-// To avoid link errors/warnings gdcm.h shall be included before any other gdcm headers
-#include "gdcm.h" 
-
 #include "vtkObject.h"
 #include "vtkObjectFactory.h"
 #include "vtkIntArray.h"
@@ -25,17 +22,15 @@
 #include "vtkMRMLFreeSurferProceduralColorNode.h"
 #include "vtkMRMLProceduralColorNode.h"
 #include "vtkMRMLPETProceduralColorNode.h"
-#include "vtkMRMLScalarVolumeNode.h"
 
 #include "itkImageSeriesReader.h"
-#include "itkImage.h"
+#include "itkOrientedImage.h"
 #include "itkMetaDataDictionary.h"
 #include "itkGDCMImageIO.h"
 #include "itkGDCMSeriesFileNames.h"
 #include "itkNumericSeriesFileNames.h"
 #include "itkImageSeriesReader.h"
 #include "vtkGlobFileNames.h"
-
 
 #include "gdcmFile.h"
 #include "gdcmGlobal.h"
@@ -215,9 +210,9 @@ int vtkPETCTFusionLogic::GetParametersFromDICOMHeader( const char *path)
 
 
   typedef short PixelValueType;
-  typedef itk::Image< PixelValueType, 3 > VolumeType;
+  typedef itk::OrientedImage< PixelValueType, 3 > VolumeType;
   typedef itk::ImageSeriesReader< VolumeType > ReaderType;
-  typedef itk::Image< PixelValueType, 2 > SliceType;
+  typedef itk::OrientedImage< PixelValueType, 2 > SliceType;
   typedef itk::ImageFileReader< SliceType > SliceReaderType;
   typedef itk::GDCMImageIO ImageIOType;
   typedef itk::GDCMSeriesFileNames InputNamesGeneratorType;

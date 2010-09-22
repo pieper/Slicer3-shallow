@@ -17,7 +17,7 @@
 #include <vtkMRMLModelDisplayNode.h>
 #include <vtkMRMLModelHierarchyNode.h>
 
-// STD includes
+// STL includes
 #include <stdlib.h>
 
 #include "TestingMacros.h"

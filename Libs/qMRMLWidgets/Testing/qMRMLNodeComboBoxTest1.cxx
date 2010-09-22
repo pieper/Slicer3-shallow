@@ -1,23 +1,3 @@
-/*==============================================================================
-
-  Program: 3D Slicer
-
-  Copyright (c) 2010 Kitware Inc.
-
-  See Doc/copyright/copyright.txt
-  or http://www.slicer.org/copyright/copyright.txt for details.
-
-  Unless required by applicable law or agreed to in writing, software
-  distributed under the License is distributed on an "AS IS" BASIS,
-  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-  See the License for the specific language governing permissions and
-  limitations under the License.
-
-  This file was originally developed by Julien Finet, Kitware Inc.
-  and was partially funded by NIH grant 3P41RR013218-12S1
-
-==============================================================================*/
-
 // QT includes
 #include <QApplication>
 
@@ -67,8 +47,7 @@ int qMRMLNodeComboBoxTest1( int argc, char * argv [] )
   // no type has been given yet -> no item shoud be listed
   if (nodeSelector.nodeCount())
     {
-    std::cerr << __LINE__ << " - qMRMLNodeSelector::count() failed: "
-              << nodeSelector.nodeCount() << std::endl;
+    std::cerr << __LINE__ << " - qMRMLNodeSelector::count() failed: " << nodeSelector.count() << " " << nodeSelector.nodeCount() << std::endl;
     return EXIT_FAILURE;
     }
 
@@ -77,17 +56,13 @@ int qMRMLNodeComboBoxTest1( int argc, char * argv [] )
   sceneFactory.generateNode();
   sceneFactory.generateNode();
   sceneFactory.generateNode();
-  
-  // All the types are accepted when no type has been given.
-  // the nodeselector may or may not contain nodes (some are hidden)
-  /*if (nodeSelector.nodeCount())
+
+  // no type has been given yet -> no item shoud be listed
+  if (nodeSelector.nodeCount())
     {
-    std::cerr << __LINE__ << " - qMRMLNodeSelector::count() failed:"
-              << nodeSelector.nodeCount() << " nodes instead of "
-              << sceneFactory.mrmlScene()->GetNumberOfNodes() << std::endl;
+    std::cerr << __LINE__ << " - qMRMLNodeSelector::count() failed." << std::endl;
     return EXIT_FAILURE;
     }
-  */
 
   nodeSelector.setMRMLScene(0);
   if (nodeSelector.mrmlScene() != 0)
@@ -137,7 +112,7 @@ int qMRMLNodeComboBoxTest1( int argc, char * argv [] )
     return EXIT_FAILURE;
     }
   sceneFactory.deleteScene();
-  if (nodeSelector.nodeCount() != 0)
+  if (nodeSelector.count() != 0)
     {
     std::cerr << __LINE__ << " - qMRMLNodeSelector: mrml scene events failed." 
               << std::endl;
@@ -169,7 +144,7 @@ int qMRMLNodeComboBoxTest1( int argc, char * argv [] )
   if (nodeSelector.nodeCount() != 4)
     {
     std::cerr << __LINE__ << " - qMRMLNodeSelector: attribute filtering failed."
-              << nodeSelector.nodeCount() << std::endl;
+              << nodeSelector.count() << std::endl;
     return EXIT_FAILURE;
     }
 
@@ -180,7 +155,7 @@ int qMRMLNodeComboBoxTest1( int argc, char * argv [] )
   nodeSelector.setNodeTypes(QStringList("vtkMRMLNonlinearTransformNode"));
   if (nodeSelector.nodeCount() != 3)
     {
-    std::cerr << __LINE__ << " - qMRMLNodeSelector: node type filtering failed." << nodeSelector.nodeCount() << std::endl;
+    std::cerr << __LINE__ << " - qMRMLNodeSelector: node type filtering failed." << nodeSelector.count() << std::endl;
     return EXIT_FAILURE;
     }
   nodeSelector.setShowChildNodeTypes(false);

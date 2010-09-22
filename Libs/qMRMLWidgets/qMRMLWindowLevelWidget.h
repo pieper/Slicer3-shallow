@@ -1,12 +1,15 @@
 #ifndef __qMRMLWindowLevelWidget_h
 #define __qMRMLWindowLevelWidget_h
 
-// Qt includes
-#include <QWidget>
 
-// CTK includes
-#include <ctkPimpl.h>
-#include <ctkVTKObject.h>
+/// qVTK includes
+#include <qVTKObject.h>
+
+/// qCTK includes
+#include <qCTKPimpl.h>
+
+/// QT includes
+#include <QWidget>
 
 #include "qMRMLWidgetsExport.h"
 
@@ -20,28 +23,17 @@ class QMRML_WIDGETS_EXPORT qMRMLWindowLevelWidget : public QWidget
   Q_OBJECT
   QVTK_OBJECT
 
-  Q_PROPERTY(ControlMode autoWindowLevel READ autoWindowLevel WRITE setAutoWindowLevel)
+  Q_PROPERTY(int autoWindowLevel READ autoWindowLevel WRITE setAutoWindowLevel)
   Q_PROPERTY(double window READ window WRITE setWindow)
   Q_PROPERTY(double level READ level WRITE setLevel)
-  Q_PROPERTY(double minimumValue READ minimumValue WRITE setMinimumValue)
-  Q_PROPERTY(double maximumValue READ maximumValue WRITE setMaximumValue)
-  Q_ENUMS(ControlMode)
+
 public:
   /// Constructors
   typedef QWidget Superclass;
   explicit qMRMLWindowLevelWidget(QWidget* parent);
-  virtual ~qMRMLWindowLevelWidget();
+  virtual ~qMRMLWindowLevelWidget(){}
 
-  enum ControlMode
-  {
-    Manual = 0,
-    Auto
-  };
-
-  ///
-  /// Set Auto/Manual mode
-  void setAutoWindowLevel(ControlMode autoWindowLevel);
-  ControlMode autoWindowLevel() const;
+  int autoWindowLevel() const;
 
   /// 
   /// Get window
@@ -50,14 +42,6 @@ public:
   /// 
   /// Get level
   double level()const;
-
-  /// 
-  /// Get minimum of the range
-  double minimumValue()const;
-
-  /// 
-  /// Get maximum of the range
-  double maximumValue()const;
 
   /// 
   /// Return the current MRML node of interest
@@ -70,7 +54,7 @@ signals:
   void windowLevelValuesChanged(double window, double level);
   /// 
   /// Signal sent if the auto/manual value is updated
-  void autoWindowLevelValueChanged(ControlMode value);
+  void autoWindowLevelValueChanged(int value);
 
 public slots:
   ///
@@ -91,9 +75,9 @@ public slots:
 
   /// 
   /// Set min/max range
-  void setMinMaxRangeValue(double min, double max);
-  void setMinimumValue(double min);
-  void setMaximumValue(double max);
+  void setMinMaxRange(double min, double max);
+  // TODO remove when range becomes double
+  void setMinMaxRange(int min, int max);
 
   /// 
   /// Set the MRML node of interest
@@ -116,13 +100,14 @@ protected:
   /// Set current MRML display node
   void setMRMLVolumeDisplayNode(vtkMRMLScalarVolumeDisplayNode* displayNode);
 
+  /// 
+  /// Set sliders range
+  void setMinimum(double min);
+  void setMaximum(double max);
 
-protected:
-  QScopedPointer<qMRMLWindowLevelWidgetPrivate> d_ptr;
 
 private:
-  Q_DECLARE_PRIVATE(qMRMLWindowLevelWidget);
-  Q_DISABLE_COPY(qMRMLWindowLevelWidget);
+  QCTK_DECLARE_PRIVATE(qMRMLWindowLevelWidget);
 
   vtkMRMLScalarVolumeNode* VolumeNode;
   vtkMRMLScalarVolumeDisplayNode* VolumeDisplayNode;

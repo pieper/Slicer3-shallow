@@ -22,19 +22,36 @@ Version:   $Revision: 1.2 $
 #include "vtkMRMLCommandLineModuleNode.h"
 #include "vtkMRMLScene.h"
 
-//------------------------------------------------------------------------------
-vtkStandardNewMacro(vtkMRMLCommandLineModuleNode);
-
-//------------------------------------------------------------------------------
 // Private implementaton of an std::map
 class ModuleDescriptionMap : public std::map<std::string, ModuleDescription> {};
 
 ModuleDescriptionMap* vtkMRMLCommandLineModuleNode::RegisteredModules = new ModuleDescriptionMap;
 
+//------------------------------------------------------------------------------
+vtkMRMLCommandLineModuleNode* vtkMRMLCommandLineModuleNode::New()
+{
+  // First try to create the object from the vtkObjectFactory
+  vtkObject* ret = vtkObjectFactory::CreateInstance("vtkMRMLCommandLineModuleNode");
+  if(ret)
+    {
+      return (vtkMRMLCommandLineModuleNode*)ret;
+    }
+  // If the factory was unable to create the object, then create it here.
+  return new vtkMRMLCommandLineModuleNode;
+}
+
 //----------------------------------------------------------------------------
+
 vtkMRMLNode* vtkMRMLCommandLineModuleNode::CreateNodeInstance()
 {
-  return vtkMRMLCommandLineModuleNode::New();
+  // First try to create the object from the vtkObjectFactory
+  vtkObject* ret = vtkObjectFactory::CreateInstance("vtkMRMLCommandLineModuleNode");
+  if(ret)
+    {
+      return (vtkMRMLCommandLineModuleNode*)ret;
+    }
+  // If the factory was unable to create the object, then create it here.
+  return new vtkMRMLCommandLineModuleNode;
 }
 
 //----------------------------------------------------------------------------
@@ -48,6 +65,7 @@ vtkMRMLCommandLineModuleNode::vtkMRMLCommandLineModuleNode()
 vtkMRMLCommandLineModuleNode::~vtkMRMLCommandLineModuleNode()
 {
 }
+
 
 //----------------------------------------------------------------------------
 void vtkMRMLCommandLineModuleNode::WriteXML(ostream& of, int nIndent)

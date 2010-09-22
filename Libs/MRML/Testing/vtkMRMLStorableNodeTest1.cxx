@@ -17,8 +17,6 @@
 
 #include "TestingMacros.h"
 
-#include "vtkMRMLModelStorageNode.h"
-
 class vtkMRMLStorableNodeTestHelper1 : public vtkMRMLStorableNode
 {
 public:
@@ -39,10 +37,6 @@ public:
   virtual bool CanApplyNonLinearTransforms() { return false; }
   virtual void ApplyTransform(vtkAbstractTransform* vtkNotUsed(transform)) { return; }
   using vtkMRMLTransformableNode::ApplyTransform;
-
-  // for testing purposes, return a valid storage node,
-  // vtkMRMLStorageNode::New returns NULL
-  virtual vtkMRMLStorageNode* CreateDefaultStorageNode() { return vtkMRMLModelStorageNode::New(); }
 };
  
 int vtkMRMLStorableNodeTest1(int , char * [] )
@@ -51,7 +45,15 @@ int vtkMRMLStorableNodeTest1(int , char * [] )
 
   EXERCISE_BASIC_OBJECT_METHODS( node1 );
 
-  EXERCISE_BASIC_STORABLE_MRML_METHODS(vtkMRMLStorableNodeTestHelper1, node1);
-  
+  vtkMRMLNode * newNode = node1->CreateNodeInstance();
+
+  if( newNode == NULL )
+    {
+    std::cerr << "Error in CreateNodeInstance()" << std::endl;
+    return EXIT_FAILURE;
+    }
+
+  newNode->Delete();
+
   return EXIT_SUCCESS;
 }

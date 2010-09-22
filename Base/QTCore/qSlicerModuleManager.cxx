@@ -1,64 +1,59 @@
-/*==============================================================================
+/*=auto=========================================================================
 
-  Program: 3D Slicer
+ Portions (c) Copyright 2005 Brigham and Women's Hospital (BWH) 
+ All Rights Reserved.
 
-  Copyright (c) 2010 Kitware Inc.
+ See Doc/copyright/copyright.txt
+ or http://www.slicer.org/copyright/copyright.txt for details.
 
-  See Doc/copyright/copyright.txt
-  or http://www.slicer.org/copyright/copyright.txt for details.
+ Program:   3D Slicer
 
-  Unless required by applicable law or agreed to in writing, software
-  distributed under the License is distributed on an "AS IS" BASIS,
-  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-  See the License for the specific language governing permissions and
-  limitations under the License.
+=========================================================================auto=*/
 
-  This file was originally developed by Jean-Christophe Fillion-Robin, Kitware Inc.
-  and was partially funded by NIH grant 3P41RR013218-12S1
-
-==============================================================================*/
-
-// Qt includes
-#include <QHash>
-#include <QDebug>
-
-// SlicerQt includes
 #include "qSlicerModuleManager.h"
+
+// SlicerQT includes
 #include "qSlicerCoreApplication.h"
-#include "qSlicerAbstractCoreModule.h"
+#include "qSlicerAbstractModule.h"
 #include "qSlicerModuleFactoryManager.h"
 
 // MRML includes
 #include <vtkMRMLScene.h>
 
+// QT includes
+#include <QHash>
+#include <QDebug>
+
 //-----------------------------------------------------------------------------
-class qSlicerModuleManagerPrivate
+class qSlicerModuleManagerPrivate: public qCTKPrivate<qSlicerModuleManager>
 {
 public:
+  QCTK_DECLARE_PUBLIC(qSlicerModuleManager);
 
   ///
   /// Handle post-load initialization
-  void onModuleLoaded(qSlicerAbstractCoreModule* module);
+  void onModuleLoaded(qSlicerAbstractModule* module);
 
-  typedef QHash<QString, qSlicerAbstractCoreModule*>::const_iterator ModuleListConstIterator;
-  typedef QHash<QString, qSlicerAbstractCoreModule*>::iterator       ModuleListIterator;
+  typedef QHash<QString, qSlicerAbstractModule*>::const_iterator ModuleListConstIterator;
+  typedef QHash<QString, qSlicerAbstractModule*>::iterator       ModuleListIterator;
 
   ///
   /// Store Pair<ModuleName, ModuleObject>
-  QHash<QString, qSlicerAbstractCoreModule*> ModuleList;
+  QHash<QString, qSlicerAbstractModule*> ModuleList;  
   qSlicerModuleFactoryManager            ModuleFactoryManager;
 };
 
 //-----------------------------------------------------------------------------
 qSlicerModuleManager::qSlicerModuleManager()
-  : d_ptr(new qSlicerModuleManagerPrivate)
 {
-  //Q_D(qSlicerModuleManager);
+  QCTK_INIT_PRIVATE(qSlicerModuleManager);
+  //QCTK_D(qSlicerModuleManager);
 
   // The module manager should be instanciated only if a qSlicerCoreApplication exists
   Q_ASSERT(qSlicerCoreApplication::application());
   // and has been initialized
   Q_ASSERT(qSlicerCoreApplication::application()->initialized());
+  
 }
 
 //-----------------------------------------------------------------------------
@@ -70,7 +65,7 @@ qSlicerModuleManager::~qSlicerModuleManager()
 //-----------------------------------------------------------------------------
 void qSlicerModuleManager::printAdditionalInfo()
 {
-  Q_D(qSlicerModuleManager);
+  QCTK_D(qSlicerModuleManager);
   qDebug() << "qSlicerModuleManager (" << this << ")";
   qDebug() << "ModuleList";
 
@@ -87,14 +82,14 @@ void qSlicerModuleManager::printAdditionalInfo()
 //---------------------------------------------------------------------------
 qSlicerModuleFactoryManager* qSlicerModuleManager::factoryManager()const
 {
-  Q_D(const qSlicerModuleManager);
+  QCTK_D(const qSlicerModuleManager);
   return const_cast<qSlicerModuleFactoryManager*>(&d->ModuleFactoryManager);
 }
 
 //---------------------------------------------------------------------------
 bool qSlicerModuleManager::isLoaded(const QString& name)const
 {
-  Q_D(const qSlicerModuleManager);
+  QCTK_D(const qSlicerModuleManager);
   // If a module is not registered, we consider it isn't loaded
   if (!d->ModuleFactoryManager.isRegistered(name))
     {
@@ -106,7 +101,7 @@ bool qSlicerModuleManager::isLoaded(const QString& name)const
 //---------------------------------------------------------------------------
 bool qSlicerModuleManager::loadModule(const QString& name)
 {
-  Q_D(qSlicerModuleManager);
+  QCTK_D(qSlicerModuleManager);
 
   // A module should be registered when attempting to load it
   //Q_ASSERT(d->ModuleFactoryManager.isRegistered(name));
@@ -123,7 +118,7 @@ bool qSlicerModuleManager::loadModule(const QString& name)
     }
 
   // Instantiate the module
-  qSlicerAbstractCoreModule * _module = d->ModuleFactoryManager.instantiateModule(name);
+  qSlicerAbstractModule * _module = d->ModuleFactoryManager.instantiateModule(name);
   if (!_module)
     {
     qWarning() << "Failed to instanciate module: " << name;
@@ -150,7 +145,7 @@ bool qSlicerModuleManager::loadModule(const QString& name)
 
   // Module should also be aware if current MRML scene has changed
   this->connect(qSlicerCoreApplication::application(),
-                SIGNAL(mrmlSceneChanged(vtkMRMLScene*)),
+                SIGNAL(currentMRMLSceneChanged(vtkMRMLScene*)),
                 _module,
                 SLOT(setMRMLScene(vtkMRMLScene*)));
 
@@ -163,7 +158,7 @@ bool qSlicerModuleManager::loadModule(const QString& name)
 //---------------------------------------------------------------------------
 bool qSlicerModuleManager::unLoadModule(const QString& name)
 {
-  Q_D(qSlicerModuleManager);
+  QCTK_D(qSlicerModuleManager);
 
   // A module should be registered when attempting to unload it
   //Q_ASSERT(d->ModuleFactoryManager.isRegistered(name));
@@ -171,7 +166,7 @@ bool qSlicerModuleManager::unLoadModule(const QString& name)
     {
     return false;
     }
-
+  
   qSlicerModuleManagerPrivate::ModuleListConstIterator iter = d->ModuleList.find( name );
   if (iter == d->ModuleList.constEnd())
     {
@@ -179,12 +174,12 @@ bool qSlicerModuleManager::unLoadModule(const QString& name)
     return false;
     }
 
-  qSlicerAbstractCoreModule * _module = iter.value();
+  qSlicerAbstractModule * _module = iter.value();
   Q_ASSERT(_module);
-
+  
   // Handle pre-unload
   emit this->moduleAboutToBeUnloaded(_module);
-
+  
   // Tells Qt to delete the object when appropriate
   _module->deleteLater();
 
@@ -195,26 +190,21 @@ bool qSlicerModuleManager::unLoadModule(const QString& name)
 }
 
 //---------------------------------------------------------------------------
-qSlicerAbstractCoreModule* qSlicerModuleManager::module(const QString& name)
+qSlicerAbstractModule* qSlicerModuleManager::module(const QString& name)
 {
-  Q_D(qSlicerModuleManager);
+  QCTK_D(qSlicerModuleManager);
 
   // A module should be registered when attempting to obtain it
   // assert causes a crash on linux64 when this check fails
-  //  Q_ASSERT(d->ModuleFactoryManager.isRegistered(name));
+//  Q_ASSERT(d->ModuleFactoryManager.isRegistered(name));
   if (!d->ModuleFactoryManager.isRegistered(name))
     {
-    qDebug() << "The module \"" << name << "\" has not been registered.";
-    qDebug() << "The following modules have been registered:"
-             << d->ModuleFactoryManager.moduleNames();
     return 0;
     }
-
+  
   qSlicerModuleManagerPrivate::ModuleListConstIterator iter = d->ModuleList.find(name);
   if ( iter == d->ModuleList.constEnd() )
     {
-    qDebug()<< "The module \"" << name << "\" can not be found.";
-    qDebug() << "The following modules exists:" << d->ModuleList.keys();
     return 0;
     }
   return iter.value();
@@ -223,20 +213,11 @@ qSlicerAbstractCoreModule* qSlicerModuleManager::module(const QString& name)
 //---------------------------------------------------------------------------
 QString qSlicerModuleManager::moduleTitle(const QString& name) const
 {
-  Q_D(const qSlicerModuleManager);
-  return d->ModuleFactoryManager.moduleTitle(name);
+  return qctk_d()->ModuleFactoryManager.moduleTitle(name);
 }
 
 //---------------------------------------------------------------------------
 QString qSlicerModuleManager::moduleName(const QString& title) const
 {
-  Q_D(const qSlicerModuleManager);
-  return d->ModuleFactoryManager.moduleName(title);
-}
-
-//---------------------------------------------------------------------------
-QStringList qSlicerModuleManager::moduleList() const
-{
-  Q_D(const qSlicerModuleManager);
-  return d->ModuleFactoryManager.moduleNames();
+  return qctk_d()->ModuleFactoryManager.moduleName(title);
 }

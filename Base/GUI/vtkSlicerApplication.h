@@ -111,7 +111,6 @@ class VTK_SLICER_BASE_GUI_EXPORT vtkSlicerApplication : public vtkKWApplication
     /// 
     /// Return the module panel
     //BTX
-    void SetModulePanel(qSlicerModulePanel*);
     qSlicerModulePanel* modulePanel();
     //ETX
 #endif
@@ -178,8 +177,6 @@ class VTK_SLICER_BASE_GUI_EXPORT vtkSlicerApplication : public vtkKWApplication
   static const char *LoadModulesRegKey;
   static const char *IgnoreModulesRegKey;
   static const char *LoadCommandLineModulesRegKey;
-  static const char *RedirectModuleStreamsRegKey;
-  static const char *DeleteTemporaryFilesRegKey;
   static const char *EnableDaemonRegKey;
   static const char *ApplicationFontFamilyRegKey;
   static const char *ApplicationFontSizeRegKey;
@@ -348,18 +345,6 @@ class VTK_SLICER_BASE_GUI_EXPORT vtkSlicerApplication : public vtkKWApplication
   vtkSetMacro(LoadCommandLineModules, int);
   vtkGetMacro(LoadCommandLineModules, int);
   vtkBooleanMacro(LoadCommandLineModules, int);
-
-  /// 
-  /// Set/Get if command line modules should be loaded (i.e. CLI plugins)
-  void SetRedirectModuleStreams(int);
-  vtkGetMacro(RedirectModuleStreams, int);
-  vtkBooleanMacro(RedirectModuleStreams, int);
-
-  /// 
-  /// Set/Get if command line modules should be loaded (i.e. CLI plugins)
-  void SetDeleteTemporaryFiles(int);
-  vtkGetMacro(DeleteTemporaryFiles, int);
-  vtkBooleanMacro(DeleteTemporaryFiles, int);
 
   /// 
   /// Set/Get if the slicer daemon should be loaded
@@ -545,8 +530,6 @@ class VTK_SLICER_BASE_GUI_EXPORT vtkSlicerApplication : public vtkKWApplication
 
   int LoadModules;
   int LoadCommandLineModules;
-  int RedirectModuleStreams;
-  int DeleteTemporaryFiles;
   int EnableDaemon;
   void* PythonModule;
   void* PythonDictionary;

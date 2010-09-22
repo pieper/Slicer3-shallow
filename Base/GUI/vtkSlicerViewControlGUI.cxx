@@ -685,123 +685,6 @@ void vtkSlicerViewControlGUI::UpdateSliceGUIInteractorStyles ( )
     }
 }
 
-
-//---------------------------------------------------------------------------
-void vtkSlicerViewControlGUI::UpdateBehaviorFromMRML()
-{
-  vtkMRMLViewNode *vn = this->ViewNode;
- if ( vn == NULL )
-    {
-    vtkErrorMacro ( "Got NULL ViewNode. Can't update navigation render's appearance." );
-    return;
-    }
-
- if ( this->SpinButton == NULL || !this->SpinButton->IsCreated() )
-   {
-   vtkErrorMacro ( "No Spin Button Found. Not updating spin/rock behavior." );
-   return;
-   }
- if ( this->RockButton == NULL || !this->RockButton->IsCreated() )
-   {
-   vtkErrorMacro ( "No Rock Button Found. Not updating spin/rock behavior." );
-   return;
-   }
-
- // make sure GUI setting tracks MRML.
- if (( vn->GetAnimationMode() == vtkMRMLViewNode::Off ) &&
-     ( this->SpinButton->GetSelectedState() == 1) )
-   {
-   this->SpinButton->Deselect();
-   }
- else if (( vn->GetAnimationMode() == vtkMRMLViewNode::Off ) &&       
-          ( this->RockButton->GetSelectedState() == 1 ) )
-   {
-   this->RockButton->Deselect();
-   }
- else if (( vn->GetAnimationMode() == vtkMRMLViewNode::Spin ) &&
-          ( this->RockButton->GetSelectedState() == 1) )
-   {
-   this->SpinButton->Select();
-   this->RockButton->Deselect();
-//   this->MainViewSpin();
-   }
- else if (( vn->GetAnimationMode() == vtkMRMLViewNode::Rock ) &&
-          ( this->SpinButton->GetSelectedState() == 1) )
-   {
-   this->SpinButton->Deselect();
-   this->RockButton->Select();
-//   this->SetRockCount ( vn->GetRockCount ( ) );
-//   this->MainViewRock();
-   }
-}
-
-//---------------------------------------------------------------------------
-void vtkSlicerViewControlGUI::UpdateAppearanceFromMRML()
-{
-  vtkMRMLViewNode *vn = this->ViewNode;
- if ( vn == NULL )
-    {
-    vtkErrorMacro ( "Got NULL ViewNode. Can't update navigation render's appearance." );
-    return;
-    }
-
-  if ( this->VisibilityButton == NULL )
-    {
-    // no need to update its menu...
-    return;
-    }
-  vtkKWMenu *m = this->VisibilityButton->GetMenu();
-  
- // thing visibility
- if ( vn->GetFiducialsVisible() != m->GetItemSelectedState("Fiducial points"))
-   {
-   m->SetItemSelectedState ( "Fiducial points", vn->GetFiducialsVisible() );
-   }
- if ( vn->GetFiducialLabelsVisible() !=m->GetItemSelectedState("Fiducial labels"))
-   {
-   m->SetItemSelectedState ( "Fiducial labels", vn->GetFiducialLabelsVisible() );
-   }
- if ( vn->GetBoxVisible() !=m->GetItemSelectedState ("3D cube"))
-   {
-   m->SetItemSelectedState ( "3D cube", vn->GetBoxVisible() );
-   }
- if ( vn->GetAxisLabelsVisible() != m->GetItemSelectedState ("3D axis labels"))
-   {
-   m->SetItemSelectedState ("3D axis labels", vn->GetAxisLabelsVisible() );
-   }
- 
- // background color
-  vtkSlicerApplication *app = vtkSlicerApplication::SafeDownCast( this->GetApplication() );
-  if ( !app )
-    {
-    vtkErrorMacro ("ProcessGUIEvents: Got NULL Application" );
-    return;
-    }
-
- if ( vn->GetBackgroundColor() == app->GetSlicerTheme()->GetSlicerColors()->ViewerBlue )
-   {
-   if (m->GetItemSelectedState ("Light blue background") != 1 )
-     {
-     m->SetItemSelectedState ( "Light blue background", 1 );
-     }
-   }
- if ( vn->GetBackgroundColor() == app->GetSlicerTheme()->GetSlicerColors()->Black )
-   {
-   if (m->GetItemSelectedState ("Black background") != 1 )
-     {
-     m->SetItemSelectedState ( "Black background", 1 );
-     }
-   }
- if ( vn->GetBackgroundColor() == app->GetSlicerTheme()->GetSlicerColors()->White )
-   {
-   if (m->GetItemSelectedState ("White background") != 1 )
-     {
-     m->SetItemSelectedState ( "White background", 1 );
-     }
-   }
-}
-
-
 //---------------------------------------------------------------------------
 void vtkSlicerViewControlGUI::UpdateFromMRML()
 {
@@ -814,8 +697,9 @@ void vtkSlicerViewControlGUI::UpdateFromMRML()
 void vtkSlicerViewControlGUI::UpdateSceneSnapshotsFromMRML()
 {
   
-  if (this->MRMLScene == NULL || this->MRMLScene->GetIsUpdating())
+  if (this->MRMLScene == NULL)
     {
+    vtkErrorMacro ( "ViewControlGUI: Got NULL MRMLScene.");
     return;
     }
 
@@ -962,13 +846,13 @@ void vtkSlicerViewControlGUI::UpdateViewFromMRML()
 //---------------------------------------------------------------------------
 void vtkSlicerViewControlGUI::UpdateSlicesFromMRML()
 {
-  if (this->MRMLScene == NULL )
+  if (this->MRMLScene == NULL)
     {
     vtkErrorMacro ( "ViewControlGUI: Got NULL MRMLScene.");
     return;
     }
 
-  if ( this->SceneClosing)
+  if (this->SceneClosing)
     {
     return;
     }
@@ -1025,6 +909,7 @@ void vtkSlicerViewControlGUI::UpdateSlicesFromMRML()
 //---------------------------------------------------------------------------
 void vtkSlicerViewControlGUI::RequestNavigationRender()
 {
+
 
 #ifndef NAVZOOMWIDGET_DEBUG
   if(!this->EnableDisableNavButton->GetSelectedState())
@@ -1172,7 +1057,7 @@ void vtkSlicerViewControlGUI::ResetNavigationCamera()
 }
 
 
-
+//---------------------------------------------------------------------------
 const char* vtkSlicerViewControlGUI::CreateSceneSnapshotNode( const char *nodeName)
 {
   vtkMRMLSceneSnapshotNode *node = NULL;
@@ -1183,7 +1068,7 @@ const char* vtkSlicerViewControlGUI::CreateSceneSnapshotNode( const char *nodeNa
     vtkErrorMacro ( "ViewControlGUI: Got NULL MRMLScene.");
     return (NULL);
     }
-  
+
   node = vtkMRMLSceneSnapshotNode::SafeDownCast (this->MRMLScene->CreateNodeByClass( "vtkMRMLSceneSnapshotNode" ));
   if (node == NULL)
     {
@@ -1244,7 +1129,6 @@ int vtkSlicerViewControlGUI::InvokeNameDialog( const char *msg, const char *name
     {
     return 0;
     }
-
 }
 
 
@@ -1862,27 +1746,27 @@ void vtkSlicerViewControlGUI::InitializeNavigationWidgetCamera ( )
     vtkCamera *cam;
     vtkCamera *navcam;
     vtkRenderer *ren;
-    vtkSlicerApplicationGUI *p = vtkSlicerApplicationGUI::SafeDownCast( this->GetApplicationGUI ( ));    
+    vtkSlicerApplicationGUI *p = vtkSlicerApplicationGUI::SafeDownCast( this->GetApplicationGUI ( ));
     vtkSlicerViewerWidget* viewer_widget = p->GetActiveViewerWidget();
     ren = viewer_widget ? viewer_widget->GetMainViewer()->GetRenderer() : NULL;
     if (ren)
       {
-    cam = ren->IsActiveCameraCreated() ? ren->GetActiveCamera() : NULL;
-    if (cam)
-      {
-    cam->GetPosition (camPos );
-    cam->GetFocalPoint ( focalPoint );
-      navcam = this->NavigationWidget->GetRenderer()->IsActiveCameraCreated() ? this->NavigationWidget->GetRenderer()->GetActiveCamera() : NULL;
-      if (navcam)
+      cam = ren->IsActiveCameraCreated() ? ren->GetActiveCamera() : NULL;
+      if (cam)
         {
-        navcam->SetPosition ( camPos );
-        navcam->SetFocalPoint ( focalPoint );
-        navcam->ComputeViewPlaneNormal();
-        navcam->SetViewUp( cam->GetViewUp() );
-        this->FOVBoxActor->SetCamera (navcam);
-        this->FOVBox->SetBoxTypeToOriented ( );
+        cam->GetPosition (camPos );
+        cam->GetFocalPoint ( focalPoint );
+        navcam = this->NavigationWidget->GetRenderer()->IsActiveCameraCreated() ? this->NavigationWidget->GetRenderer()->GetActiveCamera() : NULL;
+        if (navcam)
+          {
+          navcam->SetPosition ( camPos );
+          navcam->SetFocalPoint ( focalPoint );
+          navcam->ComputeViewPlaneNormal();
+          navcam->SetViewUp( cam->GetViewUp() );
+          this->FOVBoxActor->SetCamera (navcam);
+          this->FOVBox->SetBoxTypeToOriented ( );
+          }
         }
-      }
       }
     }
 #endif
@@ -2150,8 +2034,10 @@ void vtkSlicerViewControlGUI::MainViewSetStereo ( )
 }
 
 
+//---------------------------------------------------------------------------
 void vtkSlicerViewControlGUI::DeviceCoordinatesToXYZ(vtkSlicerSliceGUI *sgui, int x, int y, int xyz[3] )
 {
+
   if ( sgui == NULL )
     {
     vtkErrorMacro ( "ViewControlGUI: Got NULL SlicerSLiceGUI" );
@@ -2534,7 +2420,7 @@ void vtkSlicerViewControlGUI::RockView ( )
         if (viewer_widget)
           {
           viewer_widget->GetMainViewer()->GetRenderer()->UpdateLightsGeometryToFollowCamera();
-          viewer_widget->RequestRender();
+          viewer_widget->GetMainViewer()->Render();
           }
         }
       }
@@ -2603,8 +2489,7 @@ void vtkSlicerViewControlGUI::SpinView ( int dir, double degrees )
         if (viewer_widget)
           {
           viewer_widget->GetMainViewer()->GetRenderer()->UpdateLightsGeometryToFollowCamera();
-          viewer_widget->RequestRender();
-          vtkDebugMacro ( "Rendered a spin by " << degrees << "." );
+          viewer_widget->GetMainViewer()->Render();
           }
         }
       }  
@@ -3207,7 +3092,6 @@ void vtkSlicerViewControlGUI::ProcessLogicEvents ( vtkObject * vtkNotUsed(caller
 void vtkSlicerViewControlGUI::ProcessMRMLEvents ( vtkObject *caller,
                                            unsigned long event, void * vtkNotUsed(callData) )
 {
-
   if (this->ProcessingMRMLEvent != 0 )
     {
     return;
@@ -3217,7 +3101,7 @@ void vtkSlicerViewControlGUI::ProcessMRMLEvents ( vtkObject *caller,
 
   vtkDebugMacro("processing event " << event);
    
-  if (event == vtkMRMLScene::SceneClosedEvent )
+  if (event == vtkMRMLScene::SceneCloseEvent )
     {
     this->SceneClosing = true;
     }
@@ -3239,29 +3123,19 @@ void vtkSlicerViewControlGUI::ProcessMRMLEvents ( vtkObject *caller,
     return;
     }
 
-  // has a node been added or deleted? Or has the scene closed or just opened??
-  if ( vtkMRMLScene::SafeDownCast(caller) == this->MRMLScene)
+  // has a node been added or deleted?
+  if ( vtkMRMLScene::SafeDownCast(caller) == this->MRMLScene 
+       && ((event == vtkMRMLScene::NodeAddedEvent || event == vtkMRMLScene::NodeRemovedEvent )
+           || (event == vtkMRMLScene::SceneCloseEvent) || (event == vtkMRMLScene::NewSceneEvent ) ) )
     {
-    if ((event == vtkMRMLScene::NodeAddedEvent || event == vtkMRMLScene::NodeRemovedEvent ))
-      {
-      this->UpdateFromMRML();
-      this->UpdateNavigationWidgetViewActors ( );
-      }
-    else if ((event == vtkMRMLScene::SceneClosedEvent) || (event == vtkMRMLScene::NewSceneEvent )) 
-      {
-      this->UpdateFromMRML();
-      this->UpdateAppearanceFromMRML();
-      this->UpdateBehaviorFromMRML();
-      this->UpdateNavigationWidgetViewActors ( );
-      }
+    this->UpdateFromMRML();
+    this->UpdateNavigationWidgetViewActors ( );
     }
-  
+
   // has a new camera or view has been selected?
   if ( snode != NULL )
     {
      this->UpdateFromMRML();
-     this->UpdateAppearanceFromMRML();
-     this->UpdateBehaviorFromMRML();
      this->UpdateNavigationWidgetViewActors ( );
     }    
 
@@ -3277,10 +3151,6 @@ void vtkSlicerViewControlGUI::ProcessMRMLEvents ( vtkObject *caller,
           {
           this->RockButton->Deselect();
           }
-        if ( this->SpinButton->GetSelectedState() == 0 )
-          {
-          this->SpinButton->Select();
-          }
         this->MainViewSpin (  );
         }
       // handle the mode change
@@ -3289,10 +3159,6 @@ void vtkSlicerViewControlGUI::ProcessMRMLEvents ( vtkObject *caller,
         if ( this->SpinButton->GetSelectedState() == 1 )
           {
           this->SpinButton->Deselect();
-          }
-        if ( this->RockButton->GetSelectedState() == 0 )
-          {
-          this->RockButton->Select();
           }
         this->SetRockCount ( vnode->GetRockCount ( ) );
         this->MainViewRock ( );
@@ -3334,8 +3200,6 @@ void vtkSlicerViewControlGUI::ProcessMRMLEvents ( vtkObject *caller,
       // axis labels, fiducial points, fiducial labels or 3Dcube?
       // does the menu match the node? if not update the menu
       this->MainViewVisibility ( );
-      // if an actor's visibility has changed, update the nav render.
-      this->RequestNavigationRender();
       }
     // render mode changed
     else if ( event == vtkMRMLViewNode::RenderModeEvent )
@@ -4054,14 +3918,6 @@ void vtkSlicerViewControlGUI::BuildGUI ( vtkKWFrame *appF )
       frameM->Delete();
       frameR->Delete();
 
-      // Observe an event that updates the status text during loading of data.
-      vtkIntArray *events = vtkIntArray::New();
-      events->InsertNextValue( vtkMRMLScene::NodeAddedEvent );
-      events->InsertNextValue( vtkMRMLScene::NodeRemovedEvent );
-      events->InsertNextValue( vtkMRMLScene::SceneClosedEvent );
-      events->InsertNextValue( vtkMRMLScene::NewSceneEvent );
-      this->SetAndObserveMRMLSceneEvents (this->MRMLScene, events );
-      events->Delete();
       }
     }
 }
@@ -4158,6 +4014,7 @@ vtkMRMLViewNode *vtkSlicerViewControlGUI::GetActiveView ( )
     if (node && node->GetActive() && this->ViewNode != node)
       {
       this->SetViewNode(node);
+      this->UpdateMainViewerInteractorStyles();
       }
     }
   return this->ViewNode;
@@ -4194,7 +4051,7 @@ void vtkSlicerViewControlGUI::UpdateMainViewerInteractorStyles ( )
 {
   // get all views from the scene
   // and observe active view.
-  if (this->SceneClosing )
+  if (this->SceneClosing)
     {
     return;
     }

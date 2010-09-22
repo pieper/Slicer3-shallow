@@ -5,6 +5,7 @@
 #include "vtkSlicerSlicesGUI.h"
 //#include "vtkSlicerSliceGUICollection.h"
 #include "vtkSlicerSliceGUI.h"
+#include "vtkSlicerSliceLogic.h"
 #include "vtkMRMLSliceNode.h"
 #include "vtkSlicerApplication.h"
 #include "vtkSlicerApplicationLogic.h"
@@ -218,7 +219,7 @@ void vtkSlicerSlicesGUI::AddGUIObservers ( )
 
   if (this->GetMRMLScene())
     {
-    this->GetMRMLScene()->AddObserver(vtkMRMLScene::SceneImportedEvent, (vtkCommand *)this->MRMLCallbackCommand);
+    this->GetMRMLScene()->AddObserver(vtkMRMLScene::SceneLoadEndEvent, (vtkCommand *)this->MRMLCallbackCommand);
     this->GetMRMLScene()->AddObserver(vtkMRMLScene::SceneRestoredEvent, (vtkCommand *)this->MRMLCallbackCommand);
     }
         
@@ -420,7 +421,7 @@ vtkSlicerSliceGUI* vtkSlicerSlicesGUI::GetNthSliceGUI(int n)
 void vtkSlicerSlicesGUI::UpdateGUI()
 {
   if (this->GetMRMLScene() == NULL ||
-      this->GetMRMLScene()->GetIsUpdating())
+      this->GetMRMLScene()->GetIsClosed())
     {
     return;
     }
@@ -701,7 +702,7 @@ void vtkSlicerSlicesGUI::ProcessMRMLEvents ( vtkObject *caller,
 {
   // std::cerr << "In ProcessMRMLEvents " << event << std::endl;
 
-  if (this->GetMRMLScene() && caller == this->GetMRMLScene() && (event == vtkMRMLScene::SceneImportedEvent || event == vtkMRMLScene::SceneRestoredEvent))
+  if (this->GetMRMLScene() && caller == this->GetMRMLScene() && (event == vtkMRMLScene::SceneLoadEndEvent || event == vtkMRMLScene::SceneRestoredEvent))
     {
     // Check the data model for the current module.  Need to be
     // careful that Slicer fully "up" before checking. As an

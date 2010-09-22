@@ -188,8 +188,7 @@ endif()
 #
 #
 # Note:
-#   Tcl, Tk, and incrTcl are built in all cases
-#   blt and iwidgets are build only if Slicer3_USE_KWWIDGETS is ON
+#   Tcl, Tk, blt, incrTcl and iwidgets are build only if Slicer3_USE_KWWIDGETS is ON
 #   Python is build if either Slicer3_USE_PYTHON or Slicer3_USE_PYTHONQT are ON
 # 
 
@@ -242,9 +241,7 @@ if(Slicer3_USE_QT)
     # Includes Qt headers
     INCLUDE(${QT_USE_FILE})
 
-    option(Slicer3_USE_PYTHONQT "Integrate a PythonQt interpreter into Slicer." OFF)
-    option(Slicer3_USE_PYTHONQT_WITH_TCL "Enable PythonQt Tcl adapter layer" OFF)
-    mark_as_advanced(Slicer3_USE_PYTHONQT_WITH_TCL)
+    option(Slicer3_USE_PYTHONQT "Integrate a python-QT interpreter into Slicer." OFF)
   
   else()
     MESSAGE(FATAL_ERROR "error: Qt >= ${minimum_required_qt_version} was not found on your system. You probably need to set the QT_QMAKE_EXECUTABLE variable")
@@ -276,9 +273,6 @@ endif()
 # Enable VTK Debug Leaks
 option(Slicer3_USE_VTK_DEBUG_LEAKS 
   "Turn on VTKs Debug Leaks functionality in both VTK and Slicer." ON)
-  
-# Enable the build of Command line module
-option(Slicer3_BUILD_CLI "Build Slicer3 CLI Plugins" ON)
   
 #------------------------------------------------------------------------------
 # Validate options
@@ -334,7 +328,7 @@ set(incrTcl_DEPENDENCIES tcl tk)
 set(iwidgets_DEPENDENCIES tcl itcl)
 set(blt_DEPENDENCIES tcl tk)
 set(python_DEPENDENCIES)
-if(Slicer3_USE_KWWIDGETS OR Slicer3_USE_PYTHONQT_WITH_TCL)
+if(Slicer3_USE_KWWIDGETS)
   if(WIN32)
     set(python_DEPENDENCIES tcl)
   else()
@@ -344,13 +338,12 @@ endif()
 set(CLAPACK_DEPENDENCIES)
 set(NUMPY_DEPENDENCIES CLAPACK python)
 set(scipy_DEPENDENCIES NUMPY)
-set(weave_DEPENDENCIES python NUMPY)
 
 set(VTK_DEPENDENCIES)
-set(CTK_DEPENDENCIES VTK)
-if(Slicer3_USE_PYTHONQT)
-  list(APPEND CTK_DEPENDENCIES python)
-endif()
+#set(CTK_DEPENDENCIES VTK)
+#if(Slicer3_USE_PYTHONQT)
+#  list(APPEND CTK_DEPENDENCIES python)
+#endif()
 set(KWWidgets_DEPENDENCIES VTK)
 set(Insight_DEPENDENCIES)
 set(BatchMake_DEPENDENCIES Insight)
@@ -363,12 +356,10 @@ set(slicer_DEPENDENCIES VTK Insight BatchMake OpenIGTLink teem cmcurl)
 # Conditionnaly include ExternalProject Target
 #------------------------------------------------------------------------------
 
-if(Slicer3_USE_KWWIDGETS OR Slicer3_USE_PYTHONQT_WITH_TCL)
+if(Slicer3_USE_KWWIDGETS)
   include(External_Tcl)
   include(External_Tk)
   include(External_incrTcl)
-endif()
-if(Slicer3_USE_KWWIDGETS)
   include(External_iwidgets)
   include(External_blt)
 endif()
@@ -378,7 +369,6 @@ if(Slicer3_USE_PYTHON OR Slicer3_USE_PYTHONQT)
   if(Slicer3_BUILD_NUMPY)
     include(External_CLAPACK)
     include(External_NUMPY)
-    include(External_weave)
     if(Slicer3_BUILD_SCIPY)
       include(External_SciPy)
     endif(Slicer3_BUILD_SCIPY)
@@ -387,9 +377,9 @@ endif()
 
 include(External_VTK)
 
-if(Slicer3_USE_QT)
-  include(External_CTK)
-endif()
+#if(Slicer3_USE_QT)
+#  include(External_CTK)
+#endif()
 
 if(Slicer3_USE_KWWIDGETS)
   include(External_KWWidgets)
@@ -414,12 +404,6 @@ if(Slicer3_USE_KWWIDGETS)
   endif()
 endif()
 
-if (Slicer3_USE_PYTHONQT_WITH_TCL)
-  if(UNIX)
-    list(APPEND slicer_DEPENDENCIES itcl)
-  endif()
-endif()
-
 if(Slicer3_USE_QT)
   list(APPEND slicer_DEPENDENCIES CTK)
 endif()
@@ -438,7 +422,8 @@ endif()
 # List of external projects
 #------------------------------------------------------------------------------  
 
-set(external_project_list tk tcl incrTcl iwidgets blt python CLAPACK NUMPY scipy VTK CTK KWWidgets Insight BatchMake OpenIGTLink teem cmcurl slicer)
+#set(external_project_list tk tcl incrTcl iwidgets blt python CLAPACK NUMPY scipy VTK CTK KWWidgets Insight BatchMake OpenIGTLink teem cmcurl slicer)
+set(external_project_list tk tcl incrTcl iwidgets blt python CLAPACK NUMPY scipy VTK KWWidgets Insight BatchMake OpenIGTLink teem cmcurl slicer)
 
 #-----------------------------------------------------------------------------
 # Dump external project dependencies
@@ -467,11 +452,9 @@ ExternalProject_Add(${proj}
     -DCMAKE_CXX_FLAGS:STRING=${CMAKE_CXX_FLAGS}
     -DCMAKE_C_FLAGS:STRING=${CMAKE_C_FLAGS}
     -DCMAKE_BUILD_TYPE:STRING=${CMAKE_BUILD_TYPE}
-    -DSubversion_SVN_EXECUTABLE:FILEPATH=${Subversion_SVN_EXECUTABLE}
-    # Slicer specific options
     -DBUILD_EXAMPLES:BOOL=OFF
     -DBUILD_TESTING:BOOL=ON
-    -DSlicer3_BUILD_CLI:BOOL=${Slicer3_BUILD_CLI}
+    -DSubversion_SVN_EXECUTABLE:FILEPATH=${Subversion_SVN_EXECUTABLE}
     # ITK
     -DITK_DIR:PATH=${ITK_DIR}
     # Teem
@@ -494,7 +477,6 @@ ExternalProject_Add(${proj}
     # Python
     -DSlicer3_USE_PYTHON:BOOL=${Slicer3_USE_PYTHON}
     -DSlicer3_USE_PYTHONQT:BOOL=${Slicer3_USE_PYTHONQT}
-    -DSlicer3_USE_PYTHONQT_WITH_TCL:BOOL=${Slicer3_USE_PYTHONQT_WITH_TCL}
     -DSlicer3_USE_SYSTEM_PYTHON:BOOL=OFF
     -DSlicer3_USE_NUMPY:BOOL=${Slicer3_BUILD_NUMPY}
     -DPYTHON_EXECUTABLE:FILEPATH=${slicer_PYTHON_EXECUTABLE}
@@ -503,7 +485,7 @@ ExternalProject_Add(${proj}
     # Qt
     -DSlicer3_USE_QT:BOOL=${Slicer3_USE_QT}
     -DQT_QMAKE_EXECUTABLE:PATH=${QT_QMAKE_EXECUTABLE}
-    -DCTK_DIR:PATH=${CTK_DIR}
+    #-DCTK_DIR:PATH=${CTK_DIR}
     # KWWidgets
     -DSlicer3_USE_KWWIDGETS:BOOL=${Slicer3_USE_KWWIDGETS}
     -DKWWidgets_DIR:PATH=${CMAKE_BINARY_DIR}/KWWidgets-build

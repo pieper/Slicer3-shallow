@@ -51,7 +51,7 @@ public:
 
   virtual void UpdateGUI();
 
-  void OnMultiColumnListSelectionChanged();
+  void OnMultiColumnListSelection();
   void UpdateTargetListGUI();
 
 protected:
@@ -84,6 +84,8 @@ protected:
   // TargetPlanning
   vtkKWFrame *VolumeSelectionFrame;
   vtkKWPushButton *LoadVerificationVolumeButton;
+  vtkKWCheckButton *ShowWorkspaceButton;  
+  vtkKWCheckButton *ShowRobotButton;  
   vtkSlicerNodeSelectorWidget* VolumeSelectorWidget;
   vtkKWFrame *LoadVolumeDialogFrame;
 

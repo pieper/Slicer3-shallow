@@ -46,16 +46,13 @@ set ::WINDOWS "win32"
 #
 switch $::tcl_platform(os) {
     "SunOS" { set ::env(BUILD) $::SOLARIS }
-    "GNU/kFreeBSD" {
-        set ::env(BUILD) $::LINUX
-    }   
     "Linux" {           
         if {$::tcl_platform(machine) == "x86_64"} {
             set ::env(BUILD) $::LINUX_64 
         } else {
             set ::env(BUILD) $::LINUX
         }
-    }
+    }       
     "Darwin" { 
         if {$::tcl_platform(machine) == "i386"} {
             set ::env(BUILD) $::DARWIN_X86
@@ -80,12 +77,12 @@ puts "Slicer3_HOME is $::Slicer3_HOME"
 # changes in the "Files to test if library has already been built"
 # section below, or genlib will happily build the library again.
 
-set ::Slicer3_TAG "http://svn.slicer.org/Slicer3/trunk"
+set ::Slicer3_TAG "http://svn.slicer.org/Slicer3/branches/Slicer-3-6"
 set ::CMAKE_TAG "CMake-2-8-0"
 set ::Teem_TAG http://teem.svn.sourceforge.net/svnroot/teem/teem/branches/Teem-1.11
 set ::KWWidgets_TAG "Slicer-3-6"
 set ::VTK_TAG "http://svn.github.com/pieper/SlicerVTK.git" ;# slicer's patched vtk 5.6
-set ::ITK_TAG ITK-3-20
+set ::ITK_TAG ITK-3-18
 set ::PYTHON_TAG "http://svn.python.org/projects/python/branches/release26-maint"
 set ::PYTHON_REVISION 76651 ;# avoid windows manifest "fix"
 set ::BLAS_TAG http://svn.slicer.org/Slicer3-lib-mirrors/trunk/netlib/BLAS
@@ -95,9 +92,9 @@ set ::SCIPY_TAG "http://svn.scipy.org/svn/scipy/branches/0.7.x"
 #set ::BatchMake_TAG "BatchMake-1-2"
 set ::BatchMake_TAG "HEAD"
 set ::SLICERLIBCURL_TAG "HEAD"
-set ::OpenIGTLink_TAG "http://svn.na-mic.org/NAMICSandBox/trunk/OpenIGTLink"
-#set ::OpenCV_TAG http://sourceforge.net/projects/opencvlibrary/files/opencv-unix/2.1/OpenCV-2.1.0.tar.bz2/download
-set ::OpenCV_TAG https://code.ros.org/svn/opencv/tags/2.1/opencv
+set ::OpenIGTLink_TAG "http://svn.na-mic.org/NAMICSandBox/branches/OpenIGTLink-1-0"
+#set ::OpenCV_TAG "http://sourceforge.net/projects/opencvlibrary/files/opencv-linux/1.0/opencv-1.0.0.tar.gz/download" 
+set ::OpenCV_TAG "http://sourceforge.net/projects/opencvlibrary/files/opencv-unix/1.0/opencv-1.0.0.tar.gz/download"
 
 # set TCL_VERSION to "tcl" to get 8.4, otherwise use tcl85 get 8.5
 # set 8.5 for Solaris explicitly, because 8.4 complains 
@@ -106,13 +103,8 @@ if {$tcl_platform(os) == "SunOS"} {
   set ::TCL_VERSION tcl85
   set ::TCL_MINOR_VERSION 5
 } else {
-    if {$tcl_platform(os) == "GNU/kFreeBSD"} {
-        set ::TCL_VERSION tcl85
-        set ::TCL_MINOR_VERSION 5
-    } else {
-        set ::TCL_VERSION tcl
-        set ::TCL_MINOR_VERSION 4
-    }
+  set ::TCL_VERSION tcl
+  set ::TCL_MINOR_VERSION 4
 }
 
 # Set library, binary, etc. paths...
@@ -191,9 +183,6 @@ switch $::tcl_platform(os) {
     "SunOS" {
         set shared_lib_ext "so"
     }
-    "GNU/kFreeBSD" {
-        set shared_lib_ext "so"
-    }
     "Linux" {
         set shared_lib_ext "so"
     }
@@ -221,7 +210,6 @@ switch $::tcl_platform(os) {
         }
         set ::PYTHON_TEST_FILE $::PYTHON_BIN_DIR/bin/python
         set ::PYTHON_LIB $::PYTHON_BIN_DIR/lib/libpython2.6.so
-        set ::PYTHON_EXECUTABLE $::PYTHON_BIN_DIR/bin/python
         set ::PYTHON_INCLUDE $::PYTHON_BIN_DIR/include/python2.6
         set ::NETLIB_TEST_FILE $::Slicer3_LIB/netlib-build/BLAS-build/libblas.a
         set ::NUMPY_TEST_FILE $::PYTHON_BIN_DIR/lib/python2.6/site-packages/numpy/core/numeric.pyc
@@ -263,7 +251,6 @@ switch $::tcl_platform(os) {
         }
         set ::PYTHON_TEST_FILE $::PYTHON_BIN_DIR/bin/python
         set ::PYTHON_LIB $::PYTHON_BIN_DIR/lib/libpython2.6.dylib
-        set ::PYTHON_EXECUTABLE $::PYTHON_BIN_DIR/bin/python
         set ::PYTHON_INCLUDE $::PYTHON_BIN_DIR/include/python2.6
         set ::NETLIB_TEST_FILE $::Slicer3_LIB/netlib-build/BLAS-build/libblas.a
         set ::NUMPY_TEST_FILE $::PYTHON_BIN_DIR/lib/python2.6/site-packages/numpy/core/numeric.pyc
@@ -300,7 +287,6 @@ switch $::tcl_platform(os) {
         }
         set ::PYTHON_TEST_FILE $::PYTHON_BIN_DIR/bin/python
         set ::PYTHON_LIB $::PYTHON_BIN_DIR/lib/libpython2.6.so
-        set ::PYTHON_EXECUTABLE $::PYTHON_BIN_DIR/bin/python
         set ::PYTHON_INCLUDE $::PYTHON_BIN_DIR/include/python2.6
         set ::NETLIB_TEST_FILE $::Slicer3_LIB/netlib-build/BLAS-build/libblas.a
         set ::NUMPY_TEST_FILE $::PYTHON_BIN_DIR/lib/python2.6/site-packages/numpy/core/numeric.pyc
@@ -320,43 +306,8 @@ switch $::tcl_platform(os) {
         set ::OPENIGTLINK_TEST_FILE $::OpenIGTLink_DIR/bin/libOpenIGTLink.$shared_lib_ext
         set ::BatchMake_TEST_FILE $::BatchMake_BUILD_DIR/bin/BatchMake
         set ::SLICERLIBCURL_TEST_FILE $::SLICERLIBCURL_BUILD_DIR/bin/libslicerlibcurl.a
-    }
-    "GNU/kFreeBSD" {
-        set ::VTK_BUILD_SUBDIR ""
-        set ::Teem_BIN_DIR  $::Teem_BUILD_DIR/bin
 
-        set ::TCL_TEST_FILE $::TCL_BIN_DIR/tclsh8.5
-        set ::INCR_TCL_LIB $::TCL_LIB_DIR/itcl3.4/libitcl3.4.so
-        set ::INCR_TK_LIB $::TCL_LIB_DIR/itk3.4/libitk3.4.so
-        set ::IWIDGETS_TEST_FILE $::TCL_LIB_DIR/iwidgets4.0.2/iwidgets.tcl
-        set ::BLT_TEST_FILE $::TCL_BIN_DIR/bltwish30
-        if { $::USE_SYSTEM_PYTHON } {
-          error "need to define system python path for $::tcl_platform(os)"
-        }
-        set ::PYTHON_TEST_FILE $::PYTHON_BIN_DIR/bin/python
-        set ::PYTHON_LIB $::PYTHON_BIN_DIR/lib/libpython2.6.so
-        set ::PYTHON_EXECUTABLE $::PYTHON_BIN_DIR/bin/python
-        set ::PYTHON_INCLUDE $::PYTHON_BIN_DIR/include/python2.6
-        set ::NETLIB_TEST_FILE $::Slicer3_LIB/netlib-build/BLAS-build/libblas.a
-        set ::NUMPY_TEST_FILE $::PYTHON_BIN_DIR/lib/python2.6/site-packages/numpy/core/numeric.pyc
-        set ::SCIPY_TEST_FILE $::PYTHON_BIN_DIR/lib/python2.6/site-packages/scipy/version.pyc
-        set ::TK_TEST_FILE  $::TCL_BIN_DIR/wish8.5
-        set ::ITCL_TEST_FILE $::TCL_LIB_DIR/itcl3.4/libitcl3.4.so
-        set ::Teem_TEST_FILE $::Teem_BIN_DIR/unu
-        set ::VTK_TEST_FILE $::VTK_DIR/bin/vtk
-        set ::KWWidgets_TEST_FILE $::KWWidgets_BUILD_DIR/bin/libKWWidgets.so
-        set ::OpenCV_TEST_FILE $::OpenCV_DIR/lib/libcv.so
-        set ::VTK_TCL_LIB $::TCL_LIB_DIR/libtcl8.5.$shared_lib_ext
-        set ::VTK_TK_LIB $::TCL_LIB_DIR/libtk8.5.$shared_lib_ext
-        set ::VTK_TCLSH $::TCL_BIN_DIR/tclsh8.5
-        set ::ITK_TEST_FILE $::ITK_BINARY_PATH/bin/libITKCommon.$shared_lib_ext
-        set ::TK_EVENT_PATCH $::Slicer3_HOME/tkEventPatch.diff
-        set ::env(VTK_BUILD_SUBDIR) $::VTK_BUILD_SUBDIR
-        set ::OPENIGTLINK_TEST_FILE $::OpenIGTLink_DIR/bin/libOpenIGTLink.$shared_lib_ext
-        set ::BatchMake_TEST_FILE $::BatchMake_BUILD_DIR/bin/BatchMake
-        set ::SLICERLIBCURL_TEST_FILE $::SLICERLIBCURL_BUILD_DIR/bin/libslicerlibcurl.a
     }
-
     "Windows NT" {
     # Windows NT currently covers WinNT, Win2000, XP Home, XP Pro
 
@@ -377,7 +328,6 @@ switch $::tcl_platform(os) {
         }
         set ::PYTHON_TEST_FILE $::PYTHON_BIN_DIR/PCbuild/python.exe
         set ::PYTHON_LIB $::PYTHON_BIN_DIR/PCbuild/python26.lib
-        set ::PYTHON_EXECUTABLE $::PYTHON_BIN_DIR/PCbuild/python.exe
 
         set ::PYTHON_INCLUDE $::PYTHON_BIN_DIR/include
 
@@ -468,22 +418,10 @@ switch $::tcl_platform(os) {
         set ::MAKE "gmake -j[expr $numCPUs]"        
         set ::SERIAL_MAKE "gmake"
     }
-    "GNU/kFreeBSD" {
-        set ::VTKSLICERBASE_BUILD_LIB $::Slicer3_HOME/Base/builds/$::env(BUILD)/bin/vtkSlicerBase.so
-        set ::VTKSLICERBASE_BUILD_TCL_LIB $::Slicer3_HOME/Base/builds/$::env(BUILD)/bin/vtkSlicerBaseTCL.so
-        set ::GENERATOR "Unix Makefiles"
-        set ::COMPILER_PATH "/usr/bin"
-        set ::COMPILER "g++"
-        set ::FORTRAN_COMPILER "gfortran"
-        set ::CMAKE $::CMAKE_PATH/bin/cmake
-        set numCPUs [lindex [exec grep processor /proc/cpuinfo | wc] 0]
-        set ::MAKE "make -j [expr $numCPUs]"
-        set ::SERIAL_MAKE "make"
-    }
     "Linux" {
         set ::VTKSLICERBASE_BUILD_LIB $::Slicer3_HOME/Base/builds/$::env(BUILD)/bin/vtkSlicerBase.so
         set ::VTKSLICERBASE_BUILD_TCL_LIB $::Slicer3_HOME/Base/builds/$::env(BUILD)/bin/vtkSlicerBaseTCL.so
-        set ::GENERATOR "Unix Makefiles"
+        set ::GENERATOR "Unix Makefiles" 
         set ::COMPILER_PATH "/usr/bin"
         set ::COMPILER "g++"
         set ::FORTRAN_COMPILER "gfortran"
@@ -642,13 +580,6 @@ switch $::tcl_platform(os) {
             set ::MAKE "c:/Program Files/Microsoft Visual Studio 9.0/Common7/IDE/devenv.exe"
             set ::COMPILER_PATH "c:/Program Files/Microsoft Visual Studio 9.0/VC/bin"
             set ::MSSDK_PATH "c:/Program Files/Microsoft SDKs/Windows/v6.0A"
-        }
-
-        if { [file exists "C:/Program Files/Microsoft Visual Studio 10.0/Common7/IDE/VCExpress.exe"] } {
-            set ::GENERATOR "Visual Studio 10"
-            set ::MAKE "C:/Program Files/Microsoft Visual Studio 10.0/Common7/IDE/VCExpress.exe"
-            set ::COMPILER_PATH "c:/Program Files/Microsoft Visual Studio 10.0/VC/bin"
-            set ::MSSDK_PATH "c:/Program Files/Microsoft SDKs/Windows/v7.0A"
         }
 
         set ::COMPILER "cl"

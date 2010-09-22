@@ -19,7 +19,7 @@
 // QT includes
 #include <QSignalSpy>
 
-// STD includes
+// STL includes
 #include <stdlib.h>
 #include <iostream>
 

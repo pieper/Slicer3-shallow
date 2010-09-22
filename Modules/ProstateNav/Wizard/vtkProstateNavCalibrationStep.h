@@ -44,7 +44,6 @@ public:
   virtual void ProcessGUIEvents(vtkObject *caller, unsigned long event, void *callData);  
 
   void ShowZFrameModel(bool show);
-  void ShowWorkspaceModel(bool show);
 
   // Description:
   // If a file name is specified, the function will import an image from the file

@@ -49,9 +49,11 @@ class VTK_MRML_EXPORT vtkMRMLSliceNode : public vtkMRMLNode
   /// Copy the node's attributes to this object
   virtual void Copy(vtkMRMLNode *node);
 
-  ///
-  /// Reimplemented to preserve orientation when reset
-  virtual void Reset();
+  /// 
+  /// Updates other nodes in the scene depending on this node
+  /// or updates this node if it depends on other nodes when the scene is read in
+  /// This method is called automatically by XML parser after all nodes are created
+  virtual void UpdateScene(vtkMRMLScene *);
 
   /// 
   /// Get node XML tag name (like Volume, Model)
@@ -91,27 +93,10 @@ class VTK_MRML_EXPORT vtkMRMLSliceNode : public vtkMRMLNode
   /// General 'reformat' view that allows for multiplanar reformat
   void SetOrientationToReformat();
   
-  ///
-  /// Convenient function that calls SetOrientationToAxial(),
-  /// SetOrientationToSagittal(), SetOrientationToCoronal() or
-  /// SetOrientationToReformat() depending on the value of the string
-  void SetOrientation(const char* orientation);
-
   /// Description
   /// A description of the current orientation
-  /// Warning, OrientationString doesn't change the matrices, use
-  /// SetOrientation() instead.
   vtkGetStringMacro (OrientationString);
   vtkSetStringMacro (OrientationString);
-
-  /// Description
-  /// The OrientationReference is a place to store the last orientation
-  /// that was explicitly selected.  This way if they RotateToVolumePlane
-  /// is called repeatedly it will always return the same plane
-  /// (without the hint, it would first try to match, say, Coronal, and then
-  /// try to match 'Reformat' but would not know what overall orientation to pick).
-  vtkGetStringMacro (OrientationReference);
-  vtkSetStringMacro (OrientationReference);
 
   /// 
   /// Size of the slice plane in millimeters
@@ -121,8 +106,8 @@ class VTK_MRML_EXPORT vtkMRMLSliceNode : public vtkMRMLNode
   /// 
   /// Number of samples in each direction
   /// -- note that the spacing is implicitly FieldOfView / Dimensions
-  vtkGetVectorMacro(Dimensions,int,3)
-  void SetDimensions (int x, int y, int z);
+  vtkGetVector3Macro (Dimensions, unsigned int);
+  void SetDimensions (unsigned int x, unsigned int y, unsigned int z);
 
   /// 
   /// Matrix mapping from XY pixel coordinates on an image window 
@@ -226,11 +211,6 @@ class VTK_MRML_EXPORT vtkMRMLSliceNode : public vtkMRMLNode
   vtkGetVector3Macro(PrescribedSliceSpacing, double);
 
   /// 
-  /// Get/Set the current distance from the origin to the slice plane
-  double GetSliceOffset();
-  void SetSliceOffset(double offset);
-
-  ///
   /// Set/get the active slice in the lightbox. The active slice is
   /// shown in the 3D scene
   vtkSetMacro(ActiveSlice, int);
@@ -262,9 +242,8 @@ protected:
   int WidgetVisible;
   int UseLabelOutline;
   double FieldOfView[3];
-  int Dimensions[3];
+  unsigned int Dimensions[3];
   char *OrientationString;
-  char *OrientationReference;
 
   int LayoutGridRows;
   int LayoutGridColumns;

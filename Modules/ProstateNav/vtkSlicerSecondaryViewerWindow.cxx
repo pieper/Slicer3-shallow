@@ -97,16 +97,20 @@ void vtkSlicerSecondaryViewerWindow::UpdateSecondaryMonitorPosition()
     {
       vtkErrorMacro("DetectMonitors: EnumDisplayMonitors failed");
     }
+    this->SecondaryMonitorPosition[0]=rect.left;
+    this->SecondaryMonitorPosition[1]=rect.top;
+    this->SecondaryMonitorSize[0]=rect.right-rect.left;
+    this->SecondaryMonitorSize[1]=rect.bottom-rect.top;
   }
   else
   {
+    this->SecondaryMonitorPosition[0]=rect.left;
+    this->SecondaryMonitorPosition[1]=rect.top;
+    this->SecondaryMonitorSize[0]=500;
+    this->SecondaryMonitorSize[1]=500;
     this->MultipleMonitorsAvailable = false; 
   }
 
-  this->SecondaryMonitorPosition[0]=rect.left;
-  this->SecondaryMonitorPosition[1]=rect.top;
-  this->SecondaryMonitorSize[0]=rect.right-rect.left;
-  this->SecondaryMonitorSize[1]=rect.bottom-rect.top;
 }
 
 #else // _WIN32
@@ -163,7 +167,7 @@ void vtkSlicerSecondaryViewerWindow::CreateWidget()
   
   // Create list of MRML events for that the widgets will observe
   vtkSmartPointer<vtkIntArray> events = vtkSmartPointer<vtkIntArray>::New();
-  events->InsertNextValue(vtkMRMLScene::SceneClosedEvent);
+  events->InsertNextValue(vtkMRMLScene::SceneCloseEvent);
   events->InsertNextValue(vtkMRMLScene::NewSceneEvent);
   events->InsertNextValue(vtkMRMLScene::NodeAddedEvent);
   events->InsertNextValue(vtkMRMLScene::NodeRemovedEvent);
@@ -180,6 +184,8 @@ void vtkSlicerSecondaryViewerWindow::CreateWidget()
   // Don't show the view node for the user
   viewNode->SetHideFromEditors(true);
 
+  viewNode->SetRenderMode(vtkMRMLViewNode::Orthographic);
+
   gui->GetMRMLScene()->AddNode(viewNode);  
 
   // Create the 3D Viewer
@@ -190,7 +196,7 @@ void vtkSlicerSecondaryViewerWindow::CreateWidget()
   this->ViewerWidget->SetAndObserveMRMLSceneEvents (gui->GetMRMLScene(), events );
   this->ViewerWidget->SetAndObserveViewNode (viewNode);
   this->ViewerWidget->UpdateFromMRML();
-  this->ViewerWidget->SetApplicationLogic ( gui->GetApplicationLogic() );
+  this->ViewerWidget->SetApplicationLogic ( gui->GetApplicationLogic() );  
 
   // Add the fiducial list widget  
   this->FiducialListWidget=vtkSlicerFiducialListWidget::New();

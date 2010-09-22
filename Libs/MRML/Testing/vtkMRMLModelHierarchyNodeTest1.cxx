@@ -23,37 +23,66 @@ int vtkMRMLModelHierarchyNodeTest1(int , char * [] )
 
   EXERCISE_BASIC_OBJECT_METHODS( node1 );
 
-  EXERCISE_BASIC_MRML_METHODS(vtkMRMLModelHierarchyNode, node1);
+  node1->UpdateReferences();
 
-  TEST_SET_GET_STRING(node1, ModelNodeID);
-  //TEST_SET_GET_STRING(node1, DisplayNodeID);
-  vtkSmartPointer<vtkMRMLScene> scene = vtkSmartPointer<vtkMRMLScene>::New();
-  vtkSmartPointer<vtkMRMLModelDisplayNode> dnode = vtkSmartPointer<vtkMRMLModelDisplayNode>::New();
-  scene->AddNode(node1);
-  scene->AddNode(dnode);
-  node1->SetAndObserveDisplayNodeID(dnode->GetID());
-  TEST_SET_GET_BOOLEAN(node1, Expanded);
-  
-  vtkSmartPointer<vtkMRMLModelNode> mnode = vtkSmartPointer<vtkMRMLModelNode>::New();
-  scene->AddNode(mnode);
-  node1->SetModelNodeID(mnode->GetID());
-  vtkSmartPointer<vtkMRMLModelNode> mnode2 = vtkSmartPointer<vtkMRMLModelNode>::New();
-  mnode2 = node1->GetModelNode();
-  if (mnode2 != mnode)
+  vtkSmartPointer< vtkMRMLModelHierarchyNode > node2 = vtkSmartPointer< vtkMRMLModelHierarchyNode >::New();
+
+  node2->Copy( node1 );
+
+  node2->Reset();
+
+  node2->StartModify();
+
+  std::string nodeTagName = node1->GetNodeTagName();
+
+  std::cout << "Node Tag Name = " << nodeTagName << std::endl;
+
+  std::string attributeName;
+  std::string attributeValue;
+
+  node1->SetAttribute( attributeName.c_str(), attributeValue.c_str() );
+
+  std::string attributeValue2 = node1->GetAttribute( attributeName.c_str() );
+
+  if( attributeValue != attributeValue2 )
     {
-    std::cerr << "ERROR setting/getting model node" << std::endl;
+    std::cerr << "Error in Set/GetAttribute() " << std::endl;
+    return EXIT_FAILURE;
+    }
+  
+  TEST_SET_GET_BOOLEAN( node1, HideFromEditors );
+  TEST_SET_GET_BOOLEAN( node1, Selectable );
+
+  TEST_SET_GET_STRING( node1, Description );
+  TEST_SET_GET_STRING( node1, SceneRootDir );
+  TEST_SET_GET_STRING( node1, Name );
+  TEST_SET_GET_STRING( node1, SingletonTag );
+
+  TEST_SET_GET_BOOLEAN( node1, ModifiedSinceRead );
+  TEST_SET_GET_BOOLEAN( node1, SaveWithScene );
+  TEST_SET_GET_BOOLEAN( node1, AddToScene );
+  TEST_SET_GET_BOOLEAN( node1, Selected );
+
+  node1->Modified();
+
+  vtkMRMLScene * scene = node1->GetScene();
+
+  if( scene != NULL )
+    {
+    std::cerr << "Error in GetScene() " << std::endl;
     return EXIT_FAILURE;
     }
 
-  vtkSmartPointer<vtkMRMLModelHierarchyNode> hnode1 = node1->GetUnExpandedParentNode();
-  std::cout << "Unexpanded parent node = " << (hnode1 == NULL ? "NULL" : hnode1->GetID()) << std::endl;
-  vtkSmartPointer<vtkMRMLModelHierarchyNode> hnode2 = node1->GetTopParentNode();
-   std::cout << "Top parent node = " << (hnode2 == NULL ? "NULL" : hnode2->GetID()) << std::endl;
-  vtkSmartPointer<vtkCollection> col =  vtkSmartPointer<vtkCollection>::New();
-  node1->GetChildrenModelNodes(col);
-  std::cout << "Number of children model nodes = " << col->GetNumberOfItems() << std::endl;
-  vtkSmartPointer<vtkMRMLModelHierarchyNode> hnode3 = node1->GetModelHierarchyNode(scene, "myid");
-   std::cout << "Model hierarchy node = " << (hnode3 == NULL ? "NULL" : hnode3->GetID()) << std::endl;
-  
+  std::string stringToEncode = "Thou Shall Test !";
+  std::string stringURLEncoded = node1->URLEncodeString( stringToEncode.c_str() );
+
+  std::string stringDecoded = node1->URLDecodeString( stringURLEncoded.c_str() );
+
+  if( stringDecoded != stringToEncode )
+    {
+    std::cerr << "Error in URLEncodeString/URLDecodeString() " << std::endl;
+    return EXIT_FAILURE;
+    }
+
   return EXIT_SUCCESS;
 }

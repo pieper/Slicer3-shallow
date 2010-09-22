@@ -1752,7 +1752,7 @@ void vtkCommandLineModuleGUI::BuildGUI ( )
         tparameter->SetNodeClass(nodeClass.c_str(),
                                  NULL,
                                  NULL,
-                                 (*pit).GetLabel().c_str());
+                                 (title + " Transform").c_str());
         tparameter->SetNewNodeEnabled(1);
         tparameter->SetNoneEnabled(noneEnabled);
         tparameter->SetDefaultEnabled(0);

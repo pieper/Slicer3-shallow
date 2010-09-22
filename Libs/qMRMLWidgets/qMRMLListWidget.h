@@ -1,31 +1,11 @@
-/*==============================================================================
-
-  Program: 3D Slicer
-
-  Copyright (c) 2010 Kitware Inc.
-
-  See Doc/copyright/copyright.txt
-  or http://www.slicer.org/copyright/copyright.txt for details.
-
-  Unless required by applicable law or agreed to in writing, software
-  distributed under the License is distributed on an "AS IS" BASIS,
-  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-  See the License for the specific language governing permissions and
-  limitations under the License.
-
-  This file was originally developed by Julien Finet, Kitware Inc.
-  and was partially funded by NIH grant 3P41RR013218-12S1
-
-==============================================================================*/
-
 #ifndef __qMRMLListWidget_h
 #define __qMRMLListWidget_h
 
-// Qt includes
-#include <QListView>
+/// qCTK includes
+#include <qCTKPimpl.h>
 
-// CTK includes
-#include <ctkPimpl.h>
+/// QT includes
+#include <QListView>
 
 #include "qMRMLWidgetsExport.h"
 
@@ -38,18 +18,14 @@ class QMRML_WIDGETS_EXPORT qMRMLListWidget : public QListView
 public:
   qMRMLListWidget(QWidget *parent=0);
   virtual ~qMRMLListWidget();
-
+                           
   vtkMRMLScene* mrmlScene()const;
 
 public slots:
   void setMRMLScene(vtkMRMLScene* scene);
 
-protected:
-  QScopedPointer<qMRMLListWidgetPrivate> d_ptr;
-
 private:
-  Q_DECLARE_PRIVATE(qMRMLListWidget);
-  Q_DISABLE_COPY(qMRMLListWidget);
+  QCTK_DECLARE_PRIVATE(qMRMLListWidget);
 };
 
 #endif

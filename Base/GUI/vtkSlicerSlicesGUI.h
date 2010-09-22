@@ -10,6 +10,7 @@
 
 #include "vtkSlicerBaseGUIWin32Header.h"
 #include "vtkSlicerModuleGUI.h"
+#include "vtkSlicerSliceLogic.h"
 #include "vtkMRMLSliceNode.h"
 #include "vtkSmartPointer.h"
 

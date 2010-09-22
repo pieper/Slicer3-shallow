@@ -236,6 +236,8 @@ protected:
 
   char *ActiveScalarName;
   
+  vtkSetReferenceStringMacro(ColorNodeID);
+
   vtkMRMLColorNode *ColorNode;
 
   /// Numbers
@@ -261,8 +263,7 @@ protected:
   double ScalarRange[2];
   double Color[3];
   double SelectedColor[3];
-private:
-  vtkSetReferenceStringMacro(ColorNodeID);
+  
 };
 
 #endif

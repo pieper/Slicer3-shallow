@@ -442,7 +442,7 @@ void vtkSlicerFiducialListWidget::ProcessMRMLEvents ( vtkObject *caller,
 
   // the scene was closed, don't get node removed events so clear up here
   if (callScene != NULL &&
-      event == vtkMRMLScene::SceneClosedEvent)
+      event == vtkMRMLScene::SceneCloseEvent)
     {
     vtkDebugMacro("ProcessMRMLEvents: got a scene close event");
     // the lists are already gone from the scene, so need to clear out all the
@@ -628,8 +628,8 @@ void vtkSlicerFiducialListWidget::CreateWidget ( )
   if (this->MRMLScene)
     {
     vtkIntArray *events = vtkIntArray::New();
-    events->InsertNextValue(vtkMRMLScene::SceneClosedEvent);
-    events->InsertNextValue(vtkMRMLScene::SceneAboutToBeClosedEvent);
+    events->InsertNextValue(vtkMRMLScene::SceneCloseEvent);
+    events->InsertNextValue(vtkMRMLScene::SceneClosingEvent);
     events->InsertNextValue(vtkMRMLScene::NewSceneEvent);
     events->InsertNextValue(vtkMRMLScene::NodeAddedEvent);
     events->InsertNextValue(vtkMRMLScene::NodeRemovedEvent);
@@ -1308,8 +1308,8 @@ void vtkSlicerFiducialListWidget::AddSeedWidget(vtkMRMLFiducialListNode *fiducia
   vtkSlicerFiducialsSeedWidgetCallback *myCallback = vtkSlicerFiducialsSeedWidgetCallback::New();
   myCallback->FiducialListNode = fiducialListNode;
   myCallback->SeedWidgetClass = c;
-
-   //
+  
+  //
   //--- make seed widget's initial interaction behavior compliant  with mouse mode.
   //--- this may need to go after Update3DWidget...
   //
@@ -1327,13 +1327,14 @@ void vtkSlicerFiducialListWidget::AddSeedWidget(vtkMRMLFiducialListNode *fiducia
     c->GetWidget()->ProcessEventsOff();
     }
 
+  
   c->GetWidget()->AddObserver(vtkCommand::InteractionEvent,myCallback);
   c->GetWidget()->AddObserver(vtkCommand::StartInteractionEvent, myCallback);
   c->GetWidget()->AddObserver(vtkCommand::PlacePointEvent, myCallback);
   myCallback->Delete();
-
   this->SeedWidgets[fiducialListNode->GetID()] = c;
-  
+
+
   // make sure we're observing the node events
   vtkDebugMacro("AddSeedWidget: adding observers to fid list node");
   this->AddObserversToFiducialList(fiducialListNode);
@@ -1365,6 +1366,8 @@ void vtkSlicerFiducialListWidget::AddSeedWidget(vtkMRMLFiducialListNode *fiducia
   // now update it
   vtkDebugMacro("AddSeedWidget: calling update on the new widget");
   this->Update3DWidget(fiducialListNode);
+
+
 }
 
 //---------------------------------------------------------------------------
@@ -1999,7 +2002,7 @@ void vtkSlicerFiducialListWidget::Update3DWidget(vtkMRMLFiducialListNode *fiduci
     }
   if (this->Updating3DWidget)
     {
-    vtkWarningMacro("Update3DWidget: Already updating 3d widget");
+    vtkDebugMacro("Update3DWidget: Already updating 3d widget");
     return;
     }
   vtkSlicerSeedWidgetClass *seedWidget = this->GetSeedWidget(fiducialListNode->GetID());

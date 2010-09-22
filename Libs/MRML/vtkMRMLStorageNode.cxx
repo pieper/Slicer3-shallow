@@ -112,8 +112,6 @@ void vtkMRMLStorageNode::WriteXML(ostream& of, int nIndent)
       {
       name = itksys::SystemTools::RelativePath(this->GetScene()->GetRootDirectory(), this->GetNthFileName(i));
       }
-
-
     of << indent << " fileListMember" << i << "=\"" << vtkMRMLNode::URLEncodeString(name.c_str()) << "\"";
     }
 
@@ -189,35 +187,9 @@ void vtkMRMLStorageNode::ReadXMLAttributes(const char** atts)
         }
       
       name += filename;
+      
       std::string collapsedFullPath = vtksys::SystemTools::CollapseFullPath(name.c_str());
       vtkDebugMacro("ReadXMLAttributes: collapsed path for " << attName << " = " << collapsedFullPath.c_str());
-      // check if this file exists
-      if (vtksys::SystemTools::FileExists(collapsedFullPath.c_str(), true) == false &&
-          this->GetFileName() != NULL)
-        {
-        vtkDebugMacro("ReadXMLAttributes: File list member " << filename << " is relative, but is not found relative to the mrml root directory. " << collapsedFullPath << " was not found. Trying to find it relative to the archetype: " << this->GetFileName());
-        // get the directory of the file name
-        std::string fileNameDirectory = vtksys::SystemTools::GetParentDirectory(this->GetFileName());
-        vtkDebugMacro("ReadXMLAttributes: Directory of archetype = " << fileNameDirectory);
-        // add a trailing slash if missing
-        if (fileNameDirectory[fileNameDirectory.size()-1]  != '/')
-          {
-          fileNameDirectory = fileNameDirectory + std::string("/");
-          }
-        fileNameDirectory += filename;
-        vtkDebugMacro("ReadXMLAttributes: New uncollapsed path = " << fileNameDirectory);
-        std::string secondCollapsedFullPath = vtksys::SystemTools::CollapseFullPath(fileNameDirectory.c_str());
-        vtkDebugMacro("ReadXMLAttributes: New collapsed path for " << attName << " = " << secondCollapsedFullPath.c_str());
-        if (vtksys::SystemTools::FileExists(secondCollapsedFullPath.c_str(), true) == false)
-          {
-          vtkWarningMacro("ReadXMLAttributes: file list member " << filename << " is relative, but not found relative to the mrml root directory. Trying to find the path relative to the archetype doesn't work either: " << secondCollapsedFullPath << " not found, going back to using path from mrml root dir of " << collapsedFullPath);
-          }
-        else
-          {
-          vtkWarningMacro("ReadXMLAttributes: file list member " << filename << " is relative, but not found relative to the mrml root directory: " << collapsedFullPath << " is invalid. Found the file relative to the archetype, so using path  " <<  secondCollapsedFullPath);
-          collapsedFullPath = secondCollapsedFullPath;
-          }
-        }
       this->AddFileName(collapsedFullPath.c_str());
       }
     else if (!strcmp(attName, "uri"))
@@ -293,7 +265,7 @@ void vtkMRMLStorageNode::PrintSelf(ostream& os, vtkIndent indent)
 
   for (int i = 0; i < this->GetNumberOfFileNames(); i++)
     {
-    os << indent << "FileListMember: " << (this->GetNthFileName(i) == NULL ? "NULL" : this->GetNthFileName(i)) << "\n";
+    os << indent << "FileListMember: " << this->GetNthFileName(i) << "\n";
     }
   os << indent << "URI: " <<
     (this->URI ? this->URI : "(none)") << "\n";
@@ -334,7 +306,7 @@ void vtkMRMLStorageNode::StageReadData ( vtkMRMLNode *refNode )
     // of data. But,
     // commented out for now because CLI modules are using MRML to write
     // data in another thread, causing GUI to crash.
-//    this->Scene->InvokeEvent (vtkMRMLScene::ImportProgressFeedbackEvent );
+//    this->Scene->InvokeEvent (vtkMRMLScene::LoadProgressFeedbackEvent );
     }
 
   if ( this->GetURI() == NULL )
@@ -557,12 +529,6 @@ std::string vtkMRMLStorageNode::GetFullNameFromNthFileName(int n)
     fileName = this->GetNthFileName(n);
     }
 
-  if (fileName == NULL)
-    {
-    vtkDebugMacro("GetFullNameFromNthFileName: n = " << n << " have a null filename, returning empty string");
-    return fullName;
-    }
-  
   vtkDebugMacro("GetFullNameFromNthFileName: n = " << n << ", using file name '" << fileName << "'");
   
   if (this->Scene != NULL &&
@@ -593,7 +559,7 @@ std::string vtkMRMLStorageNode::GetFullNameFromNthFileName(int n)
       }
     else
       {
-      vtkDebugMacro("GetFullNameFromNthFileName: scene root dir = " << (this->Scene->GetRootDirectory() != NULL ? this->Scene->GetRootDirectory() : "null") << ", relative = " << (this->IsFilePathRelative(fileName) ? "yes" : "no"));
+      vtkDebugMacro("GetFullNameFromNthFileName: scene root dir = " << (this->Scene->GetRootDirectory() != NULL ? this->Scene->GetRootDirectory() : "null") << ", fileName = " << fileName << ", relative = " << (this->IsFilePathRelative(fileName) ? "yes" : "no"));
       }
     fullName = std::string(fileName);
     }
@@ -604,17 +570,14 @@ std::string vtkMRMLStorageNode::GetFullNameFromNthFileName(int n)
 //----------------------------------------------------------------------------
 int vtkMRMLStorageNode::SupportedFileType(const char *fileName)
 {
-  vtkErrorMacro("SupportedFileType: sub class didn't define this method! (fileName = '" << (fileName == NULL ? "NULL" : fileName) << "')");
+  vtkErrorMacro("SupportedFileType: sub class didn't define this method! (fileName = '" << fileName << "')");
   return 0;
 }
 
 //----------------------------------------------------------------------------
 int vtkMRMLStorageNode::FileNameIsInList(const char *fileName)
 {
-  if (fileName == NULL)
-    {
-    return 0;
-    }
+  
   std::string fname = std::string(fileName);
   int fileNameIsRelative =  this->IsFilePathRelative(fileName);
   for (unsigned int i = 0; i < this->FileNameList.size(); i++)
@@ -672,11 +635,6 @@ int vtkMRMLStorageNode::FileNameIsInList(const char *fileName)
 //----------------------------------------------------------------------------
 unsigned int vtkMRMLStorageNode::AddFileName( const char* filename )
 {
-  if (!filename)
-    {
-    vtkErrorMacro("AddFileName: can't add a null file name");
-    return 0;
-    }
   std::string filenamestr (filename);
   if (!this->FileNameIsInList(filename))
     {
@@ -695,7 +653,7 @@ void vtkMRMLStorageNode::ResetFileNameList( )
 //----------------------------------------------------------------------------
 const char * vtkMRMLStorageNode::GetNthFileName(int n) const
 {
-  if ((this->GetNumberOfFileNames()-1) < n)
+  if (this->GetNumberOfFileNames() < n)
     {
     return NULL;
     }
@@ -725,15 +683,10 @@ void vtkMRMLStorageNode::ResetNthFileName(int n, const char* fileName)
 }
 
 //----------------------------------------------------------------------------
-unsigned int vtkMRMLStorageNode::AddURI( const char* uri )
+unsigned int vtkMRMLStorageNode::AddURI( const char* filename )
 {
-  if (uri == NULL)
-    {
-    vtkErrorMacro("AddURI: can't add a null URI");
-    return 0;
-    }
-  std::string uristr (uri);
-  this->URIList.push_back( uristr );
+  std::string filenamestr (filename);
+  this->URIList.push_back( filenamestr );
   return (unsigned int)this->URIList.size();
 }
 
@@ -757,16 +710,16 @@ const char * vtkMRMLStorageNode::GetNthURI(int n)
 }
 
 //----------------------------------------------------------------------------
-void vtkMRMLStorageNode::ResetNthURI(int n, const char* uri)
+void vtkMRMLStorageNode::ResetNthURI(int n, const char* fileName)
 {
-  if (uri == NULL)
+  if (fileName == NULL)
     {
     vtkErrorMacro("ResetNthURI: given URI is null (n = " << n << ")");
     return;
     }
   if (n >= 0 && this->GetNumberOfURIs() >= n)
     {
-    this->URIList[n] = std::string(uri);
+    this->URIList[n] = std::string(fileName);
     }
   else
     {
@@ -781,11 +734,6 @@ void vtkMRMLStorageNode::SetDataDirectory(const char *dataDirName)
   if (dataDirName == NULL)
     {
     vtkErrorMacro("SetDataDirectory: input directory name is null, returning.");
-    return;
-    }
-  if (this->GetFileName() == NULL)
-    {
-    vtkWarningMacro("SetDataDirectory: file name is null, no reason to reset data directory.");
     return;
     }
   // reset the filename
@@ -848,11 +796,7 @@ void vtkMRMLStorageNode::InitializeSupportedWriteFileTypes()
 //------------------------------------------------------------------------------
 int vtkMRMLStorageNode::IsFilePathRelative(const char * filepath)
 {
-  if (filepath == NULL)
-    {
-    vtkErrorMacro("IsFilePathRelative: input file path is null! Returning 0");
-    return 0;
-    }
+
   if ( this->Scene )
     {
     return this->Scene->IsFilePathRelative(filepath);

@@ -1,25 +1,15 @@
 #ifndef __qMRMLWidgetsPlugin_h
 #define __qMRMLWidgetsPlugin_h
 
-#include "qMRMLCollapsibleButtonPlugin.h"
-#include "qMRMLColorTableComboBoxPlugin.h"
-#include "qMRMLLabelComboBoxPlugin.h"
 #include "qMRMLLinearTransformSliderPlugin.h"
 #include "qMRMLListWidgetPlugin.h"
 #include "qMRMLMatrixWidgetPlugin.h"
 #include "qMRMLNodeComboBoxPlugin.h"
-#include "qMRMLRangeWidgetPlugin.h"
-#include "qMRMLROIWidgetPlugin.h"
-#include "qMRMLSliceControllerWidgetPlugin.h"
-#include "qMRMLSliceInformationWidgetPlugin.h"
-#include "qMRMLSliceWidgetPlugin.h"
-#include "qMRMLSlicesControllerToolBarPlugin.h"
-#include "qMRMLThreeDViewPlugin.h"
-#include "qMRMLThreeDViewsControllerWidgetPlugin.h"
+#include "qMRMLNodeSelectorPlugin.h"
+#include "qMRMLNodeTreeSelectorPlugin.h"
 #include "qMRMLTransformSlidersPlugin.h"
 #include "qMRMLTreeWidgetPlugin.h"
 #include "qMRMLVolumeThresholdWidgetPlugin.h"
-#include "qMRMLWidgetPlugin.h"
 #include "qMRMLWindowLevelWidgetPlugin.h"
 #include "qMRMLSceneFactoryWidgetPlugin.h"
 
@@ -37,27 +27,17 @@ public:
   QList<QDesignerCustomWidgetInterface*> customWidgets() const
     {
     QList<QDesignerCustomWidgetInterface *> plugins;
-    plugins << new qMRMLCollapsibleButtonPlugin
-            << new qMRMLColorTableComboBoxPlugin
-            << new qMRMLLabelComboBoxPlugin
-            << new qMRMLLinearTransformSliderPlugin
+    plugins << new qMRMLLinearTransformSliderPlugin
             << new qMRMLListWidgetPlugin
             << new qMRMLMatrixWidgetPlugin
             << new qMRMLNodeComboBoxPlugin
-            << new qMRMLRangeWidgetPlugin
-            << new qMRMLROIWidgetPlugin
-            << new qMRMLSceneFactoryWidgetPlugin
-            << new qMRMLSliceControllerWidgetPlugin
-            << new qMRMLSliceInformationWidgetPlugin
-            << new qMRMLSlicesControllerToolBarPlugin
-            << new qMRMLSliceWidgetPlugin
-            << new qMRMLThreeDViewPlugin
-            << new qMRMLThreeDViewsControllerWidgetPlugin
+            << new qMRMLNodeSelectorPlugin
+            << new qMRMLNodeTreeSelectorPlugin
             << new qMRMLTransformSlidersPlugin
             << new qMRMLTreeWidgetPlugin
             << new qMRMLVolumeThresholdWidgetPlugin
-            << new qMRMLWidgetPlugin
-            << new qMRMLWindowLevelWidgetPlugin;
+            << new qMRMLWindowLevelWidgetPlugin
+            << new qMRMLSceneFactoryWidgetPlugin;
     return plugins;
     }
 };

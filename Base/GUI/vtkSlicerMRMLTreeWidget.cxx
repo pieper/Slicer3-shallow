@@ -465,7 +465,7 @@ void vtkSlicerMRMLTreeWidget::VisibilityCallback(const char *id, int vis)
         }
       else
         {
-        vtkErrorMacro("GetNthDisplayNode returns NULL, even for value of i less than GetNumberOfDisplayNodes");
+        vtkDebugMacro("GetNthDisplayNode returns NULL, even for value of i less than GetNumberOfDisplayNodes");
         }
       }
     }
@@ -542,7 +542,7 @@ void vtkSlicerMRMLTreeWidget::AddMRMLObservers ( )
     {
     this->MRMLScene->AddObserver(vtkMRMLScene::NodeRemovedEvent, (vtkCommand *)this->MRMLCallbackCommand);
     this->MRMLScene->AddObserver(vtkMRMLScene::NodeAddedEvent, (vtkCommand *)this->MRMLCallbackCommand);
-    this->MRMLScene->AddObserver(vtkMRMLScene::SceneClosedEvent, (vtkCommand *)this->MRMLCallbackCommand);
+    this->MRMLScene->AddObserver(vtkMRMLScene::SceneCloseEvent, (vtkCommand *)this->MRMLCallbackCommand);
     this->MRMLScene->AddObserver(vtkMRMLScene::SceneEditedEvent, (vtkCommand *)this->MRMLCallbackCommand);
     }
   else
@@ -561,7 +561,7 @@ void vtkSlicerMRMLTreeWidget::RemoveMRMLObservers ()
     }
   this->MRMLScene->RemoveObservers(vtkMRMLScene::NodeRemovedEvent, (vtkCommand *)this->MRMLCallbackCommand);
   this->MRMLScene->RemoveObservers(vtkMRMLScene::NodeAddedEvent, (vtkCommand *)this->MRMLCallbackCommand);
-  this->MRMLScene->RemoveObservers(vtkMRMLScene::SceneClosedEvent, (vtkCommand *)this->MRMLCallbackCommand);
+  this->MRMLScene->RemoveObservers(vtkMRMLScene::SceneCloseEvent, (vtkCommand *)this->MRMLCallbackCommand);
   this->MRMLScene->RemoveObservers(vtkMRMLScene::SceneEditedEvent, (vtkCommand *)this->MRMLCallbackCommand);
 }
 
@@ -577,7 +577,7 @@ void vtkSlicerMRMLTreeWidget::ProcessMRMLEvents ( vtkObject *caller,
   vtkMRMLCameraNode *camera_node = vtkMRMLCameraNode::SafeDownCast(calldata_node);
   vtkMRMLViewNode *view_node = vtkMRMLViewNode::SafeDownCast(calldata_node);
   if (this->MRMLScene &&
-      ((event == vtkMRMLScene::SceneClosedEvent) || 
+      ((event == vtkMRMLScene::SceneCloseEvent) || 
        (vtkMRMLScene::SafeDownCast(caller) == this->MRMLScene && 
         (calldata_tnode || view_node || camera_node))))
     {

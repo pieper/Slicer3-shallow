@@ -1,32 +1,8 @@
-/*==============================================================================
-
-  Program: 3D Slicer
-
-  Copyright (c) 2010 Kitware Inc.
-
-  See Doc/copyright/copyright.txt
-  or http://www.slicer.org/copyright/copyright.txt for details.
-
-  Unless required by applicable law or agreed to in writing, software
-  distributed under the License is distributed on an "AS IS" BASIS,
-  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-  See the License for the specific language governing permissions and
-  limitations under the License.
-
-  This file was originally developed by Jean-Christophe Fillion-Robin, Kitware Inc.
-  and was partially funded by NIH grant 3P41RR013218-12S1
-
-==============================================================================*/
-
-// Qt includes
-#include <QDebug>
-
-// CTK includes
-#include <ctkLogger.h>
-
-// qMRML includes
 #include "qMRMLEventLogger.h"
 #include "qMRMLEventLogger_p.h"
+
+// QT includes
+#include <QDebug>
 
 // MRML includes
 #include <vtkMRMLScene.h>
@@ -34,117 +10,11 @@
 // VTK includes
 #include <vtkObject.h>
 
-//--------------------------------------------------------------------------
-static ctkLogger logger("org.slicer.libs.qmrmlwidgets.qMRMLEventLogger");
-//--------------------------------------------------------------------------
-
 //------------------------------------------------------------------------------
-// qMRMLEventLoggerPrivate methods
-
-//------------------------------------------------------------------------------
-void qMRMLEventLoggerPrivate::init()
+qMRMLEventLogger::qMRMLEventLogger(QObject* _parent):Superclass(_parent)
 {
-  Q_Q(qMRMLEventLogger);
-  q->listenNodeAddedEvent(true);
-  q->listenNodeRemovedEvent(true);
-  q->listenNewSceneEvent(true);
-  q->listenSceneClosedEvent(true);
-  q->listenSceneAboutToBeClosedEvent(true);
-  q->listenSceneEditedEvent(true);
-  q->listenMetadataAddedEvent(true);
-  q->listenImportProgressFeedbackEvent(true);
-  q->listenSaveProgressFeedbackEvent(true);
-  q->listenSceneAboutToBeImportedEvent(true);
-  q->listenSceneImportedEvent(true);
-  q->listenSceneRestoredEvent(true);
-}
-
-//------------------------------------------------------------------------------
-qMRMLEventLoggerPrivate::qMRMLEventLoggerPrivate(qMRMLEventLogger& object)
-  : q_ptr(&object)
-{
-  this->MRMLScene = 0;
-}
-
-//------------------------------------------------------------------------------
-void qMRMLEventLoggerPrivate::setMRMLScene(vtkMRMLScene* scene)
-{
-  Q_Q(qMRMLEventLogger);
-
-  if (scene == this->MRMLScene)
-    {
-    return;
-    }
-
-  QString cid; // connectionId
-
-  // Set a high priority, doing so will force the Logger to be first to catch and
-  // display the event associated with the scene.
-  float priority = 100.0;
-
-  this->EventNameToConnectionIdMap["NodeAdded"] = this->qvtkReconnect(
-    this->MRMLScene, scene,
-    vtkMRMLScene::NodeAddedEvent, q,
-    SLOT(onNodeAddedEvent(vtkObject*, vtkObject*)), priority);
-
-  this->EventNameToConnectionIdMap["NodeRemoved"] = this->qvtkReconnect(
-    this->MRMLScene, scene,
-    vtkMRMLScene::NodeRemovedEvent, q,
-    SLOT(onNodeRemovedEvent(vtkObject*, vtkObject*)), priority);
-
-  this->EventNameToConnectionIdMap["NewScene"] = this->qvtkReconnect(
-    this->MRMLScene, scene,
-    vtkMRMLScene::NewSceneEvent, q, SLOT(onNewSceneEvent()), priority);
-
-  this->EventNameToConnectionIdMap["SceneClosed"] = this->qvtkReconnect(
-    this->MRMLScene, scene,
-    vtkMRMLScene::SceneClosedEvent, q, SLOT(onSceneClosedEvent()), priority);
-
-  this->EventNameToConnectionIdMap["SceneAboutToBeClosed"] = this->qvtkReconnect(
-    this->MRMLScene, scene,
-    vtkMRMLScene::SceneAboutToBeClosedEvent, q, SLOT(onSceneAboutToBeClosedEvent()), priority);
-
-  this->EventNameToConnectionIdMap["SceneEdited"] = this->qvtkReconnect(
-    this->MRMLScene, scene,
-    vtkMRMLScene::SceneEditedEvent, q, SLOT(onSceneEditedEvent()), priority);
-
-  this->EventNameToConnectionIdMap["MetadataAdded"] = this->qvtkReconnect(
-    this->MRMLScene, scene,
-    vtkMRMLScene::MetadataAddedEvent, q, SLOT(onMetadataAddedEvent()), priority);
-
-  this->EventNameToConnectionIdMap["ImportProgressFeedback"] = this->qvtkReconnect(
-    this->MRMLScene, scene,
-    vtkMRMLScene::ImportProgressFeedbackEvent, q, SLOT(onImportProgressFeedbackEvent()), priority);
-
-  this->EventNameToConnectionIdMap["SaveProgressFeedback"] = this->qvtkReconnect(
-    this->MRMLScene, scene,
-    vtkMRMLScene::SaveProgressFeedbackEvent, q, SLOT(onSaveProgressFeedbackEvent()), priority);
-
-  this->EventNameToConnectionIdMap["SceneAboutToBeImported"] = this->qvtkReconnect(
-    this->MRMLScene, scene,
-    vtkMRMLScene::SceneAboutToBeImportedEvent, q, SLOT(onSceneAboutToBeImportedEvent()), priority);
-
-  this->EventNameToConnectionIdMap["SceneImported"] = this->qvtkReconnect(
-    this->MRMLScene, scene,
-    vtkMRMLScene::SceneImportedEvent, q, SLOT(onSceneImportedEvent()), priority);
-
-  this->EventNameToConnectionIdMap["SceneRestored"] = this->qvtkReconnect(
-    this->MRMLScene, scene,
-    vtkMRMLScene::SceneRestoredEvent, q, SLOT(onSceneRestoredEvent()), priority);
-
-  this->MRMLScene = scene;
-}
-
-//------------------------------------------------------------------------------
-// qMRMLEventLogger methods
-
-//------------------------------------------------------------------------------
-qMRMLEventLogger::qMRMLEventLogger(QObject* _parent)
-  : Superclass(_parent)
-  , d_ptr(new qMRMLEventLoggerPrivate(*this))
-{
-  logger.setInfo();
-  Q_D(qMRMLEventLogger);
+  QCTK_INIT_PRIVATE(qMRMLEventLogger);
+  QCTK_D(qMRMLEventLogger);
   d->init();
 }
 
@@ -156,8 +26,7 @@ qMRMLEventLogger::~qMRMLEventLogger()
 //------------------------------------------------------------------------------
 void qMRMLEventLogger::setMRMLScene(vtkMRMLScene* scene)
 {
-  Q_D(qMRMLEventLogger);
-  d->setMRMLScene(scene);
+  qctk_d()->setMRMLScene(scene);
 }
 
 //------------------------------------------------------------------------------
@@ -166,7 +35,7 @@ void qMRMLEventLogger::setMRMLScene(vtkMRMLScene* scene)
 #define QMRMLEVENTLOGGER_LISTENING_EVENT_MACRO(_EVENT_NAME)   \
 bool qMRMLEventLogger::listening##_EVENT_NAME##Event()        \
 {                                                             \
-  Q_D(qMRMLEventLogger);                                   \
+  QCTK_D(qMRMLEventLogger);                                   \
   return d->EventToListen.contains(#_EVENT_NAME);             \
 }
 
@@ -174,14 +43,15 @@ bool qMRMLEventLogger::listening##_EVENT_NAME##Event()        \
 QMRMLEVENTLOGGER_LISTENING_EVENT_MACRO(NodeAdded);
 QMRMLEVENTLOGGER_LISTENING_EVENT_MACRO(NodeRemoved);
 QMRMLEVENTLOGGER_LISTENING_EVENT_MACRO(NewScene);
-QMRMLEVENTLOGGER_LISTENING_EVENT_MACRO(SceneClosed);
-QMRMLEVENTLOGGER_LISTENING_EVENT_MACRO(SceneAboutToBeClosed);
+QMRMLEVENTLOGGER_LISTENING_EVENT_MACRO(SceneClose);
+QMRMLEVENTLOGGER_LISTENING_EVENT_MACRO(SceneClosing);
+QMRMLEVENTLOGGER_LISTENING_EVENT_MACRO(SceneLoadingError);
 QMRMLEVENTLOGGER_LISTENING_EVENT_MACRO(SceneEdited);
 QMRMLEVENTLOGGER_LISTENING_EVENT_MACRO(MetadataAdded);
-QMRMLEVENTLOGGER_LISTENING_EVENT_MACRO(ImportProgressFeedback);
+QMRMLEVENTLOGGER_LISTENING_EVENT_MACRO(LoadProgressFeedback);
 QMRMLEVENTLOGGER_LISTENING_EVENT_MACRO(SaveProgressFeedback);
-QMRMLEVENTLOGGER_LISTENING_EVENT_MACRO(SceneAboutToBeImported);
-QMRMLEVENTLOGGER_LISTENING_EVENT_MACRO(SceneImported);
+QMRMLEVENTLOGGER_LISTENING_EVENT_MACRO(SceneLoadStart);
+QMRMLEVENTLOGGER_LISTENING_EVENT_MACRO(SceneLoadEnd);
 QMRMLEVENTLOGGER_LISTENING_EVENT_MACRO(SceneRestored);
 
 //------------------------------------------------------------------------------
@@ -195,7 +65,7 @@ QMRMLEVENTLOGGER_LISTENING_EVENT_MACRO(SceneRestored);
 #define QMRMLEVENTLOGGER_LISTEN_EVENT_MACRO(_EVENT_NAME)            \
 void qMRMLEventLogger::listen##_EVENT_NAME##Event(bool listen)      \
 {                                                                   \
-  Q_D(qMRMLEventLogger);                                         \
+  QCTK_D(qMRMLEventLogger);                                         \
                                                                     \
   Q_ASSERT(!d->EventNameToConnectionIdMap.contains(#_EVENT_NAME));  \
   QString cid = d->EventNameToConnectionIdMap[#_EVENT_NAME];        \
@@ -216,14 +86,15 @@ void qMRMLEventLogger::listen##_EVENT_NAME##Event(bool listen)      \
 QMRMLEVENTLOGGER_LISTEN_EVENT_MACRO(NodeAdded);
 QMRMLEVENTLOGGER_LISTEN_EVENT_MACRO(NodeRemoved);
 QMRMLEVENTLOGGER_LISTEN_EVENT_MACRO(NewScene);
-QMRMLEVENTLOGGER_LISTEN_EVENT_MACRO(SceneClosed);
-QMRMLEVENTLOGGER_LISTEN_EVENT_MACRO(SceneAboutToBeClosed);
+QMRMLEVENTLOGGER_LISTEN_EVENT_MACRO(SceneClose);
+QMRMLEVENTLOGGER_LISTEN_EVENT_MACRO(SceneClosing);
+QMRMLEVENTLOGGER_LISTEN_EVENT_MACRO(SceneLoadingError);
 QMRMLEVENTLOGGER_LISTEN_EVENT_MACRO(SceneEdited);
 QMRMLEVENTLOGGER_LISTEN_EVENT_MACRO(MetadataAdded);
-QMRMLEVENTLOGGER_LISTEN_EVENT_MACRO(ImportProgressFeedback);
+QMRMLEVENTLOGGER_LISTEN_EVENT_MACRO(LoadProgressFeedback);
 QMRMLEVENTLOGGER_LISTEN_EVENT_MACRO(SaveProgressFeedback);
-QMRMLEVENTLOGGER_LISTEN_EVENT_MACRO(SceneAboutToBeImported);
-QMRMLEVENTLOGGER_LISTEN_EVENT_MACRO(SceneImported);
+QMRMLEVENTLOGGER_LISTEN_EVENT_MACRO(SceneLoadStart);
+QMRMLEVENTLOGGER_LISTEN_EVENT_MACRO(SceneLoadEnd);
 QMRMLEVENTLOGGER_LISTEN_EVENT_MACRO(SceneRestored);
 
 //------------------------------------------------------------------------------
@@ -233,14 +104,14 @@ QMRMLEVENTLOGGER_LISTEN_EVENT_MACRO(SceneRestored);
 //------------------------------------------------------------------------------
 void qMRMLEventLogger::onNodeAddedEvent(vtkObject* caller, vtkObject* call_data)
 {
-  logger.info(QString("onNodeAddedEvent: %1").arg(call_data->GetClassName()));
+  qDebug() << "qMRMLEventLogger::onNodeAddedEvent:" << caller->GetClassName();
   emit this->signalNodeAddedEvent(caller, call_data);
 }
 
 //------------------------------------------------------------------------------
 void qMRMLEventLogger::onNodeRemovedEvent(vtkObject* caller, vtkObject* call_data)
 {
-  logger.info(QString("onNodeRemovedEvent: %1").arg(call_data->GetClassName()));
+  qDebug() << "qMRMLEventLogger::onNodeRemovedEvent:" << caller->GetClassName();
   emit this->signalNodeRemovedEvent(caller, call_data);
 }
 
@@ -248,22 +119,23 @@ void qMRMLEventLogger::onNodeRemovedEvent(vtkObject* caller, vtkObject* call_dat
 // Helper macro allowing to define function of the
 // form void onEVENT_NAMEEvent()'
 //
-#define QMRMLEVENTLOGGER_ONEVENT_SLOT_MACRO(_EVENT_NAME)  \
-void qMRMLEventLogger::on##_EVENT_NAME##Event()           \
-{                                                         \
-  logger.info(QString("on%1Event").arg(#_EVENT_NAME));    \
-  emit signal##_EVENT_NAME##Event();                      \
+#define QMRMLEVENTLOGGER_ONEVENT_SLOT_MACRO(_EVENT_NAME)   \
+void qMRMLEventLogger::on##_EVENT_NAME##Event()            \
+{                                                          \
+  qDebug() << "qMRMLEventLogger::on##_EVENT_NAME##Event";  \
+  emit signal##_EVENT_NAME##Event();                       \
 }
 
 QMRMLEVENTLOGGER_ONEVENT_SLOT_MACRO(NewScene);
-QMRMLEVENTLOGGER_ONEVENT_SLOT_MACRO(SceneClosed);
-QMRMLEVENTLOGGER_ONEVENT_SLOT_MACRO(SceneAboutToBeClosed);
+QMRMLEVENTLOGGER_ONEVENT_SLOT_MACRO(SceneClose);
+QMRMLEVENTLOGGER_ONEVENT_SLOT_MACRO(SceneClosing);
+QMRMLEVENTLOGGER_ONEVENT_SLOT_MACRO(SceneLoadingError);
 QMRMLEVENTLOGGER_ONEVENT_SLOT_MACRO(SceneEdited);
 QMRMLEVENTLOGGER_ONEVENT_SLOT_MACRO(MetadataAdded);
-QMRMLEVENTLOGGER_ONEVENT_SLOT_MACRO(ImportProgressFeedback);
+QMRMLEVENTLOGGER_ONEVENT_SLOT_MACRO(LoadProgressFeedback);
 QMRMLEVENTLOGGER_ONEVENT_SLOT_MACRO(SaveProgressFeedback);
-QMRMLEVENTLOGGER_ONEVENT_SLOT_MACRO(SceneAboutToBeImported);
-QMRMLEVENTLOGGER_ONEVENT_SLOT_MACRO(SceneImported);
+QMRMLEVENTLOGGER_ONEVENT_SLOT_MACRO(SceneLoadStart);
+QMRMLEVENTLOGGER_ONEVENT_SLOT_MACRO(SceneLoadEnd);
 QMRMLEVENTLOGGER_ONEVENT_SLOT_MACRO(SceneRestored);
 
 //------------------------------------------------------------------------------
@@ -271,15 +143,98 @@ QMRMLEVENTLOGGER_ONEVENT_SLOT_MACRO(SceneRestored);
 #undef QMRMLEVENTLOGGER_ONEVENT_SLOT_MACRO
 
 //------------------------------------------------------------------------------
-void qMRMLEventLogger::setConsoleOutputEnabled(bool enabled)
+// qMRMLEventLoggerPrivate methods
+
+//------------------------------------------------------------------------------
+void qMRMLEventLoggerPrivate::init()
 {
-  if (enabled)
-    {
-    logger.setInfo();
-    }
-  else
-    {
-    logger.setOff();
-    }
+  QCTK_P(qMRMLEventLogger);
+  p->listenNodeAddedEvent(true);
+  p->listenNodeRemovedEvent(true);
+  p->listenNewSceneEvent(true);
+  p->listenSceneCloseEvent(true);
+  p->listenSceneClosingEvent(true);
+  p->listenSceneLoadingErrorEvent(true);
+  p->listenSceneEditedEvent(true);
+  p->listenMetadataAddedEvent(true);
+  p->listenLoadProgressFeedbackEvent(true);
+  p->listenSaveProgressFeedbackEvent(true);
+  p->listenSceneLoadStartEvent(true);
+  p->listenSceneLoadEndEvent(true);
+  p->listenSceneRestoredEvent(true);
 }
 
+//------------------------------------------------------------------------------
+qMRMLEventLoggerPrivate::qMRMLEventLoggerPrivate():Superclass()
+{
+  this->MRMLScene = 0;
+}
+    
+//------------------------------------------------------------------------------
+void qMRMLEventLoggerPrivate::setMRMLScene(vtkMRMLScene* scene)
+{
+  QCTK_P(qMRMLEventLogger);
+  
+  if (scene == this->MRMLScene)
+    {
+    return; 
+    }
+    
+  QString cid; // connectionId
+
+  this->EventNameToConnectionIdMap["NodeAdded"] = this->qvtkReconnect(
+    this->MRMLScene, scene,
+    vtkMRMLScene::NodeAddedEvent, p,
+    SLOT(onNodeAddedEvent(vtkObject*, vtkObject*)));
+                      
+  this->EventNameToConnectionIdMap["NodeRemoved"] = this->qvtkReconnect(
+    this->MRMLScene, scene,
+    vtkMRMLScene::NodeRemovedEvent, p,
+    SLOT(onNodeRemovedEvent(vtkObject*, vtkObject*)));
+
+  this->EventNameToConnectionIdMap["NewScene"] = this->qvtkReconnect(
+    this->MRMLScene, scene,
+    vtkMRMLScene::NewSceneEvent, p, SLOT(onNewSceneEvent()));
+
+  this->EventNameToConnectionIdMap["SceneClose"] = this->qvtkReconnect(
+    this->MRMLScene, scene,
+    vtkMRMLScene::SceneCloseEvent, p, SLOT(onSceneCloseEvent()));
+
+  this->EventNameToConnectionIdMap["SceneClosing"] = this->qvtkReconnect(
+    this->MRMLScene, scene,
+    vtkMRMLScene::SceneClosingEvent, p, SLOT(onSceneClosingEvent()));
+
+  this->EventNameToConnectionIdMap["SceneLoadingError"] = this->qvtkReconnect(
+    this->MRMLScene, scene,
+    vtkMRMLScene::SceneLoadingErrorEvent, p, SLOT(onSceneLoadingErrorEvent()));
+
+  this->EventNameToConnectionIdMap["SceneEdited"] = this->qvtkReconnect(
+    this->MRMLScene, scene,
+    vtkMRMLScene::SceneEditedEvent, p, SLOT(onSceneEditedEvent()));
+
+  this->EventNameToConnectionIdMap["MetadataAdded"] = this->qvtkReconnect(
+    this->MRMLScene, scene,
+    vtkMRMLScene::MetadataAddedEvent, p, SLOT(onMetadataAddedEvent()));
+
+  this->EventNameToConnectionIdMap["LoadProgressFeedback"] = this->qvtkReconnect(
+    this->MRMLScene, scene,
+    vtkMRMLScene::LoadProgressFeedbackEvent, p, SLOT(onLoadProgressFeedbackEvent()));
+                      
+  this->EventNameToConnectionIdMap["SaveProgressFeedback"] = this->qvtkReconnect(
+    this->MRMLScene, scene,
+    vtkMRMLScene::SaveProgressFeedbackEvent, p, SLOT(onSaveProgressFeedbackEvent()));
+
+  this->EventNameToConnectionIdMap["SceneLoadStart"] = this->qvtkReconnect(
+    this->MRMLScene, scene,
+    vtkMRMLScene::SceneLoadStartEvent, p, SLOT(onSceneLoadStartEvent()));
+
+  this->EventNameToConnectionIdMap["SceneLoadEnd"] = this->qvtkReconnect(
+    this->MRMLScene, scene,
+    vtkMRMLScene::SceneLoadEndEvent, p, SLOT(onSceneLoadEndEvent()));
+
+  this->EventNameToConnectionIdMap["SceneRestored"] = this->qvtkReconnect(
+    this->MRMLScene, scene,
+    vtkMRMLScene::SceneRestoredEvent, p, SLOT(onSceneRestoredEvent()));
+
+  this->MRMLScene = scene; 
+}

@@ -10,7 +10,7 @@
 #include "vtkXMLDataParser.h"
 #include "vtkXMLDataElement.h"
 
-// STD includes
+// STL includes
 #include <string>
 #include <map>
 #include <vector>

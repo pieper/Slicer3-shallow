@@ -314,6 +314,8 @@ public:
   virtual void      SetTreeNodeSpatialPriorVolumeID(vtkIdType nodeID, 
                                                     vtkIdType volumeID);
 
+  vtkMRMLVolumeNode* GetAlignedSpatialPriorFromTreeNodeID(vtkIdType nodeID);
+
   // target volumes
   virtual int         GetTargetNumberOfSelectedVolumes();
   // index in [0, #selected volumes)
@@ -327,6 +329,8 @@ public:
   virtual void        AddTargetSelectedVolume(vtkIdType volumeID);
   virtual void        AddTargetSelectedVolumeByMRMLID(char* mrmlID);
   virtual void        RemoveTargetSelectedVolume(vtkIdType volumeID);
+  virtual void        RemoveTargetSelectedVolumeIndex(vtkIdType imageIndex);
+
   virtual void        MoveNthTargetSelectedVolume(int fromIndex,
                                                   int toIndex);
   virtual void        MoveTargetSelectedVolume(vtkIdType volumeID,
@@ -516,6 +520,7 @@ public:
   virtual void      SetUpdateIntermediateData(int shouldUpdate);
 
   virtual int       GetAtlasNumberOfTrainingSamples();
+  virtual void      ComputeAtlasNumberOfTrainingSamples();
 
   virtual void      GetSegmentationBoundaryMin(int minPoint[3]);
   virtual void      SetSegmentationBoundaryMin(int minPoint[3]);

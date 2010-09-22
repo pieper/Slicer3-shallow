@@ -47,6 +47,7 @@ class vtkProstateNavStep;
 class vtkSlicerSecondaryViewerWindow;
 
 class vtkMRMLProstateNavManagerNode;
+class vtkMRMLFiducialListNode;
  
 // Description:    
 // This class implements Slicer's Volumes GUI
@@ -77,6 +78,11 @@ class VTK_PROSTATENAV_EXPORT vtkProstateNavGUI : public vtkSlicerModuleGUI
   
   //ETX
   
+  // Precision of the target position and orientation display
+  static const int POSITION_PRECISION_DIGITS;
+  static const double POSITION_PRECISION_TOLERANCE;
+
+
  public:
   // Description:    
   // Usual vtk class functions
@@ -99,8 +105,6 @@ class VTK_PROSTATENAV_EXPORT vtkProstateNavGUI : public vtkSlicerModuleGUI
   // Description: 
   // Get wizard widget
   vtkGetObjectMacro(WizardWidget, vtkKWWizardWidget);
-
-  vtkGetObjectMacro ( ProstateNavManager, vtkMRMLProstateNavManagerNode );
 
   // Description:    
   // This method builds the IGTDemo module GUI
@@ -148,6 +152,8 @@ class VTK_PROSTATENAV_EXPORT vtkProstateNavGUI : public vtkSlicerModuleGUI
   
   //ETX
   
+  vtkMRMLProstateNavManagerNode* GetProstateNavManagerNode();
+
   // Description:
   // Bring a marker to view in all three slice views along its principal axes
   // N - the direction vector of the locator,
@@ -160,11 +166,16 @@ class VTK_PROSTATENAV_EXPORT vtkProstateNavGUI : public vtkSlicerModuleGUI
   // Bring current target to view in all three slice views
   void BringTargetToViewIn2DViews(int mode);
 
+  // Description:
+  // Request render in all viewer widgets
+  void RequestRenderInViewerWidgets();
+  void ShowSecondaryWindowCheckButtonCallback (int checked);
+
  protected:
   vtkProstateNavGUI ( );
   virtual ~vtkProstateNavGUI ( );
   
-  void SetProstateNavManager(vtkMRMLProstateNavManagerNode* node);
+  //void SetProstateNavManager(vtkMRMLProstateNavManagerNode* node);
   void SetRobot(vtkMRMLRobotNode* robot);
   void SetTargetPlanList(vtkMRMLFiducialListNode* targetPlanList);
 
@@ -179,6 +190,7 @@ class VTK_PROSTATENAV_EXPORT vtkProstateNavGUI : public vtkSlicerModuleGUI
 
   // Configuration Frame
 
+  vtkKWCheckButton *ShowSecondaryWindowCheckButton;
   vtkSlicerNodeSelectorWidget* ProstateNavManagerSelectorWidget;
   vtkSlicerNodeSelectorWidget* RobotSelectorWidget;
 
@@ -209,13 +221,14 @@ class VTK_PROSTATENAV_EXPORT vtkProstateNavGUI : public vtkSlicerModuleGUI
   // Target Fiducials
   //----------------------------------------------------------------
 
-  void UpdateGUI();
+  void UpdateGUI();  
+
 
  private:
 
   vtkProstateNavGUI ( const vtkProstateNavGUI& ); // Not implemented.
   void operator = ( const vtkProstateNavGUI& ); //Not implemented.
-  
+
   void BuildGUIForConfigurationFrame();
   void BuildGUIForWorkphaseFrame();
   void BuildGUIForWizardFrame();
@@ -224,7 +237,7 @@ class VTK_PROSTATENAV_EXPORT vtkProstateNavGUI : public vtkSlicerModuleGUI
   void UpdateStatusButtons();
   void UpdateWorkflowSteps();
   
-  int  ChangeWorkphase(int phase, int fChangeWizard=0);
+  int  ChangeWorkphaseInGUI(int phase);
   const char* AddZFrameModel(const char* nodeName);
 
   // Description:
@@ -232,16 +245,32 @@ class VTK_PROSTATENAV_EXPORT vtkProstateNavGUI : public vtkSlicerModuleGUI
   void UpdateCurrentTargetDisplay();
   void UpdateCurrentTargetDisplayInSecondaryWindow();
 
+  void SetAndObserveRobotNodeID(const char *nodeID);
+  vtkMRMLRobotNode* GetRobotNode();
+
+  void SetAndObserveProstateNavManagerNodeID(const char *nodeID);  
+
+  void SetAndObserveTargetPlanListNodeID(const char *nodeID);
+  vtkMRMLFiducialListNode* GetTargetPlanListNode();
+  
+
   int Entered;
 
   // store the currently displayed workflow steps
   // if the same steps requested to be displayed, then nothing will happen
   vtkStringArray* DisplayedWorkflowSteps;
 
-  vtkMRMLProstateNavManagerNode* ProstateNavManager;
-  vtkMRMLRobotNode* Robot;
-  vtkMRMLFiducialListNode* TargetPlanList;
-  
+  vtkSetStringMacro(ProstateNavManagerNodeID);
+  char* ProstateNavManagerNodeID;
+  vtkMRMLProstateNavManagerNode* ProstateNavManagerNode;
+
+  vtkSetStringMacro(RobotNodeID);
+  char* RobotNodeID;
+  vtkMRMLRobotNode* RobotNode;
+
+  vtkSetStringMacro(TargetPlanListNodeID);
+  char* TargetPlanListNodeID;
+  vtkMRMLFiducialListNode* TargetPlanListNode;  
 };
 
 

@@ -18,7 +18,7 @@
 #include <itkImageToImageFilter.h>
 #include "itkDiffusionTensor3DTransform.h"
 #include "itkDiffusionTensor3DInterpolateImageFunction.h"
-#include <itkImage.h>
+#include <itkOrientedImage.h>
 #include <itkDiffusionTensor3D.h>
 #include <itkCastImageFilter.h>
 #include <itkImageRegionIterator.h>
@@ -35,20 +35,20 @@ namespace itk
 template< class TInput , class TOutput >
 class DiffusionTensor3DResample
 : public ImageToImageFilter
-< Image < DiffusionTensor3D < TInput > , 3 > ,
-  Image < DiffusionTensor3D < TOutput > , 3 > >
+< OrientedImage < DiffusionTensor3D < TInput > , 3 > ,
+  OrientedImage < DiffusionTensor3D < TOutput > , 3 > >
 {
 public :
 typedef TInput InputDataType ;
 typedef TOutput OutputDataType ;
 typedef ImageToImageFilter
-          < Image < DiffusionTensor3D < TInput > , 3 > ,
-            Image < DiffusionTensor3D < TOutput > , 3 > >
+          < OrientedImage < DiffusionTensor3D < TInput > , 3 > ,
+            OrientedImage < DiffusionTensor3D < TOutput > , 3 > >
 Superclass ;
 typedef DiffusionTensor3D< InputDataType > InputTensorDataType ;
-typedef Image< InputTensorDataType , 3 > InputImageType ;
+typedef OrientedImage< InputTensorDataType , 3 > InputImageType ;
 typedef DiffusionTensor3D< OutputDataType > OutputTensorDataType ;
-typedef Image< OutputTensorDataType , 3 > OutputImageType ;
+typedef OrientedImage< OutputTensorDataType , 3 > OutputImageType ;
 typedef DiffusionTensor3DResample Self ;
 typedef SmartPointer< Self > Pointer ;
 typedef SmartPointer< const Self > ConstPointer ;

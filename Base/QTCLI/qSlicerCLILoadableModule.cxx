@@ -1,35 +1,27 @@
-/*==============================================================================
+/*=auto=========================================================================
 
-  Program: 3D Slicer
+ Portions (c) Copyright 2005 Brigham and Women's Hospital (BWH) 
+ All Rights Reserved.
 
-  Copyright (c) 2010 Kitware Inc.
+ See Doc/copyright/copyright.txt
+ or http://www.slicer.org/copyright/copyright.txt for details.
 
-  See Doc/copyright/copyright.txt
-  or http://www.slicer.org/copyright/copyright.txt for details.
+ Program:   3D Slicer
 
-  Unless required by applicable law or agreed to in writing, software
-  distributed under the License is distributed on an "AS IS" BASIS,
-  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-  See the License for the specific language governing permissions and
-  limitations under the License.
+=========================================================================auto=*/
 
-  This file was originally developed by Jean-Christophe Fillion-Robin, Kitware Inc.
-  and was partially funded by NIH grant 3P41RR013218-12S1
-
-==============================================================================*/
-
-// SlicerQt includes
 #include "qSlicerCLILoadableModule.h"
 
-// STD includes
-#include <cstdio>
+// QT includes
+#include <QTextStream>
 
 //-----------------------------------------------------------------------------
-class qSlicerCLILoadableModulePrivate
+class qSlicerCLILoadableModulePrivate: public qCTKPrivate<qSlicerCLILoadableModule>
 {
 public:
-  qSlicerCLILoadableModulePrivate();
+  QCTK_DECLARE_PUBLIC(qSlicerCLILoadableModule);
   typedef qSlicerCLILoadableModulePrivate Self;
+  qSlicerCLILoadableModulePrivate();
 
   qSlicerCLILoadableModule::ModuleEntryPointType EntryPoint; 
 };
@@ -48,13 +40,8 @@ qSlicerCLILoadableModulePrivate::qSlicerCLILoadableModulePrivate()
 
 //-----------------------------------------------------------------------------
 qSlicerCLILoadableModule::qSlicerCLILoadableModule(QWidget* _parent):Superclass(_parent)
-  , d_ptr(new qSlicerCLILoadableModulePrivate)
 {
-}
-
-//-----------------------------------------------------------------------------
-qSlicerCLILoadableModule::~qSlicerCLILoadableModule()
-{
+  QCTK_INIT_PRIVATE(qSlicerCLILoadableModule);
 }
 
 //-----------------------------------------------------------------------------
@@ -64,21 +51,13 @@ void qSlicerCLILoadableModule::setup()
 }
 
 //-----------------------------------------------------------------------------
-QString qSlicerCLILoadableModule::entryPoint()const
+QString qSlicerCLILoadableModule::entryPoint()
 {
-  Q_D(const qSlicerCLILoadableModule);
-  char buffer[256];
-  // The entry point address must be encoded the same way it is decoded. As it
-  // is decoded using  sscanf, it must be encoded using sprintf
-  sprintf(buffer, "slicer:%p", d->EntryPoint);
-  return QString(buffer); 
+  QCTK_D(qSlicerCLILoadableModule);
+  QString str;
+  QTextStream(&str) << "slicer:" << (void*)(d->EntryPoint);
+  return str; 
 }
 
 //-----------------------------------------------------------------------------
-CTK_SET_CXX(qSlicerCLILoadableModule, ModuleEntryPointType, setEntryPoint, EntryPoint);
-
-//-----------------------------------------------------------------------------
-QString qSlicerCLILoadableModule::moduleType()const
-{
-  return QLatin1String("SharedObjectModule");
-}
+QCTK_SET_CXX(qSlicerCLILoadableModule, ModuleEntryPointType, setEntryPoint, EntryPoint);

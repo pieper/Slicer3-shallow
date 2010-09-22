@@ -548,7 +548,7 @@ void vtkChangeTrackerROIStep::ShowUserInterface()
   if (!this->roiWidget->IsCreated())
     {
     vtkMRMLChangeTrackerNode* Node = this->GetGUI()->GetNode();
-    vtkMRMLSliceLogic *sliceLogic = this->GetGUI()->GetSliceLogic();
+    vtkSlicerSliceLogic *sliceLogic = this->GetGUI()->GetSliceLogic();
     vtkMRMLVolumeNode* volumeNode =  vtkMRMLVolumeNode::SafeDownCast(Node->GetScene()->GetNodeByID(Node->GetScan1_Ref()));
     double rasDimensions[3];
     double rasCenter[3];

@@ -73,8 +73,6 @@
 
 #include "vtkMRMLVolumeNode.h"
 
-#include "vtkMRMLVolumeArchetypeStorageNode.h"
-
 class vtkImageData;
 class vtkDoubleArray;
 class vtkMRMLStorageNode;
@@ -119,8 +117,7 @@ class VTK_MRML_EXPORT vtkMRMLTimeSeriesVolumeNode : public vtkMRMLVolumeNode
   /// Create default storage node or NULL if does not have one
   virtual vtkMRMLStorageNode* CreateDefaultStorageNode()
     {
-      // Superclass::CreateDefaultStorageNode();
-    return vtkMRMLVolumeArchetypeStorageNode::New();
+    return Superclass::CreateDefaultStorageNode();
     };
 
 

@@ -1,36 +1,28 @@
-/*==============================================================================
+/*=auto=========================================================================
 
-  Program: 3D Slicer
+ Portions (c) Copyright 2005 Brigham and Women's Hospital (BWH) 
+ All Rights Reserved.
 
-  Copyright (c) 2010 Kitware Inc.
+ See Doc/copyright/copyright.txt
+ or http://www.slicer.org/copyright/copyright.txt for details.
 
-  See Doc/copyright/copyright.txt
-  or http://www.slicer.org/copyright/copyright.txt for details.
+ Program:   3D Slicer
 
-  Unless required by applicable law or agreed to in writing, software
-  distributed under the License is distributed on an "AS IS" BASIS,
-  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-  See the License for the specific language governing permissions and
-  limitations under the License.
-
-  This file was originally developed by Jean-Christophe Fillion-Robin, Kitware Inc.
-  and was partially funded by NIH grant 3P41RR013218-12S1
-
-==============================================================================*/
+=========================================================================auto=*/
 
 #ifndef __qSlicerModuleManager_h
 #define __qSlicerModuleManager_h
 
-// CTK includes
-#include <ctkPimpl.h>
+/// qCTK includes
+#include <qCTKPimpl.h>
 
-// Qt includes
+/// QT includes
 #include <QObject>
 
 #include "qSlicerBaseQTCoreExport.h"
 
-class qSlicerAbstractCoreModule;
-class qSlicerModuleFactoryManager;
+class qSlicerAbstractModule;
+class qSlicerModuleFactoryManager; 
 
 class qSlicerModuleManagerPrivate;
 
@@ -41,49 +33,44 @@ public:
   qSlicerModuleManager();
   virtual ~qSlicerModuleManager();
 
-  ///
+  /// 
   virtual void printAdditionalInfo();
 
-  ///
+  /// 
   /// Return a pointer to the current module factory manager
   qSlicerModuleFactoryManager * factoryManager()const;
 
-  ///
+  /// 
   bool loadModule(const QString& name);
 
-  ///
+  /// 
   bool unLoadModule(const QString& name);
 
-  ///
+  /// 
   bool isLoaded(const QString& name)const;
 
-  ///
-  qSlicerAbstractCoreModule* module(const QString& name);
+  /// 
+  qSlicerAbstractModule* module(const QString& name);
 
-  ///
+  /// 
   /// Convenient method to get module title given its name
   /// Deprecated
   QString moduleTitle(const QString& name) const;
 
-  ///
+  /// 
   /// Convenient method to get module name given its title
   /// Deprecated
   QString moduleName(const QString& title) const;
 
-  ///
-  /// Return the list of all the loaded modules
-  QStringList moduleList()const;
-
 signals:
-  void moduleLoaded(qSlicerAbstractCoreModule* module);
-  void moduleAboutToBeUnloaded(qSlicerAbstractCoreModule* module);
-
-protected:
-  QScopedPointer<qSlicerModuleManagerPrivate> d_ptr;
+  void moduleLoaded(qSlicerAbstractModule* module);
+  void moduleAboutToBeUnloaded(qSlicerAbstractModule* module);
 
 private:
-  Q_DECLARE_PRIVATE(qSlicerModuleManager);
-  Q_DISABLE_COPY(qSlicerModuleManager);
+  qSlicerModuleManager(const qSlicerModuleManager&);  /// Not implemented.
+  void operator=(const qSlicerModuleManager&);  /// Not implemented.
+
+  QCTK_DECLARE_PRIVATE(qSlicerModuleManager);
 };
 
 #endif

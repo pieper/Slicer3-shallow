@@ -1016,6 +1016,7 @@ void vtkSlicerColorDisplayWidget::CreateWidget ( )
   
 }
 
+
 //---------------------------------------------------------------------------
 void vtkSlicerColorDisplayWidget::UpdateElement(int row, int col, char * str)
 {

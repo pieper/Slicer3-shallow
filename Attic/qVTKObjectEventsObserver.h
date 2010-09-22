@@ -97,7 +97,7 @@ protected slots:
     unsigned long vtk_event, const QObject* qt_obj);
 
 private:
-  CTK_DECLARE_PRIVATE(qVTKObjectEventsObserver);
+  QCTK_DECLARE_PRIVATE(qVTKObjectEventsObserver);
 
 };
 

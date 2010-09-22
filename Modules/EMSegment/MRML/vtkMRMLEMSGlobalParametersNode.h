@@ -3,10 +3,10 @@
 
 #include "vtkMRML.h"
 #include "vtkMRMLNode.h"
-#include "vtkMRMLEMS.h"
+#include "vtkEMSegment.h"
 #include "vtkMRMLEMSIntensityNormalizationParametersNode.h"
 
-class VTK_MRMLEMS_EXPORT vtkMRMLEMSGlobalParametersNode : 
+class VTK_EMSEGMENT_EXPORT vtkMRMLEMSGlobalParametersNode : 
   public vtkMRMLNode
 {
 public:
@@ -113,6 +113,9 @@ public:
   vtkSetStringMacro(Colormap);
   vtkGetStringMacro(Colormap);
 
+  virtual const char* GetNthTargetInputChannelName(vtkIdType n);
+  virtual void SetNthTargetInputChannelName(vtkIdType n, const char* targetName);
+
 protected:
   vtkMRMLEMSGlobalParametersNode();
   ~vtkMRMLEMSGlobalParametersNode();
@@ -149,6 +152,8 @@ protected:
   typedef IntensityNormalizationParameterListType::iterator 
   IntensityNormalizationParameterListIterator;
   IntensityNormalizationParameterListType IntensityNormalizationParameterList;
+  std::vector<std::string>   InputChannelNames; 
+  void SetNumberOfTargetInputChannels(vtkIdType num);
   //ETX
 };
 

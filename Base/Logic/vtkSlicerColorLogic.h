@@ -35,7 +35,7 @@ class VTK_SLICER_BASE_LOGIC_EXPORT vtkSlicerColorLogic : public vtkSlicerLogic
   
   /// The Usual vtk class functions
   static vtkSlicerColorLogic *New();
-  vtkTypeRevisionMacro(vtkSlicerColorLogic,vtkSlicerLogic);
+  vtkTypeRevisionMacro(vtkSlicerColorLogic,vtkObject);
   void PrintSelf(ostream& os, vtkIndent indent);
 
   /// 
@@ -55,31 +55,31 @@ class VTK_SLICER_BASE_LOGIC_EXPORT vtkSlicerColorLogic : public vtkSlicerLogic
 
   /// 
   /// Return the default color table node id for a given type
-  static const char * GetDefaultColorTableNodeID(int type);
+  const char * GetDefaultColorTableNodeID(int type);
 
   /// 
   /// Return the default freesurfer color node id for a given type
-  static const char * GetDefaultFreeSurferColorNodeID(int type);
+  const char * GetDefaultFreeSurferColorNodeID(int type);
 
   /// 
   /// Return the default dGEMRIC color node id for a given type
-  static const char * GetDefaultdGEMRICColorNodeID(int type);
+  const char * GetDefaultdGEMRICColorNodeID(int type);
 
   /// 
   /// Return the default PET color node id for a given type
-  static const char * GetDefaultPETColorNodeID(int type);
+  const char * GetDefaultPETColorNodeID(int type);
 
   /// 
   /// Return a default color node id for a freesurfer label map volume
-  static const char * GetDefaultFreeSurferLabelMapColorNodeID();
+  const char * GetDefaultFreeSurferLabelMapColorNodeID();
   
   /// 
   /// Return a default color node id for a volume
-  static const char * GetDefaultVolumeColorNodeID();
+  const char * GetDefaultVolumeColorNodeID();
 
   /// 
   /// Return a default color node id for a label map
-  static const char * GetDefaultLabelMapColorNodeID();
+  const char * GetDefaultLabelMapColorNodeID();
 
   /// 
   /// Return a default color node id for the editor
@@ -87,17 +87,15 @@ class VTK_SLICER_BASE_LOGIC_EXPORT vtkSlicerColorLogic : public vtkSlicerLogic
 
   /// 
   /// Return a default color node id for a model
-  static const char * GetDefaultModelColorNodeID();
+  const char * GetDefaultModelColorNodeID();
 
   /// 
   /// return a default color node id for a procedural color node
-  /// Delete the returned char* to avoid memory leak
-  static char * GetDefaultProceduralColorNodeID(const char *name);
+  char * GetDefaultProceduralColorNodeID(const char *name);
 
   /// 
   /// return a default color node id for a file based node, based on the file name
-  /// Delete the returned char* to avoid memory leak
-  static char * GetDefaultFileColorNodeID(const char *fileName);
+  char * GetDefaultFileColorNodeID(const char *fileName);
 
   /// 
   /// look for color files in the Base/Logic/Resources/ColorFiles directory and
@@ -110,7 +108,7 @@ class VTK_SLICER_BASE_LOGIC_EXPORT vtkSlicerColorLogic : public vtkSlicerLogic
 //BTX
   void AddColorFile(const char *fileName, std::vector<std::string> *Files);
 //ETX
-  ///
+  /// 
   /// load in a color file, creating a storage node. Returns 1 on success,
   /// 0 on failure.
   int LoadColorFile(const char *fileName, const char *nodeName = NULL);
@@ -125,9 +123,6 @@ protected:
   ~vtkSlicerColorLogic();
   vtkSlicerColorLogic(const vtkSlicerColorLogic&);
   void operator=(const vtkSlicerColorLogic&);
-
-  /// Reimplemented to listen to specific scene events
-  virtual void SetMRMLSceneInternal(vtkMRMLScene* newScene);
 
   /// 
   /// a vector holding discovered default colour files, found in the

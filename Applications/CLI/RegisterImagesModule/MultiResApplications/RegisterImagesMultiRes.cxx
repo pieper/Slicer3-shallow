@@ -8,7 +8,7 @@
 
 #include "RegisterImagesMultiResCLP.h"
 
-#include "itkImage.h"
+#include "itkOrientedImage.h"
 #include "itkImageFileReader.h"
 #include "itkImageFileWriter.h"
 
@@ -55,9 +55,9 @@ using namespace itk;
 
 typedef short                             Pixel;
 typedef float                             ProcessingPixel;
-typedef Image<Pixel, 3>           FileImage;
-typedef Image<unsigned char, 3>   MaskImage;
-typedef Image<ProcessingPixel, 3> ProcessingImage;
+typedef OrientedImage<Pixel, 3>           FileImage;
+typedef OrientedImage<unsigned char, 3>   MaskImage;
+typedef OrientedImage<ProcessingPixel, 3> ProcessingImage;
 typedef ImageFileReader<FileImage>        Reader;
 typedef ImageFileReader<MaskImage>        MaskReader;
 

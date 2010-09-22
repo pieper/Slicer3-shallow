@@ -89,7 +89,7 @@ protected:
 
 
 private:
-  CTK_DECLARE_PRIVATE(qVTKConnection);
+  QCTK_DECLARE_PRIVATE(qVTKConnection);
 };
 
 #endif

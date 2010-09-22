@@ -1,16 +1,15 @@
 #ifndef __vtkBSplineRegistrator_h
 #define __vtkBSplineRegistrator_h
 
-#include "vtkEMSegmentRegistration.h"
-
-// VTK includes
 #include "vtkObject.h"
+
 #include "vtkImageData.h"
 #include "vtkMatrix4x4.h"
 #include "vtkGridTransform.h"
 #include "vtkTransform.h"
+#include "vtkEMSegmentWin32Header.h"
 
-class VTK_EMSEGMENT_REGISTRATION_EXPORT vtkBSplineRegistrator : 
+class VTK_EMSEGMENT_EXPORT vtkBSplineRegistrator : 
   public vtkObject
 {
 public:

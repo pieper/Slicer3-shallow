@@ -174,25 +174,11 @@
       <label>DICOM filename prefix</label>
       <default>IMG</default>
     </string>
-    <string>
-      <name>dicomNumberFormat</name>
-      <longflag>--dicomNumberFormat</longflag>
-      <description>The printf-style format to be used when creating the per-slice DICOM filename.</description>
-      <label>DICOM file number format</label>
-      <default>%04d</default>
-    </string>
     <boolean>
       <name>reverseImages</name>
       <longflag>--reverseImages</longflag>
       <description>Reverse the slices.</description>
       <label>Reverse Slices</label>
-      <default>false</default>
-    </boolean>
-    <boolean>
-      <name>useCompression</name>
-      <longflag>--useCompression</longflag>
-      <description>Compress the output pixel data.</description>
-      <label>Use Compression</label>
       <default>false</default>
     </boolean>
   </parameters>

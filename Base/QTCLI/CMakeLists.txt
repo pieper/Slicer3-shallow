@@ -4,14 +4,12 @@ PROJECT(qSlicerBaseQTCLI)
 # See CMake/Slicer3QTBaseLibraryMacros.cmake for details
 #
 
-SET(KIT_export_directive "Q_SLICER_BASE_QTCLI_EXPORT")
+SET(slicer_qtbase_export_directive "Q_SLICER_BASE_QTCLI_EXPORT")
 
 # Additional directories to include
-SET(KIT_include_directories
-  ${qSlicerBaseQTCore_SOURCE_DIR}
-  ${qSlicerBaseQTCore_BINARY_DIR}
-  ${qSlicerBaseQTGUI_SOURCE_DIR}
-  ${qSlicerBaseQTGUI_BINARY_DIR}
+SET(slicer_qtbase_include_directories
+  ${qSlicerBaseQTBase_SOURCE_DIR}
+  ${qSlicerBaseQTBase_BINARY_DIR}
   ${ModuleDescriptionParser_SOURCE_DIR}
   ${ModuleDescriptionParser_BINARY_DIR}
   ${MRMLCLI_SOURCE_DIR}
@@ -19,7 +17,7 @@ SET(KIT_include_directories
   )
 
 # Source files
-SET(KIT_SRCS
+SET(slicer_qtbase_SRCS
   qSlicerCLIExecutableModuleFactory.cxx
   qSlicerCLIExecutableModuleFactory.h
   qSlicerCLILoadableModule.cxx
@@ -30,8 +28,6 @@ SET(KIT_SRCS
   qSlicerCLIModule.h
   qSlicerCLIModuleFactoryHelper.cxx
   qSlicerCLIModuleFactoryHelper.h
-  qSlicerCLIModuleUIHelper.cxx
-  qSlicerCLIModuleUIHelper.h
   qSlicerCLIModuleWidget.cxx
   qSlicerCLIModuleWidget.h
   qSlicerCLIModuleWidget_p.h
@@ -40,46 +36,42 @@ SET(KIT_SRCS
   )
 
 # Headers that should run through moc
-SET(KIT_MOC_SRCS
+SET(slicer_qtbase_MOC_SRCS
   qSlicerCLIModuleWidget.h
   qSlicerCLIModuleWidget_p.h
-  qSlicerCLIModuleUIHelper.h
   )
 
 # UI files
-SET(KIT_UI_SRCS
+SET(slicer_qtbase_UI_SRCS
   Resources/UI/qSlicerCLIModule.ui
 )
 
 # Resources
-SET(KIT_resources
+SET(qt_module_resources
 )
 
 # Additional Target libraries (QT libs already included)
-SET(KIT_target_libraries
+SET(slicer_qtbase_target_libraries
+  qCTKWidgets
+  qSlicerBaseQTBase
   qSlicerBaseQTCore
-  qSlicerBaseQTGUI
-  qMRMLWidgets # HACK: Added ONLY for qCTKFlowLayout
-  #SlicerBaseLogic
+  SlicerBaseLogic
   ModuleDescriptionParser
   MRMLCLI
   )
 
 Slicer3_build_slicer_qtbase_library(
   NAME ${PROJECT_NAME}
-  EXPORT_DIRECTIVE ${KIT_export_directive}
-  INCLUDE_DIRECTORIES ${KIT_include_directories}
-  SRCS ${KIT_SRCS}
-  MOC_SRCS ${KIT_MOC_SRCS}
-  UI_SRCS ${KIT_UI_SRCS}
-  TARGET_LIBRARIES ${KIT_target_libraries}
-  RESOURCES ${KIT_resources}
+  EXPORT_DIRECTIVE ${slicer_qtbase_export_directive}
+  INCLUDE_DIRECTORIES ${slicer_qtbase_include_directories}
+  SRCS ${slicer_qtbase_SRCS}
+  MOC_SRCS ${slicer_qtbase_MOC_SRCS}
+  UI_SRCS ${slicer_qtbase_UI_SRCS}
+  TARGET_LIBRARIES ${slicer_qtbase_target_libraries}
+  RESOURCES ${qt_module_resources}
   )
 
-# Plugin
+# --------------------------------------------------------------------------
+# Subdirectories
+#
 #ADD_SUBDIRECTORY(Plugins)
-
-# Testing
-IF(BUILD_TESTING)
-  ADD_SUBDIRECTORY(Testing)
-ENDIF(BUILD_TESTING)

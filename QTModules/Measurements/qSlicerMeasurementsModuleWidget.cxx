@@ -1,47 +1,25 @@
-/*==============================================================================
-
-  Program: 3D Slicer
-
-  Copyright (c) 2010 Kitware Inc.
-
-  See Doc/copyright/copyright.txt
-  or http://www.slicer.org/copyright/copyright.txt for details.
-
-  Unless required by applicable law or agreed to in writing, software
-  distributed under the License is distributed on an "AS IS" BASIS,
-  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-  See the License for the specific language governing permissions and
-  limitations under the License.
-
-  This file was originally developed by Jean-Christophe Fillion-Robin, Kitware Inc.
-  and was partially funded by NIH grant 3P41RR013218-12S1
-
-==============================================================================*/
-
-// CTK includes
-#include <ctkPimpl.h>
-
-// SlicerQt includes
 #include "qSlicerMeasurementsModuleWidget.h"
 #include "ui_qSlicerMeasurementsModule.h"
 
 //-----------------------------------------------------------------------------
-class qSlicerMeasurementsModuleWidgetPrivate: public Ui_qSlicerMeasurementsModule
+class qSlicerMeasurementsModuleWidgetPrivate: public qCTKPrivate<qSlicerMeasurementsModuleWidget>,
+                                               public Ui_qSlicerMeasurementsModule
 {
 public:
 };
 
 //-----------------------------------------------------------------------------
-CTK_CONSTRUCTOR_1_ARG_CXX(qSlicerMeasurementsModuleWidget, QWidget*);
-
-//-----------------------------------------------------------------------------
-qSlicerMeasurementsModuleWidget::~qSlicerMeasurementsModuleWidget()
-{
-}
+QCTK_CONSTRUCTOR_1_ARG_CXX(qSlicerMeasurementsModuleWidget, QWidget*);
 
 //-----------------------------------------------------------------------------
 void qSlicerMeasurementsModuleWidget::setup()
 {
-  Q_D(qSlicerMeasurementsModuleWidget);
+  QCTK_D(qSlicerMeasurementsModuleWidget);
   d->setupUi(this);
+}
+
+//-----------------------------------------------------------------------------
+QAction* qSlicerMeasurementsModuleWidget::showModuleAction()
+{
+  return new QAction(QIcon(":/Icons/Measurements.png"), tr("Show Measurements module"), this);
 }

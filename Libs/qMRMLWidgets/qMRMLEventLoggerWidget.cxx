@@ -1,30 +1,10 @@
-/*==============================================================================
-
-  Program: 3D Slicer
-
-  Copyright (c) 2010 Kitware Inc.
-
-  See Doc/copyright/copyright.txt
-  or http://www.slicer.org/copyright/copyright.txt for details.
-
-  Unless required by applicable law or agreed to in writing, software
-  distributed under the License is distributed on an "AS IS" BASIS,
-  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-  See the License for the specific language governing permissions and
-  limitations under the License.
-
-  This file was originally developed by Jean-Christophe Fillion-Robin, Kitware Inc.
-  and was partially funded by NIH grant 3P41RR013218-12S1
-
-==============================================================================*/
-
-// Qt includes
-#include <QLatin1String>
-
-// qMRML includes
 #include "qMRMLEventLoggerWidget.h"
 #include "ui_qMRMLEventLoggerWidget.h"
+
 #include "qMRMLEventLogger.h"
+
+// QT includes
+#include <QLatin1String>
 
 // MRML includes
 #include <vtkMRMLNode.h>
@@ -33,7 +13,8 @@
 #include <vtkObject.h>
 
 //-----------------------------------------------------------------------------
-class qMRMLEventLoggerWidgetPrivate: public Ui_qMRMLEventLoggerWidget
+class qMRMLEventLoggerWidgetPrivate: public qCTKPrivate<qMRMLEventLoggerWidget>,
+                                     public Ui_qMRMLEventLoggerWidget
 {
 public:
   void log(const QString& text);
@@ -52,9 +33,9 @@ public:
 
 //------------------------------------------------------------------------------
 qMRMLEventLoggerWidget::qMRMLEventLoggerWidget(QWidget *_parent):Superclass(_parent)
-  , d_ptr(new qMRMLEventLoggerWidgetPrivate)
 {
-  Q_D(qMRMLEventLoggerWidget);
+  QCTK_INIT_PRIVATE(qMRMLEventLoggerWidget);
+  QCTK_D(qMRMLEventLoggerWidget);
   d->setupUi(this);
   d->MRMLEventLogger = new qMRMLEventLogger(this);
 
@@ -67,14 +48,15 @@ qMRMLEventLoggerWidget::qMRMLEventLoggerWidget(QWidget *_parent):Superclass(_par
                 SLOT(onNodeRemovedEvent(vtkObject*,vtkObject*)));
 
   QMRMLEVENTLOGGERWIDGET_CONNECT_SLOT_MACRO(NewScene);
-  QMRMLEVENTLOGGERWIDGET_CONNECT_SLOT_MACRO(SceneClosed);
-  QMRMLEVENTLOGGERWIDGET_CONNECT_SLOT_MACRO(SceneAboutToBeClosed);
+  QMRMLEVENTLOGGERWIDGET_CONNECT_SLOT_MACRO(SceneClose);
+  QMRMLEVENTLOGGERWIDGET_CONNECT_SLOT_MACRO(SceneClosing);
+  QMRMLEVENTLOGGERWIDGET_CONNECT_SLOT_MACRO(SceneLoadingError);
   QMRMLEVENTLOGGERWIDGET_CONNECT_SLOT_MACRO(SceneEdited);
   QMRMLEVENTLOGGERWIDGET_CONNECT_SLOT_MACRO(MetadataAdded);
-  QMRMLEVENTLOGGERWIDGET_CONNECT_SLOT_MACRO(ImportProgressFeedback);
+  QMRMLEVENTLOGGERWIDGET_CONNECT_SLOT_MACRO(LoadProgressFeedback);
   QMRMLEVENTLOGGERWIDGET_CONNECT_SLOT_MACRO(SaveProgressFeedback);
-  QMRMLEVENTLOGGERWIDGET_CONNECT_SLOT_MACRO(SceneAboutToBeImported);
-  QMRMLEVENTLOGGERWIDGET_CONNECT_SLOT_MACRO(SceneImported);
+  QMRMLEVENTLOGGERWIDGET_CONNECT_SLOT_MACRO(SceneLoadStart);
+  QMRMLEVENTLOGGERWIDGET_CONNECT_SLOT_MACRO(SceneLoadEnd);
   QMRMLEVENTLOGGERWIDGET_CONNECT_SLOT_MACRO(SceneRestored);
 }
 
@@ -90,15 +72,8 @@ qMRMLEventLoggerWidget::~qMRMLEventLoggerWidget()
 //------------------------------------------------------------------------------
 void qMRMLEventLoggerWidget::setMRMLScene(vtkMRMLScene* scene)
 {
-  Q_D(qMRMLEventLoggerWidget);
+  QCTK_D(qMRMLEventLoggerWidget);
   d->MRMLEventLogger->setMRMLScene(scene);
-}
-
-//------------------------------------------------------------------------------
-void qMRMLEventLoggerWidget::setConsoleOutputEnabled(bool enabled)
-{
-  Q_D(qMRMLEventLoggerWidget);
-  d->MRMLEventLogger->setConsoleOutputEnabled(enabled);
 }
 
 //------------------------------------------------------------------------------
@@ -106,7 +81,7 @@ void qMRMLEventLoggerWidget::onNodeAddedEvent(vtkObject* caller,
                                               vtkObject* call_data)
 {
   Q_UNUSED(caller);
-  Q_D(qMRMLEventLoggerWidget);
+  QCTK_D(qMRMLEventLoggerWidget);
   vtkMRMLNode * node = vtkMRMLNode::SafeDownCast(call_data);
   Q_ASSERT(node);
   d->log(QString("NodeAdded: %1").arg(node->GetClassName()));
@@ -117,7 +92,7 @@ void qMRMLEventLoggerWidget::onNodeRemovedEvent(vtkObject* caller,
                                                 vtkObject* call_data)
 {
   Q_UNUSED(caller);
-  Q_D(qMRMLEventLoggerWidget);
+  QCTK_D(qMRMLEventLoggerWidget);
   vtkMRMLNode * node = vtkMRMLNode::SafeDownCast(call_data);
   Q_ASSERT(node);
   d->log(QString("NodeRemoved: %1").arg(node->GetClassName()));
@@ -130,20 +105,21 @@ void qMRMLEventLoggerWidget::onNodeRemovedEvent(vtkObject* caller,
 #define QMRMLEVENTLOGGERWIDGET_ONEVENT_SLOT_MACRO(_EVENT_NAME) \
 void qMRMLEventLoggerWidget::on##_EVENT_NAME##Event()          \
 {                                                              \
-  Q_D(qMRMLEventLoggerWidget);                              \
+  QCTK_D(qMRMLEventLoggerWidget);                              \
   d->log(#_EVENT_NAME);                                        \
 }
 
 //------------------------------------------------------------------------------
 QMRMLEVENTLOGGERWIDGET_ONEVENT_SLOT_MACRO(NewScene);
-QMRMLEVENTLOGGERWIDGET_ONEVENT_SLOT_MACRO(SceneClosed);
-QMRMLEVENTLOGGERWIDGET_ONEVENT_SLOT_MACRO(SceneAboutToBeClosed);
+QMRMLEVENTLOGGERWIDGET_ONEVENT_SLOT_MACRO(SceneClose);
+QMRMLEVENTLOGGERWIDGET_ONEVENT_SLOT_MACRO(SceneClosing);
+QMRMLEVENTLOGGERWIDGET_ONEVENT_SLOT_MACRO(SceneLoadingError);
 QMRMLEVENTLOGGERWIDGET_ONEVENT_SLOT_MACRO(SceneEdited);
 QMRMLEVENTLOGGERWIDGET_ONEVENT_SLOT_MACRO(MetadataAdded);
-QMRMLEVENTLOGGERWIDGET_ONEVENT_SLOT_MACRO(ImportProgressFeedback);
+QMRMLEVENTLOGGERWIDGET_ONEVENT_SLOT_MACRO(LoadProgressFeedback);
 QMRMLEVENTLOGGERWIDGET_ONEVENT_SLOT_MACRO(SaveProgressFeedback);
-QMRMLEVENTLOGGERWIDGET_ONEVENT_SLOT_MACRO(SceneAboutToBeImported);
-QMRMLEVENTLOGGERWIDGET_ONEVENT_SLOT_MACRO(SceneImported);
+QMRMLEVENTLOGGERWIDGET_ONEVENT_SLOT_MACRO(SceneLoadStart);
+QMRMLEVENTLOGGERWIDGET_ONEVENT_SLOT_MACRO(SceneLoadEnd);
 QMRMLEVENTLOGGERWIDGET_ONEVENT_SLOT_MACRO(SceneRestored);
 
 //------------------------------------------------------------------------------

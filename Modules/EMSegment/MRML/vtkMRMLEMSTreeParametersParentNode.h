@@ -3,11 +3,11 @@
 
 #include "vtkMRML.h"
 #include "vtkMRMLNode.h"
-#include "vtkMRMLEMS.h"
+#include "vtkEMSegment.h"
 #include "vtkMRMLScene.h"
 #include "vtkMRMLEMSClassInteractionMatrixNode.h"
 
-class VTK_MRMLEMS_EXPORT vtkMRMLEMSTreeParametersParentNode : 
+class VTK_EMSEGMENT_EXPORT vtkMRMLEMSTreeParametersParentNode : 
   public vtkMRMLNode
 {
 public:

@@ -19,7 +19,7 @@
   </property>
   <layout class="QVBoxLayout" name="verticalLayout_2">
    <item>
-    <widget class="ctkCollapsibleButton" name="ModifyAllRulerNodesGroupBox">
+    <widget class="qCTKCollapsibleButton" name="ModifyAllRulerNodesGroupBox">
      <property name="text">
       <string>Modify All Ruler Nodes</string>
      </property>
@@ -28,11 +28,11 @@
      </property>
      <layout class="QGridLayout" name="gridLayout">
       <item row="0" column="0">
-       <widget class="ctkComboBox" name="AllRulersVisibilityComboBox">
-        <property name="defaultText">
+       <widget class="qCTKTitleComboBox" name="AllRulersVisibilityComboBox">
+        <property name="title">
          <string/>
         </property>
-        <property name="defaultIcon">
+        <property name="icon">
          <iconset resource="../../../../Base/QTGUI/Resources/qSlicerBaseQTGUI.qrc">
           <normaloff>:/Icons/VisibleOrInvisible.png</normaloff>:/Icons/VisibleOrInvisible.png</iconset>
         </property>
@@ -42,7 +42,7 @@
          </property>
          <property name="icon">
           <iconset resource="../../../../Base/QTGUI/Resources/qSlicerBaseQTGUI.qrc">
-           <normaloff>:/Icons/VisibleOn.png</normaloff>:/Icons/VisibleOn.png</iconset>
+           <normaloff>:/Icons/Visible.png</normaloff>:/Icons/Visible.png</iconset>
          </property>
         </item>
         <item>
@@ -51,7 +51,7 @@
          </property>
          <property name="icon">
           <iconset resource="../../../../Base/QTGUI/Resources/qSlicerBaseQTGUI.qrc">
-           <normaloff>:/Icons/VisibleOff.png</normaloff>:/Icons/VisibleOff.png</iconset>
+           <normaloff>:/Icons/Invisible.png</normaloff>:/Icons/Invisible.png</iconset>
          </property>
         </item>
        </widget>
@@ -73,7 +73,7 @@
     </widget>
    </item>
    <item>
-    <widget class="ctkCollapsibleButton" name="ModifySelectedRulerNodesGroupBox">
+    <widget class="qCTKCollapsibleButton" name="ModifySelectedRulerNodesGroupBox">
      <property name="text">
       <string>Modify Selected Ruler Nodes</string>
      </property>
@@ -91,7 +91,7 @@
          </widget>
         </item>
         <item row="0" column="1">
-         <widget class="qMRMLNodeComboBox" name="RulerNodeSelector">
+         <widget class="qMRMLNodeSelector" name="RulerNodeSelector">
           <property name="nodeTypes">
            <stringlist>
             <string>vtkMRMLMeasurementsRulerNode</string>
@@ -121,7 +121,7 @@
          </widget>
         </item>
         <item row="2" column="1">
-         <widget class="ctkCoordinatesWidget" name="RulerPosition1CoordinatesWidget">
+         <widget class="qCTKCoordinatesWidget" name="RulerPosition1CoordinatesWidget">
           <property name="Dimension">
            <number>3</number>
           </property>
@@ -135,12 +135,12 @@
          </widget>
         </item>
         <item row="3" column="1">
-         <widget class="ctkCoordinatesWidget" name="RulerPosition2CoordinatesWidget"/>
+         <widget class="qCTKCoordinatesWidget" name="RulerPosition2CoordinatesWidget"/>
         </item>
        </layout>
       </item>
       <item>
-       <widget class="ctkCollapsibleGroupBox" name="ConstrainRulerToModelsGroupBox">
+       <widget class="qCTKCollapsibleGroupBox" name="ConstrainRulerToModelsGroupBox">
         <property name="title">
          <string>Constrain Ruler To Models</string>
         </property>
@@ -172,7 +172,7 @@
        </widget>
       </item>
       <item>
-       <widget class="ctkCollapsibleGroupBox" name="RulerDisplayOptionsGroupBox">
+       <widget class="qCTKCollapsibleGroupBox" name="RulerDisplayOptionsGroupBox">
         <property name="title">
          <string>Display Options</string>
         </property>
@@ -191,7 +191,7 @@
           </widget>
          </item>
          <item row="0" column="1">
-          <widget class="ctkColorPickerButton" name="RulerEndPointsColorPicker"/>
+          <widget class="qCTKColorPickerButton" name="RulerEndPointsColorPicker"/>
          </item>
          <item row="0" column="2">
           <widget class="QLabel" name="RulerLineColorLabel">
@@ -204,7 +204,7 @@
           </widget>
          </item>
          <item row="0" column="3">
-          <widget class="ctkColorPickerButton" name="CTKColorPickerButton_2"/>
+          <widget class="qCTKColorPickerButton" name="CTKColorPickerButton_2"/>
          </item>
          <item row="1" column="0" colspan="4">
           <widget class="QGroupBox" name="RulerDistanceAnnotationGroupBox">
@@ -267,36 +267,36 @@
  </widget>
  <customwidgets>
   <customwidget>
-   <class>ctkCollapsibleButton</class>
+   <class>qCTKCollapsibleButton</class>
    <extends>QWidget</extends>
-   <header>ctkCollapsibleButton.h</header>
+   <header>qCTKCollapsibleButton.h</header>
    <container>1</container>
   </customwidget>
   <customwidget>
-   <class>ctkCollapsibleGroupBox</class>
+   <class>qCTKCollapsibleGroupBox</class>
    <extends>QGroupBox</extends>
-   <header>ctkCollapsibleGroupBox.h</header>
+   <header>qCTKCollapsibleGroupBox.h</header>
    <container>1</container>
   </customwidget>
   <customwidget>
-   <class>ctkColorPickerButton</class>
+   <class>qCTKColorPickerButton</class>
    <extends>QPushButton</extends>
-   <header>ctkColorPickerButton.h</header>
+   <header>qCTKColorPickerButton.h</header>
   </customwidget>
   <customwidget>
-   <class>ctkCoordinatesWidget</class>
+   <class>qCTKCoordinatesWidget</class>
    <extends>QWidget</extends>
-   <header>ctkCoordinatesWidget.h</header>
+   <header>qCTKCoordinatesWidget.h</header>
   </customwidget>
   <customwidget>
-   <class>ctkComboBox</class>
+   <class>qCTKTitleComboBox</class>
    <extends>QComboBox</extends>
-   <header>ctkComboBox.h</header>
+   <header>qCTKTitleComboBox.h</header>
   </customwidget>
   <customwidget>
-   <class>qMRMLNodeComboBox</class>
+   <class>qMRMLNodeSelector</class>
    <extends>QWidget</extends>
-   <header>qMRMLNodeComboBox.h</header>
+   <header>qMRMLNodeSelector.h</header>
   </customwidget>
   <customwidget>
    <class>qSlicerWidget</class>

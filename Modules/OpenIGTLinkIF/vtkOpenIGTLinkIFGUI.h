@@ -23,10 +23,6 @@
 #include "vtkOpenIGTLinkIFLogic.h"
 #include "vtkMRMLIGTLConnectorNode.h"
 
-#include "vtkIGTLRemoteDataListWindow.h"
-#include "vtkIGTLTrackingDataControllerWindow.h"
-
-
 #include "vtkIGTDataManager.h"
 #include "vtkIGTPat2ImgRegistration.h"
 #include "vtkCallbackCommand.h"
@@ -156,9 +152,6 @@ class VTK_OPENIGTLINKIF_EXPORT vtkOpenIGTLinkIFGUI : public vtkSlicerModuleGUI
   virtual void RemoveGUIObservers ( );
   void         AddLogicObservers ( );
   void         RemoveLogicObservers ( );
-
-  virtual void OpenRemoteDataListWindow(const char* conID);
-  virtual void OpenTrackingDataControllerWindow(const char* conID);
   //virtual void AddNodeCallback(const char* conID, int io, const char* name, const char* type);
   virtual void AddNodeCallback(const char* conID, int io, const char* nodeID, const char* devType);
   virtual void ExportDataToIGTLCallback(const char* conID, const char* nodeID);
@@ -279,10 +272,6 @@ class VTK_OPENIGTLINKIF_EXPORT vtkOpenIGTLinkIFGUI : public vtkSlicerModuleGUI
   bool              IsSliceOrientationAdded;
   // Module logic and mrml pointers
 
-  //----------------------------------------------------------------
-  // Remote Data List Window
-  vtkIGTLRemoteDataListWindow* RemoteDataWindow;
-  vtkIGTLTrackingDataControllerWindow* TrackingDataControllerWindow;
 
   //----------------------------------------------------------------
   // Logic Values

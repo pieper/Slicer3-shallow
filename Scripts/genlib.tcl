@@ -257,12 +257,6 @@ switch $tcl_platform(os) {
         set isDarwin 0
         set isLinux 0
     }
-    "GNU/kFreeBSD" {
-        set isSolaris 0
-        set isWindows 0
-        set isDarwin 0
-        set isLinux 1
-    }
     "Linux" { 
         set isSolaris 0
         set isWindows 0
@@ -1216,11 +1210,6 @@ if { [BuildThis $::Teem_TEST_FILE "teem"] == 1 } {
 
     switch $::tcl_platform(os) {
       "SunOS" -
-      "GNU/kFreeBSD" {
-          set ::env("LD_LIBRARY_PATH") "$::Slicer3_LIB/VTK-build/bin"
-          set zlib "libvtkzlib.so"
-          set png "libvtkpng.so"
-      }
       "Linux" {
           set ::env("LD_LIBRARY_PATH") "$::Slicer3_LIB/VTK-build/bin"
           set zlib "libvtkzlib.so"
@@ -1298,7 +1287,6 @@ if { [BuildThis $::OPENIGTLINK_TEST_FILE "openigtlink"] == 1 && [string tolower 
             -DBUILD_SHARED_LIBS:BOOL=ON \
             -DCMAKE_SKIP_RPATH:BOOL=OFF \
             -DOpenIGTLink_DIR:FILEPATH=$Slicer3_LIB/OpenIGTLink-build \
-            -DOpenIGTLink_PROTOCOL_VERSION_2:BOOL=ON \
             -DCMAKE_BUILD_TYPE:STRING=$::VTK_BUILD_TYPE \
             ../OpenIGTLink
       } else {
@@ -1309,7 +1297,6 @@ if { [BuildThis $::OPENIGTLINK_TEST_FILE "openigtlink"] == 1 && [string tolower 
             -DBUILD_SHARED_LIBS:BOOL=ON \
             -DCMAKE_SKIP_RPATH:BOOL=ON \
             -DOpenIGTLink_DIR:FILEPATH=$Slicer3_LIB/OpenIGTLink-build \
-            -DOpenIGTLink_PROTOCOL_VERSION_2:BOOL=ON \
             -DCMAKE_BUILD_TYPE:STRING=$::VTK_BUILD_TYPE \
             ../OpenIGTLink
       }
@@ -1383,79 +1370,48 @@ if { ![file exists $::BatchMake_TEST_FILE] || $::GENLIB(update) } {
 #
 if { [BuildThis $::OpenCV_TEST_FILE "cv"] == 1 && [string tolower $::USE_OPENCV] == "on" } {
 
-    cd $::Slicer3_LIB
-    runcmd $::SVN co $::OpenCV_TAG OpenCV
+    # Slicer module OpenCV doesn't compile with OpenCV library 1.1 in svn trunk.
+    # Now we try to get and build OpenCV library 1.0, which is now distributed 
+    # only in tarball on linux
     file mkdir $::Slicer3_LIB/OpenCV-build
-    cd $::Slicer3_LIB/OpenCV-build
+    file mkdir $::Slicer3_LIB/OpenCV
 
-    #if {  !$::USE_SYSTEM_PYTHON && [string tolower $::USE_PYTHON] == "on" } {
-    #
-    #   set ::PYTHON_EXEC_PATH ""
-    #   set ::PYTHON_INC_PATH ""
-    #   set ::PYTHON_LIB ""
-    #   if { $isWindows } {
-    #      set ::PYTHON_EXEC_PATH $::Slicer3_LIB/python-build/PCbuild/python.exe
-    #     set ::PYTHON_INC_PATH $::Slicer3_LIB/python-build/include/pythton2.6
-    #     set ::PYTHON_LIB $::Slicer3_LIB/python-build/PCbuild/python26.lib
-    #    } elseif { $isDarwin } {
-    #      set ::PYTHON_EXEC_PATH $::Slicer3_LIB/python-build/bin/python
-    #     set ::PYTHON_INC_PATH $::Slicer3_LIB/python-build/include/pythton2.6
-    #     set ::PYTHON_LIB $::Slicer3_LIB/python-build/lib/libpython2.6.dylib
-    #     set ::env(DYLD_LIBRARY_PATH) $::Slicer3_LIB/python-build/lib:$::env(DYLD_LIBRARY_PATH)
-    #   } else {
-    #      set ::PYTHON_EXEC_PATH $::Slicer3_LIB/python-build/bin/python
-    #     set ::PYTHON_INC_PATH $::Slicer3_LIB/python-build/include/pythton2.6
-    #     set ::PYTHON_LIB $::Slicer3_LIB/python-build/lib/libpython2.6.so
-    #     set ::env(LD_LIBRARY_PATH) $::Slicer3_LIB/python-build/lib:$::env(LD_LIBRARY_PATH)
-    #    }
-    #
-    #   runcmd $::CMAKE \
-    #        -G$GENERATOR \
-    #        -DCMAKE_BUILD_TYPE:STRING=$::VTK_BUILD_TYPE \
-    #        -DCMAKE_CXX_COMPILER:STRING=$COMPILER_PATH/$COMPILER \
-    #        -DCMAKE_CXX_COMPILER_FULLPATH:FILEPATH=$COMPILER_PATH/$COMPILER \
-    #        -DBUILD_SHARED_LIBS:BOOL=ON \
-    #        -DBUILD_TESTING:BOOL=OFF \
-    #       -DPYTHON_EXECUTABLE=$::PYTHON_EXEC_PATH \
-    #       -DPYTHON_INCLUDE_DIR=$::PYTHON_INC_PATH \
-    #       -DPYTHON_LIBRARY=$::PYTHON_LIB \
-    #        -DOpenCV_DIR:FILEPATH=$Slicer3_LIB/OpenCV-build \
-    #        ../OpenCV
-    #
-    #} else {
-    #
-    #   runcmd $::CMAKE \
-    #        -G$GENERATOR \
-    #        -DCMAKE_BUILD_TYPE:STRING=$::VTK_BUILD_TYPE \
-    #        -DCMAKE_CXX_COMPILER:STRING=$COMPILER_PATH/$COMPILER \
-    #        -DCMAKE_CXX_COMPILER_FULLPATH:FILEPATH=$COMPILER_PATH/$COMPILER \
-    #        -DBUILD_SHARED_LIBS:BOOL=ON \
-    #        -DBUILD_TESTING:BOOL=OFF \
-    #        -DOpenCV_DIR:FILEPATH=$Slicer3_LIB/OpenCV-build \
-    #        ../OpenCV
-    #
-    #}
+    cd $::Slicer3_LIB/OpenCV
+    runcmd wget $::OpenCV_TAG 
+    runcmd tar xvfz ./opencv-1.0.0.tar.gz
+    cd $Slicer3_LIB/OpenCV/opencv-1.0.0
 
-    runcmd $::CMAKE \
-         -G$GENERATOR \
-         -DCMAKE_BUILD_TYPE:STRING=$::VTK_BUILD_TYPE \
-         -DCMAKE_CXX_COMPILER:STRING=$COMPILER_PATH/$COMPILER \
-         -DCMAKE_CXX_COMPILER_FULLPATH:FILEPATH=$COMPILER_PATH/$COMPILER \
-         -DBUILD_SHARED_LIBS:BOOL=ON \
-         -DBUILD_TESTING:BOOL=OFF \
-         -DBUILD_NEW_PYTHON_SUPPORT:BOOL=OFF \
-         -DOpenCV_DIR:FILEPATH=$Slicer3_LIB/OpenCV-build \
-         ../OpenCV
-    
-    if {$isWindows} {
-        if { $MSVC6 } {
-            runcmd $::MAKE OpenCV.dsw /MAKE "ALL_BUILD - $::VTK_BUILD_TYPE"
-        } else {
-            runcmd $::MAKE OpenCV.SLN /out buildlog.txt /build  $::VTK_BUILD_TYPE
-        }
-    } else {
-        eval runcmd $::MAKE
-    }
+    runcmd ./configure --prefix=$Slicer3_LIB/OpenCV-build 
+    eval runcmd $::MAKE
+    eval runcmd $::SERIAL_MAKE install
+
+ 
+#    cd $::Slicer3_LIB
+
+#    runcmd $::SVN co $::OpenCV_TAG OpenCV 
+
+#    file mkdir $::Slicer3_LIB/OpenCV-build
+#    cd $::Slicer3_LIB/OpenCV-build
+
+#    runcmd $::CMAKE \
+#        -G$GENERATOR \
+#        -DCMAKE_BUILD_TYPE:STRING=$::VTK_BUILD_TYPE \
+#        -DCMAKE_CXX_COMPILER:STRING=$COMPILER_PATH/$COMPILER \
+#        -DCMAKE_CXX_COMPILER_FULLPATH:FILEPATH=$COMPILER_PATH/$COMPILER \
+#        -DBUILD_SHARED_LIBS:BOOL=ON \
+#        -DBUILD_TESTING:BOOL=OFF \
+#        -DOpenCV_DIR:FILEPATH=$Slicer3_LIB/OpenCV-build \
+#        ../OpenCV/opencv
+
+#    if {$isWindows} {
+#        if { $MSVC6 } {
+#            runcmd $::MAKE BatchMake.dsw /MAKE "ALL_BUILD - $::VTK_BUILD_TYPE"
+#        } else {
+#            runcmd $::MAKE BatchMake.SLN /out buildlog.txt /build  $::VTK_BUILD_TYPE
+#        }
+#    } else {
+#        eval runcmd $::MAKE
+#    }
 }
 
 

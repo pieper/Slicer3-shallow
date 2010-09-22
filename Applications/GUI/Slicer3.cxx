@@ -21,14 +21,12 @@
 
 // SlicerQT includes
 #include "qSlicerApplication.h"
-#include "qSlicerCLILoadableModuleFactory.h"
-#include "qSlicerCLIExecutableModuleFactory.h"
-#include "qSlicerCommandOptions.h"
+#include "qSlicerModuleManager.h"
+#include "qSlicerModuleFactoryManager.h"
 #include "qSlicerCoreModuleFactory.h"
 #include "qSlicerLoadableModuleFactory.h"
-#include "qSlicerModuleFactoryManager.h"
-#include "qSlicerModuleManager.h"
-#include "qSlicerModulePanel.h"
+#include "qSlicerCLILoadableModuleFactory.h"
+#include "qSlicerCLIExecutableModuleFactory.h"
 
 // QT includes
 #include <QStringList>
@@ -52,6 +50,7 @@
 #include "vtkSlicerLogoIcons.h"
 #include "vtkSlicerApplication.h"
 #include "vtkSlicerApplicationLogic.h"
+#include "vtkSlicerSliceLogic.h"
 #include "vtkSlicerModelsLogic.h"
 #include "vtkSlicerModelHierarchyLogic.h"
 #include "vtkSlicerFiducialsLogic.h"
@@ -179,8 +178,6 @@ extern "C" {
 extern "C" int Slicerbasegui_Init(Tcl_Interp *interp);
 extern "C" int Slicerbaselogic_Init(Tcl_Interp *interp);
 extern "C" int Mrml_Init(Tcl_Interp *interp);
-extern "C" int Mrmllogic_Init(Tcl_Interp *interp);
-extern "C" int Mrmldisplayablemanager_Init(Tcl_Interp *interp);
 extern "C" int Mrmlcli_Init(Tcl_Interp *interp);
 extern "C" int Vtkitk_Init(Tcl_Interp *interp);
 extern "C" int Freesurfer_Init(Tcl_Interp *interp);
@@ -227,7 +224,7 @@ int Slicer3_Tcl_Eval ( Tcl_Interp *interp, const char *script )
   return 0;
 }
 
-void Slicer3_BrokerScriptHandler ( const char *script, void * vtkNotUsed(dummy) )
+void Slicer3_BrokerScriptHandler ( const char *script )
 {
   vtkSlicerApplication::GetInstance()->Script( script );
 }
@@ -730,8 +727,6 @@ int Slicer3_main(int& argc, char *argv[])
   Slicerbaselogic_Init(interp);
   Mrml_Init(interp);
   Mrmlcli_Init(interp);
-  Mrmllogic_Init(interp);
-  Mrmldisplayablemanager_Init(interp);
   Vtkitk_Init(interp);
   Freesurfer_Init(interp);
   Igt_Init(interp);
@@ -790,31 +785,6 @@ int Slicer3_main(int& argc, char *argv[])
     }";
   Slicer3_Tcl_Eval( interp, tclCmd.c_str() );
   }
-
-#ifdef Slicer3_USE_QT
-  static int slicerAppArgc = 1;
-  qSlicerApplication* qApplication = new qSlicerApplication(slicerAppArgc, argv);
-  Q_CHECK_PTR(qApplication);
-
-  qApplication->setCoreCommandOptions(
-    new qSlicerCommandOptions(qApplication->settings()));
-
-  // Set window flags used to display top level widgets
-#ifdef Q_WS_MAC
-  qApplication->setDefaultWindowFlags(Qt::WindowStaysOnTopHint | Qt::Tool);
-#elif defined(Q_WS_WIN)
-  qApplication->setDefaultWindowFlags(
-    Qt::WindowStaysOnTopHint | Qt::Tool | Qt::FramelessWindowHint | Qt::WindowTitleHint);
-#else
-  qApplication->setDefaultWindowFlags(
-    Qt::WindowStaysOnTopHint | Qt::FramelessWindowHint);
-#endif
-  slicerApp->SetModulePanel(new qSlicerModulePanel(0, qApplication->defaultWindowFlags()));
- #ifdef Slicer3_USE_PYTHONQT
-  PythonQt::init(PythonQt::DoNotInitializePython);
-  PythonQt_QtAll::init();
- #endif
-#endif
 
   //
   // ignore any modules specified on the command line
@@ -932,7 +902,7 @@ int Slicer3_main(int& argc, char *argv[])
   // - synchronous mode so that redunant events do not get collapsed
   //   (this is compatible with standard vtk event behavior, but adds
   //   the ability to trace event execution).
-  vtkEventBroker::GetInstance()->SetScriptHandler( Slicer3_BrokerScriptHandler, NULL );
+  vtkEventBroker::GetInstance()->SetScriptHandler( Slicer3_BrokerScriptHandler );
   vtkEventBroker::GetInstance()->SetEventModeToSynchronous();
 
   if ( EventLog != "" )
@@ -1134,6 +1104,10 @@ int Slicer3_main(int& argc, char *argv[])
   // add the default modules directory (based on the slicer
   // installation or build tree) to the user paths
   modulePaths = userModulePaths + PathSep + defaultModulePaths;
+
+#ifdef Slicer3_USE_QT
+  qSlicerApplication::application()->initializePaths(QString::fromStdString(programPath));
+#endif
 
   // =================== vvv
   // TODO: this is moved to the launcher since setting it at run
@@ -1481,7 +1455,7 @@ int Slicer3_main(int& argc, char *argv[])
   // observe the scene's new scene event
   vtkIntArray *colorEvents = vtkIntArray::New();
   colorEvents->InsertNextValue( vtkMRMLScene::NewSceneEvent );
-  colorEvents->InsertNextValue( vtkMRMLScene::SceneClosedEvent );
+  colorEvents->InsertNextValue( vtkMRMLScene::SceneCloseEvent );
   colorLogic->SetAndObserveMRMLSceneEvents ( scene,  colorEvents);
   colorEvents->Delete();
   // set the user defined color paths, it will be used by the add default
@@ -1696,26 +1670,11 @@ int Slicer3_main(int& argc, char *argv[])
         = vtkCommandLineModuleLogic::New ( );
 
       // set up stream redirection
-      if (slicerApp->GetRedirectModuleStreams() == 0 ||
-          NoModuleStreamsRedirect)
+      if (NoModuleStreamsRedirect)
         {
         commandLineModuleLogic->RedirectModuleStreamsOff();
         }
-      else
-        {
-        commandLineModuleLogic->RedirectModuleStreamsOn();
-        }
 
-      // set up deleting temporary files
-      if (slicerApp->GetDeleteTemporaryFiles() == 0 ||
-          NoDeleteTemporaryFiles)
-        {
-        commandLineModuleLogic->DeleteTemporaryFilesOff();
-        }
-      else
-        {
-        commandLineModuleLogic->DeleteTemporaryFilesOn();
-        }
       // Set the ModuleDescripton on the gui
       commandLineModuleGUI->SetModuleDescription( desc );
 

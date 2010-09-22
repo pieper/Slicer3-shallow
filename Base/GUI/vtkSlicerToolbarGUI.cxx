@@ -744,9 +744,9 @@ void vtkSlicerToolbarGUI::ProcessGUIEvents ( vtkObject *caller,
         if ( this->ChooseLayoutIconMenuButton )
           {
           const char *whichLayout = this->ChooseLayoutIconMenuButton->GetValue();
-          if (!strcmp ( whichLayout, "Side-by-side lightbox layout"))
+          if (!strcmp ( whichLayout, "Side-by-side Compare layout"))
             {
-            layout->SetViewArrangement (vtkMRMLLayoutNode::SlicerLayoutSideBySideLightboxView );
+            layout->SetViewArrangement (vtkMRMLLayoutNode::SlicerLayoutSideBySideCompareView );
             }
           else if (!strcmp ( whichLayout, "Compare layout"))
             {
@@ -853,7 +853,7 @@ void vtkSlicerToolbarGUI::ProcessGUIEvents ( vtkObject *caller,
             layout->SetViewArrangement (vtkMRMLLayoutNode::SlicerLayoutTabbedSliceView );
             }
           }
-        else if (!strcmp ( whichLayout, "Side-by-side lightbox layout"))
+        else if (!strcmp ( whichLayout, "Side-by-side Compare layout"))
           {
           PopUpCompareViewCustomLayoutFrame();
           }
@@ -1004,8 +1004,8 @@ if ( this->ChooseLayoutIconMenuButton->GetMenu() != NULL )
    case vtkMRMLLayoutNode::SlicerLayoutCompareView:
      this->ChooseLayoutIconMenuButton->SetValue ( "Compare layout" );
      break;
-   case vtkMRMLLayoutNode::SlicerLayoutSideBySideLightboxView:
-     this->ChooseLayoutIconMenuButton->SetValue ( "Side-by-side lightbox layout");
+   case vtkMRMLLayoutNode::SlicerLayoutSideBySideCompareView:
+     this->ChooseLayoutIconMenuButton->SetValue ( "Side-by-side Compare layout");
    case vtkMRMLLayoutNode::SlicerLayoutLightboxView:              
      this->ChooseLayoutIconMenuButton->SetValue ( "Lightbox layout" );
      break;
@@ -1565,8 +1565,8 @@ void vtkSlicerToolbarGUI::BuildGUI ( )
   this->ChooseLayoutIconMenuButton->GetMenu()->SetItemImage ( index, imageName.c_str() );
   this->ChooseLayoutIconMenuButton->GetMenu()->SetItemCompoundModeToLeft ( index );
 
-  this->ChooseLayoutIconMenuButton->GetMenu()->AddRadioButton ("Side-by-side lightbox layout");
-  index = this->ChooseLayoutIconMenuButton->GetMenu()->GetIndexOfItem ("Side-by-side lightbox layout");
+  this->ChooseLayoutIconMenuButton->GetMenu()->AddRadioButton ("Side-by-side Compare layout");
+  index = this->ChooseLayoutIconMenuButton->GetMenu()->GetIndexOfItem ("Side-by-side Compare layout");
   imageName.clear();
   imageName = "SlicerSideBySideCompareViewLayoutImage";
   vtkKWTkUtilities::UpdatePhotoFromIcon ( this->GetApplication(), imageName.c_str(), this->SlicerToolbarIcons->GetSideBySideCompareViewIcon(), 0);

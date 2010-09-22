@@ -126,7 +126,6 @@ vtkMeasurementsRulerWidget::vtkMeasurementsRulerWidget ( )
   this->RulerNodeID = NULL;
   this->RulerSelectorWidget = NULL;
   this->VisibilityButton = NULL;
-  this->RulerFromFiducialsButton = NULL;
   this->RulerModel1SelectorWidget = NULL;
   this->RulerModel2SelectorWidget = NULL;
   this->PointColourButton = NULL;
@@ -212,13 +211,7 @@ vtkMeasurementsRulerWidget::~vtkMeasurementsRulerWidget ( )
     this->RulerSelectorWidget->Delete();
     this->RulerSelectorWidget = NULL;
     }
-  if (this->RulerFromFiducialsButton)
-    {
-    this->RulerFromFiducialsButton->SetParent(NULL);
-    this->RulerFromFiducialsButton->Delete();
-    this->RulerFromFiducialsButton = NULL;
-    }
- 
+
   if (this->VisibilityButton)
     {
     this->VisibilityButton->SetParent(NULL);
@@ -609,23 +602,7 @@ void vtkMeasurementsRulerWidget::ProcessWidgetEvents(vtkObject *caller,
         }
       }
     }
-  
-  vtkKWPushButton *fromFids = vtkKWPushButton::SafeDownCast ( caller );
-  if (fromFids && event == vtkKWPushButton::InvokedEvent)
-    {
-    if (fromFids == this->RulerFromFiducialsButton)
-      {
-      if (appGUI)
-        {
-        appGUI->ProcessAddRulerCommand();
-        }
-      else
-        {
-        vtkWarningMacro("Can't get at the application gui to make a ruler from fiducials");
-        }
-      }
-    }
-  
+
   // process ruler node selector events
   if (this->RulerSelectorWidget ==  vtkSlicerNodeSelectorWidget::SafeDownCast(caller) &&
       event == vtkSlicerNodeSelectorWidget::NodeSelectedEvent )
@@ -1010,7 +987,7 @@ void vtkMeasurementsRulerWidget::ProcessMRMLEvents ( vtkObject *caller,
 
  // the scene was closed, don't get node removed events so clear up here
   if (callScene != NULL &&
-      event == vtkMRMLScene::SceneClosedEvent)
+      event == vtkMRMLScene::SceneCloseEvent)
     {
     vtkDebugMacro("ProcessMRMLEvents: got a scene close event");
     // the lists are already gone from the scene, so need to clear out all the
@@ -1059,19 +1036,10 @@ void vtkMeasurementsRulerWidget::ProcessMRMLEvents ( vtkObject *caller,
       // is it currently the active one?
       if (addNode == activeRulerNode)
         {
-        // update the GUI 
-        vtkDebugMacro("Calling Update widget to set up the ui");
+        vtkDebugMacro("Calling Update widget to set up the ui since this is the active one");
         this->UpdateWidget(addNode);
         }
-      else
-        {
-        // make it active
-        this->RulerSelectorWidget->SetSelected(addNode);
-        vtkDebugMacro("Set added node to be selected, now setting the ruler node id");
-        // this calls UpdateWidget to update the gui
-        this->SetRulerNodeID(addNode->GetID());
-        }
-      // update the 3d widget
+      // if it's not the current one, just update the 3d widget
       vtkDebugMacro("Calling Update 3D widget to set up a new distance widget");
       this->Update3DWidget(addNode);
       // for now, since missing some of the add calls when open a scene, make sure we're current with the scene
@@ -1121,7 +1089,7 @@ void vtkMeasurementsRulerWidget::ProcessMRMLEvents ( vtkObject *caller,
 
 //---------------------------------------------------------------------------
 void vtkMeasurementsRulerWidget::UpdateWidget(vtkMRMLMeasurementsRulerNode *activeRulerNode)
-{
+{ 
 
   vtkDebugMacro("UpdateWidget: active ruler node is " << (activeRulerNode == NULL ? "null" : activeRulerNode->GetName()));
 
@@ -1152,7 +1120,7 @@ void vtkMeasurementsRulerWidget::UpdateWidget(vtkMRMLMeasurementsRulerNode *acti
   if ( this->RulerSelectorWidget->GetSelected() == NULL )
     {
     vtkDebugMacro("Null selected ruler, selecting it and returning");
-    this->RulerSelectorWidget->SetSelected(activeRulerNode);
+    this->RulerSelectorWidget->SetSelected(activeRulerNode);    
     return;
     }
 
@@ -1283,6 +1251,7 @@ void vtkMeasurementsRulerWidget::UpdateWidget(vtkMRMLMeasurementsRulerNode *acti
   this->UpdateDistanceLabel(activeRulerNode);
   
   this->Update3DWidget(activeRulerNode);
+   
 }
 
 //---------------------------------------------------------------------------
@@ -1656,9 +1625,9 @@ void vtkMeasurementsRulerWidget::AddMRMLObservers ( )
       {
       this->MRMLScene->AddObserver(vtkMRMLScene::NodeAddedEvent, (vtkCommand *)this->MRMLCallbackCommand);
       }
-    if (this->MRMLScene->HasObserver(vtkMRMLScene::SceneClosedEvent, (vtkCommand *)this->MRMLCallbackCommand) != 1)
+    if (this->MRMLScene->HasObserver(vtkMRMLScene::SceneCloseEvent, (vtkCommand *)this->MRMLCallbackCommand) != 1)
       {
-      this->MRMLScene->AddObserver(vtkMRMLScene::SceneClosedEvent, (vtkCommand *)this->MRMLCallbackCommand);
+      this->MRMLScene->AddObserver(vtkMRMLScene::SceneCloseEvent, (vtkCommand *)this->MRMLCallbackCommand);
       }
     }
 }
@@ -1694,7 +1663,7 @@ void vtkMeasurementsRulerWidget::RemoveMRMLObservers ( )
     vtkDebugMacro("RemoveMRMLObservers: stopping watching for node removed, added, scene close events on the scene");
     this->MRMLScene->RemoveObservers(vtkMRMLScene::NodeRemovedEvent, (vtkCommand *)this->MRMLCallbackCommand);
     this->MRMLScene->RemoveObservers(vtkMRMLScene::NodeAddedEvent, (vtkCommand *)this->MRMLCallbackCommand);
-    this->MRMLScene->RemoveObservers(vtkMRMLScene::SceneClosedEvent, (vtkCommand *)this->MRMLCallbackCommand);
+    this->MRMLScene->RemoveObservers(vtkMRMLScene::SceneCloseEvent, (vtkCommand *)this->MRMLCallbackCommand);
     }
 }
 
@@ -1716,10 +1685,6 @@ void vtkMeasurementsRulerWidget::AddWidgetObservers()
   if (this->AnnotationFormatMenuButton)
     {
     this->AnnotationFormatMenuButton->GetWidget()->GetMenu()->AddObserver ( vtkKWMenu::MenuItemInvokedEvent, (vtkCommand *)this->GUICallbackCommand );
-    }
-  if (this->RulerFromFiducialsButton)
-    {
-    this->RulerFromFiducialsButton->AddObserver(vtkKWPushButton::InvokedEvent, (vtkCommand *)this->GUICallbackCommand );
     }
   if (this->VisibilityButton)
     {
@@ -1819,10 +1784,6 @@ void vtkMeasurementsRulerWidget::RemoveWidgetObservers ( )
   if (this->AnnotationFormatMenuButton)
     {
     this->AnnotationFormatMenuButton->GetWidget()->GetMenu()->RemoveObservers ( vtkKWMenu::MenuItemInvokedEvent, (vtkCommand *)this->GUICallbackCommand );
-    }
-  if (this->RulerFromFiducialsButton)
-    {
-    this->RulerFromFiducialsButton->RemoveObservers(vtkKWPushButton::InvokedEvent, (vtkCommand *)this->GUICallbackCommand );
     }
   if (this->VisibilityButton)
     {
@@ -1997,23 +1958,6 @@ void vtkMeasurementsRulerWidget::CreateWidget ( )
   
   this->Script("pack %s -side right -anchor e -padx 2 -pady 2",
                this->ReportButton->GetWidgetName());
-
-  /// create ruler from fids frame
-  vtkKWFrame *fromFidsFrame = vtkKWFrame::New();
-  fromFidsFrame->SetParent(controlAllFrame->GetFrame());
-  fromFidsFrame->Create();
-  this->Script ("pack %s -side bottom -anchor nw -fill x -padx 2 -pady 2",
-                fromFidsFrame->GetWidgetName());
-
-  /// create ruler from fids button
-  this->RulerFromFiducialsButton = vtkKWPushButton::New();
-  this->RulerFromFiducialsButton->SetParent ( fromFidsFrame );
-  this->RulerFromFiducialsButton->Create ( );
-  this->RulerFromFiducialsButton->SetText("Create Ruler from Fiducials");
-  this->RulerFromFiducialsButton->SetWidth(27);
-  this->RulerFromFiducialsButton->SetBalloonHelpString("Create a new ruler from the last two selected fiducials on the currently active fiducial list (or type Ctrl-m). The fiducials will be deleted once the ruler is made.");
-  this->Script( "pack %s -side left -anchor nw -expand false -fill none -padx 2 -pady 2",
-                this->RulerFromFiducialsButton->GetWidgetName());
   
   // ---
   // CHOOSE Ruler Node FRAME
@@ -2042,7 +1986,7 @@ void vtkMeasurementsRulerWidget::CreateWidget ( )
   this->Script ( "pack %s -side top -anchor nw -fill x -padx 2 -pady 2",
                  this->RulerSelectorWidget->GetWidgetName());
 
-   
+
   /// distance frame
   vtkKWFrame *distanceFrame = vtkKWFrame::New();
   distanceFrame->SetParent(pickRulerNodeFrame->GetFrame());
@@ -2318,7 +2262,6 @@ void vtkMeasurementsRulerWidget::CreateWidget ( )
   modelFrame->Delete();
   rulerDisplayFrame->Delete();
   visibColourFrame->Delete();
-  fromFidsFrame->Delete();
   distanceFrame->Delete();
   pickRulerNodeFrame->Delete();
   controlAllFrame->Delete();

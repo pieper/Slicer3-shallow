@@ -1,55 +1,32 @@
-/*==============================================================================
+/*=auto=========================================================================
 
-  Program: 3D Slicer
+ Portions (c) Copyright 2005 Brigham and Women's Hospital (BWH) 
+ All Rights Reserved.
 
-  Copyright (c) 2010 Kitware Inc.
+ See Doc/copyright/copyright.txt
+ or http://www.slicer.org/copyright/copyright.txt for details.
 
-  See Doc/copyright/copyright.txt
-  or http://www.slicer.org/copyright/copyright.txt for details.
+ Program:   3D Slicer
 
-  Unless required by applicable law or agreed to in writing, software
-  distributed under the License is distributed on an "AS IS" BASIS,
-  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-  See the License for the specific language governing permissions and
-  limitations under the License.
-
-  This file was originally developed by Jean-Christophe Fillion-Robin, Kitware Inc.
-  and was partially funded by NIH grant 3P41RR013218-12S1
-
-==============================================================================*/
+=========================================================================auto=*/
 
 #include "qSlicerTransformsModule.h"
 
-// SlicerQt includes
+// SlicerQT includes
 #include "vtkSlicerTransformLogic.h"
 #include "qSlicerTransformsModuleWidget.h"
 
 //-----------------------------------------------------------------------------
-class qSlicerTransformsModulePrivate
+class qSlicerTransformsModulePrivate: public qCTKPrivate<qSlicerTransformsModule>
 {
 public:
 };
 
 //-----------------------------------------------------------------------------
-qSlicerTransformsModule::qSlicerTransformsModule(QObject* _parentObject)
-  : Superclass(_parentObject)
-  , d_ptr(new qSlicerTransformsModulePrivate)
-{
-}
+QCTK_CONSTRUCTOR_1_ARG_CXX(qSlicerTransformsModule, QObject*);
 
 //-----------------------------------------------------------------------------
-qSlicerTransformsModule::~qSlicerTransformsModule()
-{
-}
-
-//-----------------------------------------------------------------------------
-QIcon qSlicerTransformsModule::icon()const
-{
-  return QIcon(":/Icons/Transforms.png");
-}
-
-//-----------------------------------------------------------------------------
-qSlicerAbstractModuleRepresentation* qSlicerTransformsModule::createWidgetRepresentation()
+qSlicerAbstractModuleWidget * qSlicerTransformsModule::createWidgetRepresentation()
 {
   return new qSlicerTransformsModuleWidget;
 }
@@ -64,9 +41,8 @@ vtkSlicerLogic* qSlicerTransformsModule::createLogic()
 QString qSlicerTransformsModule::helpText()const
 {
   QString help =
-    "The Transforms Module creates and edits transforms.<br>"
-    "<a href=%1/Modules:Transforms-Documentation-3.4>%1/Modules:Transforms-"
-    "Documentation-3.6</a>";
+    "The Transforms Module creates and edits transforms. \n"
+    "<a href=%1/Modules:Transforms-Documentation-3.4>%1/Modules:Transforms-Documentation-3.4</a>";
   return help.arg(this->slicerWikiUrl());
 }
 
@@ -74,10 +50,9 @@ QString qSlicerTransformsModule::helpText()const
 QString qSlicerTransformsModule::acknowledgementText()const
 {
   QString acknowledgement =
-    "This work was supported by NA-MIC, NAC, BIRN, NCIGT, and the Slicer "
-    "Community.<br>"
-    "See <a href=\"http://www.slicer.org\">www.slicer.org</a> for details.<br>"
-    "The Transforms module was contributed by Alex Yarmarkovich, Isomics Inc. "
-      "with help from others at SPL, BWH (Ron Kikinis)<br>";
+    "This work was supported by NA-MIC, NAC, BIRN, NCIGT, and the Slicer Community. "
+    "See <a href=\"http://www.slicer.org\">http://www.slicer.org</a> for details.\n"
+    "The Transforms module was contributed by Alex Yarmarkovich, Isomics Inc. with "
+    "help from others at SPL, BWH (Ron Kikinis)";
   return acknowledgement;
 }

@@ -32,7 +32,6 @@ proc Usage { {msg ""} } {
     set msg "$msg\n   -u --update : does a cvs/svn update on each lib"
     set msg "$msg\n   --quiet : turns off debugging messages"
     set msg "$msg\n   --no-extension-update : disables svn checkout for the extension"
-    set msg "$msg\n   --upload : upload the script to the extension server"
     puts stderr $msg
 }
 
@@ -42,7 +41,6 @@ set ::EXTEND(verbose) "true"
 set ::EXTEND(test-type) ""
 set ::EXTEND(buildList) ""
 set ::EXTEND(no-extension-update) ""
-set ::EXTEND(upload) "false"
 
 if {[info exists ::env(CVS)]} {
     set ::CVS "{$::env(CVS)}"
@@ -89,9 +87,6 @@ for {set i 0} {$i < $argc} {incr i} {
         }
         "--no-extension-update" {
             set ::EXTEND(no-extension-update) "true"
-        }
-        "--upload" {
-            set ::EXTEND(upload) "true"
         }
         "--help" -
         "-h" {
@@ -337,7 +332,8 @@ proc upload {fileName} {
   flush $sock
   close $sock
   
-  vputs "uploaded $fileName ($size bytes)"
+  set uploadLocation "http://ext.slicer.org/[file tail $::EXTEND(slicerSVNSubpath)]/$::EXTEND(slicerSVNRevision)-$::env(BUILD)/[file tail $name]"
+  vputs "uploaded $fileName ($size bytes, ${uploadLocation})"
   flush stdout
 }
 
@@ -637,10 +633,9 @@ proc buildExtension {s3ext} {
   # - read zip file into 'data' variable
   # - write it to a socket on the ext.slicer.org server
   #
-  if { $::EXTEND(upload) } {
-    upload $::ext(zipFileName)  
-    upload $s3ext
-  }
+  upload $::ext(zipFileName)  
+  upload $s3ext
+
 }
 
 
@@ -679,6 +674,4 @@ if { [llength $::EXTEND(FAILED)] != 0 } {
 
 if { [llength $::EXTEND(s3extFiles)] != 0 } {
   vputs "\n[format %3.1f [expr 100 * (1.*[llength $::EXTEND(BUILT)] / [llength $::EXTEND(s3extFiles)])]]% succeeded" 
-} else {
-  vputs "\nNo .s3ext files found."
 }

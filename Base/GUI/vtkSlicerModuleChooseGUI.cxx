@@ -1000,26 +1000,17 @@ void vtkSlicerModuleChooseGUI::Populate( )
         int index;
         vtkKWMenu *menu, *submenu;
         menu = this->GetModulesMenuButton()->GetMenu();
-        if (menu)
+        index = this->GetModulesMenuButton()->GetMenu()->GetIndexOfItem( "Registration" );
+        if ( index != -1 )
           {
-          index = menu->GetIndexOfItem( "Registration" );
-          if ( index != -1 )
-            {
-            submenu = menu->GetItemCascade(index);
-            if (submenu)
-              {
-              submenu->AddRadioButton( "Transforms", this, "SelectModule Transforms" );
-              }
-            }
-          index = menu->GetIndexOfItem( "Segmentation" );
-          if ( index != -1 )
-            {
-            submenu = menu->GetItemCascade(index);
-            if (submenu)
-              {
-              submenu->AddRadioButton( "Editor", this, "SelectModule Editor" );
-              }
-            }
+          submenu = menu->GetItemCascade(index);
+          submenu->AddRadioButton( "Transforms", this, "SelectModule Transforms" );
+          }
+        index = menu->GetIndexOfItem( "Segmentation" );
+        if ( index != -1 )
+          {
+          submenu = menu->GetItemCascade(index);
+          submenu->AddRadioButton( "Editor", this, "SelectModule Editor" );
           }
       }
 

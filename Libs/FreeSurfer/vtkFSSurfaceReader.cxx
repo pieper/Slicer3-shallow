@@ -36,7 +36,6 @@ vtkFSSurfaceReader* vtkFSSurfaceReader::New()
   return new vtkFSSurfaceReader;
 }
 
-//-------------------------------------------------------------------------
 vtkFSSurfaceReader::vtkFSSurfaceReader()
 {
   vtkPolyData *output = vtkPolyData::New();
@@ -52,7 +51,6 @@ vtkFSSurfaceReader::vtkFSSurfaceReader()
   
 }
 
-//-------------------------------------------------------------------------
 vtkFSSurfaceReader::~vtkFSSurfaceReader()
 {
 }

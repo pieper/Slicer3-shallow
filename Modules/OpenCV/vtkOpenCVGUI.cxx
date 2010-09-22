@@ -284,7 +284,7 @@ void vtkOpenCVGUI::AddGUIObservers ( )
   // MRML
 
   vtkIntArray* events = vtkIntArray::New();
-  events->InsertNextValue(vtkMRMLScene::SceneClosedEvent);
+  events->InsertNextValue(vtkMRMLScene::SceneCloseEvent);
   
   if (this->GetMRMLScene() != NULL)
     {
@@ -584,7 +584,7 @@ void vtkOpenCVGUI::ProcessMRMLEvents ( vtkObject *caller,
     }
     
 
-  if (event == vtkMRMLScene::SceneClosedEvent)
+  if (event == vtkMRMLScene::SceneCloseEvent)
     {
     }
 }

@@ -138,7 +138,6 @@ void vtkSlicerGPURayCastVolumeMapper::Render(vtkRenderer *ren, vtkVolume *vol)
   float diffuse = vol->GetProperty()->GetDiffuse() * 1.2f;
   float power = 0.75f*128*vol->GetProperty()->GetSpecularPower()/50;
 
-  
 //  cout<<ambient<<" "<<diffuse<<" "<<specular<<endl;
 //  cout.flush();
 
@@ -190,7 +189,7 @@ void vtkSlicerGPURayCastVolumeMapper::AdaptivePerformanceControl()
   maxRaysteps = maxRaysteps > dim[2] ? maxRaysteps : dim[2];
   maxRaysteps *= 1.8f; //make sure we have enough sampling rate to recover details
 
-//  maxRaysteps = maxRaysteps < 512.0f ? 512.0f : maxRaysteps;//ensure high sampling rate on low resolution volumes
+//  maxRaysteps = maxRaysteps < 1050.0f ? 1050.0f : maxRaysteps;//ensure high sampling rate on low resolution volumes
   
   // add clamp
   if (this->RaySteps > maxRaysteps) this->RaySteps = maxRaysteps;

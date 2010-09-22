@@ -46,7 +46,6 @@ proc Usage { {msg ""} } {
     set msg "$msg\n   --rpm : optional, specify CPack RPM generator for packaging"
     set msg "$msg\n   --deb : optional, specify CPack DEB generator for packaging"
     set msg "$msg\n   -e --extend : optional, build external modules using the extend script"
-    set msg "$msg\n   -e --extend-upload : optional, build external modules using the extend script and upload to server"
     set msg "$msg\n   -32 -64 : Set if we want to build Slicer 32 or 64 bits" 
     set msg "$msg\n            : The default on Solaris is the current bitness of the underlying kernel (isainfo -b)"
     set msg "$msg\n            : The default on Linux is the current bitness of the underlying kernel"
@@ -73,7 +72,6 @@ set ::GETBUILDTEST(buildList) ""
 set ::GETBUILDTEST(cpack-generator) ""
 set ::GETBUILDTEST(rpm-spec) ""
 set ::GETBUILDTEST(extend) "false"
-set ::GETBUILDTEST(extend-upload) "false"
 set ::GETBUILDTEST(compiler) ""
 set ::GETBUILDTEST(bitness) "32"
 switch $::tcl_platform(os) {
@@ -183,9 +181,6 @@ for {set i 0} {$i < $argc} {incr i} {
         "-e" {
             set ::GETBUILDTEST(extend) "true"
         }
-        "--extend-upload" {
-            set ::GETBUILDTEST(extend-upload) "true"
-        }
         "-64" {
             set ::GETBUILDTEST(bitness) "64"
         }
@@ -261,7 +256,6 @@ proc runcmd {args} {
 foreach v { isSolaris isWindows isDarwin isLinux } { set $v 0 }
 switch $tcl_platform(os) {
     "SunOS" { set isSolaris 1 }
-    "GNU/kFreeBSD" { set isLinux 1 }
     "Linux" { set isLinux 1 }
     "Darwin" { set isDarwin 1 }
     default { set isWindows 1 }
@@ -437,7 +431,7 @@ if { $::GETBUILDTEST(version-patch) == "" } {
 }
 
 # set the binary filename root
-set ::GETBUILDTEST(binary-filename) "Slicer3-3.7-alpha-$::GETBUILDTEST(version-patch)-$::env(BUILD)"
+set ::GETBUILDTEST(binary-filename) "Slicer3-3.6.1-$::GETBUILDTEST(version-patch)-$::env(BUILD)"
 if {$::GETBUILDTEST(verbose)} {
     puts "CPack will use $::::GETBUILDTEST(binary-filename)"
 }
@@ -519,7 +513,6 @@ runcmd $::CMAKE \
         -DSlicer3_USE_OPENCV=$::USE_OPENCV \
         -DPYTHON_INCLUDE_PATH:PATH=$::PYTHON_INCLUDE \
         -DPYTHON_LIBRARY:FILEPATH=$::PYTHON_LIB \
-        -DPYTHON_EXECUTABLE:FILEPATH=$::PYTHON_EXECUTABLE \
         -DSandBox_DIR:FILEPATH=$Slicer3_LIB/NAMICSandBox \
         -DCMAKE_BUILD_TYPE=$::VTK_BUILD_TYPE \
         -DSlicer3_VERSION_PATCH:STRING=$::GETBUILDTEST(version-patch) \
@@ -659,13 +652,10 @@ if {$::GETBUILDTEST(upload) == "true"} {
 # build slicer extensions if requested on the command line
 #
 
-if { $::GETBUILDTEST(extend) == "true" || $::GETBUILDTEST(extend-upload) == "true" } {
+if { $::GETBUILDTEST(extend) == "true" } {
   # build the slicer3 extensions
   cd $::Slicer3_HOME
   set cmd "sh ./Scripts/extend.tcl $::GETBUILDTEST(test-type) $::GETBUILDTEST(release)"
-  if { $::GETBUILDTEST(extend-upload) == "true" } {
-    set cmd "$cmd --upload"
-  }
   eval runcmd $cmd
 }
 

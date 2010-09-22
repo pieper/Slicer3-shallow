@@ -5,7 +5,7 @@ SET(qt_module_title "SlicerWelcome")
 
 SET(qt_module_export_directive "Q_SLICER_QTMODULES_WELCOME_EXPORT")
 
-# Additional includes - Current_{source,binary} and Slicer3_{Libs,Base} already included
+# Additional directories to include
 SET(qt_module_include_directories
   ${CMAKE_CURRENT_SOURCE_DIR}/Widgets
   ${CMAKE_CURRENT_BINARY_DIR}/Widgets
@@ -21,7 +21,6 @@ SET(qt_module_SRCS
 
 # Headers that should run through moc
 SET(qt_module_MOC_SRCS
-  qSlicerWelcomeModule.h
   qSlicerWelcomeModuleWidget.h
   )
 

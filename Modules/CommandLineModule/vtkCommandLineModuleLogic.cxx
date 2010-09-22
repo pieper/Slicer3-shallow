@@ -46,8 +46,6 @@ Version:   $Revision: 1.2 $
 #include "vtkMRMLDoubleArrayNode.h"
 #include "vtkMRMLDoubleArrayStorageNode.h"
 
-#include "vtkMRMLLabelMapVolumeDisplayNode.h"
-
 #include "itksys/Process.h"
 #include "itksys/SystemTools.hxx"
 #include "itksys/RegularExpression.hxx"
@@ -121,15 +119,6 @@ vtkCommandLineModuleLogic::~vtkCommandLineModuleLogic()
 void vtkCommandLineModuleLogic::PrintSelf(ostream& os, vtkIndent indent)
 {
   Superclass::PrintSelf(os, indent);
-
-  os << indent << "RedirectModuleStreams: " << this->RedirectModuleStreams << "\n";
-  os << indent << "DeleteTemporaryFiles: " << this->DeleteTemporaryFiles << "\n";
-  os << indent << "TemporaryDirectory: " << this->TemporaryDirectory.c_str() << "\n";
-  if (this->CommandLineModuleNode)
-    {
-    os << indent << "CommandLineModuleNode:\n";
-    this->CommandLineModuleNode->PrintSelf(os, indent.GetNextIndent());
-    }
 }
 
 std::string
@@ -485,7 +474,6 @@ void vtkCommandLineModuleLogic::ApplyTask(void *clientdata)
     {
     vtkSlicerApplication::GetInstance()->InformationMessage( "Found CommandLine Module, target is ");
     vtkSlicerApplication::GetInstance()->InformationMessage(  node0->GetModuleDescription().GetTarget().c_str());
-    vtkSlicerApplication::GetInstance()->InformationMessage( "\n");
     commandType = CommandLineModule;
     if ( entryPoint != NULL )
       {
@@ -494,7 +482,7 @@ void vtkCommandLineModuleLogic::ApplyTask(void *clientdata)
     }
   else if ( node0->GetModuleDescription().GetType() == "SharedObjectModule" )
     {
-    vtkSlicerApplication::GetInstance()->InformationMessage( "Found SharedObject Module\n" );
+    vtkSlicerApplication::GetInstance()->InformationMessage( "Found SharedObject Module" );
 
     commandType = SharedObjectModule;
     if ( entryPoint == NULL )
@@ -504,7 +492,7 @@ void vtkCommandLineModuleLogic::ApplyTask(void *clientdata)
     }
   else if ( node0->GetModuleDescription().GetType() == "PythonModule" )
     {
-    vtkSlicerApplication::GetInstance()->InformationMessage( "Found Python Module\n" );
+    vtkSlicerApplication::GetInstance()->InformationMessage( "Found Python Module" );
     commandType = PythonModule;
     }
   vtkSlicerApplication::GetInstance()->InformationMessage( node0->GetModuleDescription().GetType().c_str() );
@@ -645,7 +633,7 @@ void vtkCommandLineModuleLogic::ApplyTask(void *clientdata)
       = vtkMRMLDoubleArrayNode::SafeDownCast(nd);
 
     
-    vtkSmartPointer<vtkMRMLStorageNode> out = 0;
+    vtkMRMLStorageNode *out = 0;
 
     // Determine if and how a node is to be written.  If we update the
     // MRMLIDImageIO, then we can change these conditions for the
@@ -660,21 +648,21 @@ void vtkCommandLineModuleLogic::ApplyTask(void *clientdata)
     if ((commandType == CommandLineModule) && (svnd || vvnd))
       {
       // only write out scalar & vector image nodes if running an executable
-      out = vtkSmartPointer<vtkMRMLVolumeArchetypeStorageNode>::New();
+      out = vtkMRMLVolumeArchetypeStorageNode::New();
       }
     else if ((commandType == CommandLineModule) && (dtvnd || dwvnd))
       {
       // only write out diffusion image & tensor nodes if running an executable
-      out = vtkSmartPointer<vtkMRMLNRRDStorageNode>::New();
+      out = vtkMRMLNRRDStorageNode::New();
       }
     else if (fbnd)
       {
-      out = vtkSmartPointer<vtkMRMLFiberBundleStorageNode>::New();
+      out = vtkMRMLFiberBundleStorageNode::New();
       }
     else if (mnd)
       {
       // always write out model nodes
-      out = vtkSmartPointer<vtkMRMLModelStorageNode>::New();
+      out = vtkMRMLModelStorageNode::New();
       }
     else if (tnd)
       {
@@ -702,19 +690,19 @@ void vtkCommandLineModuleLogic::ApplyTask(void *clientdata)
         else
           {
           // use a storage node
-          out = vtkSmartPointer<vtkMRMLTransformStorageNode>::New();
+          out = vtkMRMLTransformStorageNode::New();
           }
         }
       }
     else if (ctnd)
       {
       // always write out color table nodes
-      out = vtkSmartPointer<vtkMRMLColorTableStorageNode>::New();
+      out = vtkMRMLColorTableStorageNode::New();
       }
     else if (dand)
       {
       // always write out double array nodes
-      out = vtkSmartPointer<vtkMRMLDoubleArrayStorageNode>::New();
+      out = vtkMRMLDoubleArrayStorageNode::New();
       }
     else if (mhnd)
       {
@@ -747,7 +735,7 @@ void vtkCommandLineModuleLogic::ApplyTask(void *clientdata)
         {
         vtkErrorMacro("ERROR writing file " << out->GetFileName());
         }
-      //out->Delete();
+      out->Delete();
       }
     }
 
@@ -1690,7 +1678,7 @@ void vtkCommandLineModuleLogic::ApplyTask(void *clientdata)
   else if ( commandType == PythonModule )
     {
     // For the moment, ignore the output and just run the module
-    vtkSlicerApplication::GetInstance()->InformationMessage( "Preparing to execute Python Module\n" );
+    vtkSlicerApplication::GetInstance()->InformationMessage( "Preparing to execute Python Module" );
 
     // Now, call Python properly.  For the moment, make a big string...
     // ...later we'll want to do this through the Python API
@@ -1863,68 +1851,8 @@ void vtkCommandLineModuleLogic::ApplyTask(void *clientdata)
           else
             {
             vtkWarningMacro( << "Referenced parameter unknown: " << (*pit).GetReference() );
-            }        
-          }         
-        if ((*pit).GetTag() == "image"
-            && (*pit).GetChannel() == "output"
-            && (*pit).GetReference().size() > 0)
-          {
-          std::string reference;
-          if (node0->GetModuleDescription().HasParameter((*pit).GetReference()))
-            {
-            reference
-              = node0->GetModuleDescription()
-                           .GetParameterDefaultValue((*pit).GetReference());
-            if (reference.size() > 0)
-              {
-              vtkMRMLScalarVolumeNode *v
-                = vtkMRMLScalarVolumeNode::SafeDownCast(this->MRMLScene
-                           ->GetNodeByID(reference.c_str()));
-              if (v)
-                {
-                if(!v->GetLabelMap())
-                  {
-                  vtkMRMLScalarVolumeDisplayNode *d
-                    = vtkMRMLScalarVolumeDisplayNode::New();
-                  d->CopyWithScene(v->GetDisplayNode());
-                  this->MRMLScene->AddNodeNoNotify(d);
-                  d->Delete();
-
-                  vtkSmartPointer<vtkStringArray> reqSTNID = vtkSmartPointer<vtkStringArray>::New();
-                  vtkStdString areq;
-                  areq = "[$::slicer3::MRMLScene GetNodeByID " + (*pit).GetDefault() + "] "
-                    + "SetAndObserveDisplayNodeID "
-                    + d->GetID() + " ; " +
-                    " [$::slicer3::MRMLScene GetNodeByID " + (*pit).GetDefault() + 
-                     "] SetLabelMap 0 ;" + "$::slicer3::MRMLScene Edited";
-                  reqSTNID->InsertNextValue( areq );
-                  this->GetApplicationLogic()->RequestModified( reqSTNID );
-                  }
-                else
-                  {
-                  vtkMRMLLabelMapVolumeDisplayNode *d
-                    = vtkMRMLLabelMapVolumeDisplayNode::New();
-                  d->CopyWithScene(v->GetDisplayNode());
-                  this->MRMLScene->AddNodeNoNotify(d);
-                  d->Delete();
-
-                  vtkSmartPointer<vtkStringArray> reqSTNID = vtkSmartPointer<vtkStringArray>::New();
-                  vtkStdString areq;
-                  areq = "[$::slicer3::MRMLScene GetNodeByID " + (*pit).GetDefault() + "] "
-                    + "SetAndObserveDisplayNodeID "
-                    + d->GetID() + " ; " +
-                    " [$::slicer3::MRMLScene GetNodeByID " + (*pit).GetDefault() + 
-                     "] SetLabelMap 1 ;" + "$::slicer3::MRMLScene Edited";
-                  reqSTNID->InsertNextValue( areq );
-                  this->GetApplicationLogic()->RequestModified( reqSTNID );
-                  }
-                }
-              }
             }
-          else
-            {
-            vtkWarningMacro( << "Referenced parameter unknown: " << (*pit).GetReference() );
-            }  
+        
           }
         }
       }

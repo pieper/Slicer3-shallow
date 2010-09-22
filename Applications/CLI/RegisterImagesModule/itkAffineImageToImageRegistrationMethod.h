@@ -18,7 +18,7 @@
 #ifndef __AffineImageToImageRegistrationMethod_h
 #define __AffineImageToImageRegistrationMethod_h
 
-#include "itkImage.h"
+#include "itkOrientedImage.h"
 #include "itkAffineTransform.h"
 
 #include "itkOptimizedImageToImageRegistrationMethod.h"

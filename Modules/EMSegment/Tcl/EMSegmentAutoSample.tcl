@@ -59,12 +59,13 @@ proc EMSegmentCutOutRegion {ThreshInstance MathInstance ResultVolume ProbVolume 
 #-------------------------------------------------------------------------------
 proc EMSegmentGaussCurveCalculationFromID {mrmlManager CutOffProbability LogGaussFlag MRIVolumeIDList ProbVolumeID ClassName} {
     global EMSegment
+
     set SCENE [$mrmlManager GetMRMLScene ]
 
     set ProbNode  [$SCENE GetNodeByID $ProbVolumeID]
     if { $ProbNode == "" } {
-    puts stderr "ERROR:EMSegmentGaussCurveCalculationFromID: No  ProbNode with  $ProbVolumeID defined!" 
-    return 1
+       puts stderr "ERROR:EMSegmentGaussCurveCalculationFromID: No  ProbNode with  $ProbVolumeID defined!" 
+       return 1
     }
 
     set ProbVolume  [$ProbNode GetImageData]
@@ -76,13 +77,14 @@ proc EMSegmentGaussCurveCalculationFromID {mrmlManager CutOffProbability LogGaus
     set VolDataType [$ProbVolume GetScalarType]
 
     set MRIVolumeList ""
+
     foreach ID $MRIVolumeIDList {
-    set MRIVolumeList "${MRIVolumeList}[[$SCENE GetNodeByID $ID] GetImageData] "
+       set MRIVolumeList "${MRIVolumeList}[[$SCENE GetNodeByID $ID] GetImageData] "
     }
 
     if { [EMSegmentGaussCurveCalculation $CutOffProbability $LogGaussFlag "$MRIVolumeList" $ProbVolume $VolDataType] } {
-    puts stderr "EMSegmentGaussCurveCalculationFromID: Error occured in calculating Guassian parameters for $ClassName"
-    return 1
+       puts stderr "EMSegmentGaussCurveCalculationFromID: Error occured in calculating Guassian parameters for $ClassName"
+       return 1
     }
     # -----------------------------------------
     # 3. Print results
@@ -90,6 +92,12 @@ proc EMSegmentGaussCurveCalculationFromID {mrmlManager CutOffProbability LogGaus
     set NumInputChannel [llength $MRIVolumeList] 
 
     puts "Check for Class $ClassName"
+    puts "  Atlas      : [$ProbNode GetName]"
+    puts -nonewline "  Scans      : "
+    foreach ID $MRIVolumeIDList {
+        puts -nonewline "[[$SCENE GetNodeByID $ID] GetName] "
+    }
+    puts "" 
     puts "  LogGauss   : $LogGaussFlag"
     puts "  CutOffProb : $::EMSegment(GaussCurveCalc,CutOffAbsolut) (Absolut) -- [format %5.2f $EMSegment(GaussCurveCalc,CutOffPercent)] % (Percent)"
     puts "  MaxProbVal : $::EMSegment(GaussCurveCalc,MaxProb)"
@@ -105,7 +113,8 @@ proc EMSegmentGaussCurveCalculationFromID {mrmlManager CutOffProbability LogGaus
     if {$y} {puts -nonewline "| "}
     for {set x 0} {$x < $NumInputChannel} {incr x} {puts -nonewline "[format %.3f $EMSegment(GaussCurveCalc,Covariance,$y,$x)]  "}
     }
-    puts " "  
+    puts " "
+    puts " "   
     return 0
 }
 
@@ -166,9 +175,9 @@ proc EMSegmentGaussCurveCalculation {CutOffProbability LogGaussFlag MRIVolumeLis
         incr EMSegment(GaussCurveCalc,Sum) [expr int ([$data GetScalarComponentAsFloat $i 0 0 0])]
         # puts "$i [expr int ([$data $::getScalarComponentAs $i 0 0 0])]"
         if {$EMSegment(GaussCurveCalc,Sum) > $CutOffVoxel} { 
-        if {$i == $index } {
-        # even just using maximum value  is above threshold - so change it 
-        set EMSegment(GaussCurveCalc,CutOffAbsolut) $EMSegment(GaussCurveCalc,MaxProb)
+           if {$i == $index } {
+           # even just using maximum value  is above threshold - so change it 
+           set EMSegment(GaussCurveCalc,CutOffAbsolut) $EMSegment(GaussCurveCalc,MaxProb)
         } else {
               set EMSegment(GaussCurveCalc,CutOffAbsolut) [expr $i+$Min +1] 
               set EMSegment(GaussCurveCalc,Sum) [expr $EMSegment(GaussCurveCalc,Sum) - int([$data GetScalarComponentAsFloat $i 0 0 0])]

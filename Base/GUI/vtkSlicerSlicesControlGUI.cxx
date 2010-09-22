@@ -74,6 +74,7 @@ vtkSlicerSlicesControlGUI::vtkSlicerSlicesControlGUI ( )
   this->YellowSliceEvents = NULL;
   this->GreenSliceEvents = NULL;
   this->EntryUpdatePending = 0;
+  this->SceneClosing = false;
   this->ProcessingMRMLEvent = 0;
   this->SliceInteracting = 0;
 
@@ -326,7 +327,7 @@ void vtkSlicerSlicesControlGUI::UpdateSliceGUIInteractorStyles ( )
 {
   // get all views from the scene
   // and observe active view.
-  if (this->MRMLScene && this->MRMLScene->GetIsUpdating())
+  if (this->SceneClosing)
     {
     return;
     }
@@ -380,7 +381,7 @@ void vtkSlicerSlicesControlGUI::UpdateSliceGUIInteractorStyles ( )
 //---------------------------------------------------------------------------
 void vtkSlicerSlicesControlGUI::UpdateSlicesFromMRML()
 {
-  if (this->MRMLScene && this->MRMLScene->GetIsUpdating())
+  if (this->SceneClosing)
     {
     return;
     }
@@ -1537,6 +1538,16 @@ void vtkSlicerSlicesControlGUI::ProcessMRMLEvents ( vtkObject *caller,
        && (event == vtkMRMLScene::NodeAddedEvent || event == vtkMRMLScene::NodeRemovedEvent ) )
     {
     this->UpdateFromMRML();
+    }
+
+  // is the scene closing?
+  if (event == vtkMRMLScene::SceneCloseEvent )
+    {
+    this->SceneClosing = true;
+    }
+  else 
+    {
+    this->SceneClosing = false;
     }
 
   // update FOV entry widgets to match node, if

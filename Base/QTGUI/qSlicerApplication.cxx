@@ -1,24 +1,14 @@
-/*==============================================================================
+#include "qSlicerApplication.h"
 
-  Program: 3D Slicer
+// SlicerQT includes
+#include "qSlicerWidget.h"
+#include "qSlicerIOManager.h"
+#include "qSlicerCommandOptions.h"
 
-  Copyright (c) 2010 Kitware Inc.
+// qCTK includes
+#include <qCTKSettings.h>
 
-  See Doc/copyright/copyright.txt
-  or http://www.slicer.org/copyright/copyright.txt for details.
-
-  Unless required by applicable law or agreed to in writing, software
-  distributed under the License is distributed on an "AS IS" BASIS,
-  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-  See the License for the specific language governing permissions and
-  limitations under the License.
-
-  This file was originally developed by Jean-Christophe Fillion-Robin, Kitware Inc.
-  and was partially funded by NIH grant 3P41RR013218-12S1
-
-==============================================================================*/
-
-// Qt includes
+// QT includes
 #include <QCleanlooksStyle>
 #include <QColor>
 #include <QDebug>
@@ -27,33 +17,11 @@
 #include <QFontInfo>
 #include <QMap>
 #include <QPalette>
-#include <QPluginLoader>
 #include <QRect>
 #include <QStyle>
 #include <QWidget>
 
-// CTK includes
-#include <ctkIconEnginePlugin.h>
-#include <ctkLogger.h>
-#include <ctkSettings.h>
-
-// QTGUI includes
-#include "qSlicerApplication.h"
-#include "qSlicerWidget.h"
-#include "qSlicerIOManager.h"
-#include "qSlicerCommandOptions.h"
-#include "qSlicerLayoutManager.h"
-#include "qSlicerStyle.h"
-#ifdef Slicer3_USE_PYTHONQT
-# include "qSlicerPythonManager.h"
-#endif
-
-// MRMLLogic includes
-#include <vtkMRMLApplicationLogic.h>
-
-//--------------------------------------------------------------------------
-static ctkLogger logger("org.slicer.base.qtgui.qSlicerApplication");
-//--------------------------------------------------------------------------
+#include "vtkSlicerConfigure.h"
 
 //-----------------------------------------------------------------------------
 void qSlicerApplyPalette(QPalette& palette)
@@ -78,19 +46,17 @@ void qSlicerApplyPalette(QPalette& palette)
 
 
 //-----------------------------------------------------------------------------
-class qSlicerApplicationPrivate
+class qSlicerApplicationPrivate: public qCTKPrivate<qSlicerApplication>
 {
-  Q_DECLARE_PUBLIC(qSlicerApplication);
-protected:
-  qSlicerApplication* const q_ptr;
-public:
-  qSlicerApplicationPrivate(qSlicerApplication& object);
+  public:
+  QCTK_DECLARE_PUBLIC(qSlicerApplication);
+  qSlicerApplicationPrivate();
 
-  ///
-  /// Convenient method regrouping all initialization code
+  /// 
+  /// Initialize application style
   void init();
 
-  ///
+  /// 
   /// Initialize application style
   void initStyle();
 
@@ -107,9 +73,8 @@ public:
   // Load application styleSheet
   void loadStyleSheet();
 
-  QMap<QWidget*,bool>                 TopLevelWidgetsSavedVisibilityState;
-  Qt::WindowFlags                     DefaultWindowFlags;
-  qSlicerLayoutManager*               LayoutManager;
+  QMap<QWidget*,bool>           TopLevelWidgetsSavedVisibilityState;
+  Qt::WindowFlags               DefaultWindowFlags;
 };
 
 
@@ -117,69 +82,48 @@ public:
 // qSlicerApplicationPrivate methods
 
 //-----------------------------------------------------------------------------
-qSlicerApplicationPrivate::qSlicerApplicationPrivate(qSlicerApplication& object)
-  : q_ptr(&object)
+qSlicerApplicationPrivate::qSlicerApplicationPrivate()
 {
-  this->LayoutManager = 0;
+  
 }
 
 //-----------------------------------------------------------------------------
 void qSlicerApplicationPrivate::init()
 {
-  Q_Q(qSlicerApplication);
+  QCTK_P(qSlicerApplication);
   this->initStyle();
   this->initFont();
   this->initPalette();
   this->loadStyleSheet();
-
+  
+  qSlicerIOManager* _ioManager = new qSlicerIOManager;
+  Q_ASSERT(_ioManager);
   // Note: qSlicerCoreApplication class takes ownership of the ioManager and
   // will be responsible to delete it
-  q->setCoreIOManager(new qSlicerIOManager);
-  
-  #ifdef Slicer3_USE_PYTHONQT
-  // Note: qSlicerCoreApplication class takes ownership of the pythonManager and
-  // will be responsible to delete it
-  q->setCorePythonManager(new qSlicerPythonManager());
-  #endif
+  p->setCoreIOManager(_ioManager);
 }
-/*
-#if !defined (QT_NO_LIBRARY) && !defined(QT_NO_SETTINGS)
-Q_GLOBAL_STATIC_WITH_ARGS(QFactoryLoader, loaderV2,
-    (QIconEngineFactoryInterfaceV2_iid, QLatin1String("/iconengines"), Qt::CaseInsensitive))
-#endif
-*/
+
 //-----------------------------------------------------------------------------
 void qSlicerApplicationPrivate::initStyle()
 {
-  Q_Q(qSlicerApplication);
-  q->setStyle(new qSlicerStyle(new QCleanlooksStyle));
-
-  // Force showing the icons in the menus despite the native OS style
-  // discourages it
-  q->setAttribute(Qt::AA_DontShowIconsInMenus, false);
-
-  // Init the style of the icons
-  // The plugin qSlicerIconEnginePlugin is located in the iconengines
-  // subdirectory of Slicer lib dir (typically lib/Slicer).
-  // By adding the path to the lib dir, Qt automatically loads the icon engine
-  // plugin
-  q->addLibraryPath(q->slicerHome() + "/" + Slicer3_INSTALL_LIB_DIR);
+  QCTK_P(qSlicerApplication);
+  p->setStyle(new QCleanlooksStyle);
 }
 
 //-----------------------------------------------------------------------------
 void qSlicerApplicationPrivate::initPalette()
 {
-  Q_Q(qSlicerApplication);
-  QPalette myPalette = q->palette();
+  QCTK_P(qSlicerApplication);
+  QPalette myPalette = p->palette();
   qSlicerApplyPalette(myPalette);
-  q->setPalette(myPalette);
+  p->setPalette(myPalette);
 }
 
 //-----------------------------------------------------------------------------
 void qSlicerApplicationPrivate::initFont()
 {
   /*
-  Q_Q(qSlicerApplication);
+  QCTK_P(qSlicerApplication);
   QFont f("Verdana", 9);
   QFontInfo ff(f);
   QFontDatabase database;
@@ -190,19 +134,19 @@ void qSlicerApplicationPrivate::initFont()
 
   cout << "Family: " << ff.family().toStdString() << endl;
   cout << "Size: " << ff.pointSize() << endl;
-  q->setFont(f);
+  p->setFont(f);
   */
 }
 
 //-----------------------------------------------------------------------------
 void qSlicerApplicationPrivate::loadStyleSheet()
 {
-//   Q_Q(qSlicerApplication);
+//   QCTK_P(qSlicerApplication);
 //   QString styleSheet =
 //     "background-color: white;"
 //     "alternate-background-color: #e4e4fe;";
 //
-//   q->setStyleSheet(styleSheet);
+//   p->setStyleSheet(styleSheet);
 }
 
 
@@ -211,9 +155,9 @@ void qSlicerApplicationPrivate::loadStyleSheet()
 
 //-----------------------------------------------------------------------------
 qSlicerApplication::qSlicerApplication(int &_argc, char **_argv):Superclass(_argc, _argv)
-  , d_ptr(new qSlicerApplicationPrivate(*this))
 {
-  Q_D(qSlicerApplication);
+  QCTK_INIT_PRIVATE(qSlicerApplication);
+  QCTK_D(qSlicerApplication);
   d->init();
 }
 
@@ -236,7 +180,7 @@ void qSlicerApplication::initialize(bool& exitWhenDone)
   // (SlicerQT, SlicerBatch, SlicerDaemon, ...).
   // The class qSlicerCommandOptions could be subclassed into, for example,
   // qSlicerGUICommandOptions, qSlicerDaemonCommandOptions, ...
-  // Each subclass should be added in their respective Applications/Slicer{Batch, Daemon}
+  // Each subclasse should be added in their respective Applications/Slicer{Batch, Daemon}
   // directory.
   // The following line should also be moved into the 'Main.cxx' specific to each app.
   // This comment should also be deleted !
@@ -250,7 +194,7 @@ void qSlicerApplication::initialize(bool& exitWhenDone)
 qSlicerCommandOptions* qSlicerApplication::commandOptions()
 {
   qSlicerCommandOptions* _commandOptions =
-    dynamic_cast<qSlicerCommandOptions*>(this->coreCommandOptions());
+    reinterpret_cast<qSlicerCommandOptions*>(this->coreCommandOptions());
   Q_ASSERT(_commandOptions);
   return _commandOptions;
 }
@@ -258,47 +202,19 @@ qSlicerCommandOptions* qSlicerApplication::commandOptions()
 //-----------------------------------------------------------------------------
 qSlicerIOManager* qSlicerApplication::ioManager()
 {
-  qSlicerIOManager* _ioManager = dynamic_cast<qSlicerIOManager*>(this->coreIOManager());
+  qSlicerIOManager* _ioManager = reinterpret_cast<qSlicerIOManager*>(this->coreIOManager());
   Q_ASSERT(_ioManager);
   return _ioManager;
 }
 
-#ifdef Slicer3_USE_PYTHONQT
 //-----------------------------------------------------------------------------
-qSlicerPythonManager* qSlicerApplication::pythonManager()
-{
-  qSlicerPythonManager* _pythonManager = 
-    qobject_cast<qSlicerPythonManager*>(this->corePythonManager());
-  Q_ASSERT(_pythonManager);
-
-  return _pythonManager;
-}
-#endif
-
-//-----------------------------------------------------------------------------
-void qSlicerApplication::setLayoutManager(qSlicerLayoutManager* layoutManager)
-{
-  Q_D(qSlicerApplication);
-  d->LayoutManager = layoutManager;
-  this->mrmlApplicationLogic()->SetSliceLogics(
-    layoutManager? layoutManager->mrmlSliceLogics() : 0);
-}
-
-//-----------------------------------------------------------------------------
-qSlicerLayoutManager* qSlicerApplication::layoutManager()const
-{
-  Q_D(const qSlicerApplication);
-  return d->LayoutManager;
-}
-
-//-----------------------------------------------------------------------------
-CTK_SET_CXX(qSlicerApplication, Qt::WindowFlags, setDefaultWindowFlags, DefaultWindowFlags);
-CTK_GET_CXX(qSlicerApplication, Qt::WindowFlags, defaultWindowFlags, DefaultWindowFlags);
+QCTK_SET_CXX(qSlicerApplication, Qt::WindowFlags, setDefaultWindowFlags, DefaultWindowFlags);
+QCTK_GET_CXX(qSlicerApplication, Qt::WindowFlags, defaultWindowFlags, DefaultWindowFlags);
 
 //-----------------------------------------------------------------------------
 void qSlicerApplication::setTopLevelWidgetsVisible(bool visible)
 {
-  Q_D(qSlicerApplication);
+  QCTK_D(qSlicerApplication);
   foreach(QWidget * widget, this->topLevelWidgets())
     {
     // Store current visibility state
@@ -334,7 +250,7 @@ void qSlicerApplication::setTopLevelWidgetVisible(qSlicerWidget* widget, bool vi
 {
   if (!widget) { return; }
   Q_ASSERT(!widget->parent());
-  Q_D(qSlicerApplication);
+  QCTK_D(qSlicerApplication);
   // When internal Map is empty, it means top widget are visible
   if (d->TopLevelWidgetsSavedVisibilityState.empty())
     {
@@ -344,11 +260,4 @@ void qSlicerApplication::setTopLevelWidgetVisible(qSlicerWidget* widget, bool vi
     {
     d->TopLevelWidgetsSavedVisibilityState[widget] = visible;
     }
-}
-
-//-----------------------------------------------------------------------------
-QSettings* qSlicerApplication::newSettings(const QString& organization,
-                                           const QString& application)
-{
-  return new ctkSettings(organization, application, this);
 }

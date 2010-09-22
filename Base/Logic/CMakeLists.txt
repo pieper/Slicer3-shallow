@@ -17,8 +17,6 @@ set(include_dirs
   ${MRML_BINARY_DIR}
   ${MRMLCLI_SOURCE_DIR}
   ${MRMLCLI_BINARY_DIR}
-  ${MRMLLogic_SOURCE_DIR}
-  ${MRMLLogic_BINARY_DIR}
   ${ModuleDescriptionParser_SOURCE_DIR}
   ${ModuleDescriptionParser_BINARY_DIR}
   ${vtkTeem_SOURCE_DIR}
@@ -54,19 +52,25 @@ set(SlicerBaseLogic_SRCS
   vtkSlicerApplicationLogic.cxx 
   vtkSlicerModuleLogic.cxx 
   vtkSlicerTask.cxx
+  vtkSlicerSliceLogic.cxx 
+  vtkSlicerSliceLayerLogic.cxx
   vtkSlicerModelsLogic.cxx 
   vtkSlicerModelHierarchyLogic.cxx
   vtkSlicerFiducialsLogic.cxx
   vtkSlicerColorLogic.cxx
   vtkDataIOManagerLogic.cxx
   # slicer's vtk extensions (filters)
-  vtkImageSlicePaint.cxx
+  vtkImageSlicePaint.cxx 
+  vtkImageSlice.cxx 
   vtkImageFillROI.cxx
   vtkSlicerGlyphSource2D.cxx
   vtkSlicerROILogic.cxx
+  vtkImageResliceMask.cxx 
   vtkImageConnectivity.cxx 
   vtkImageLabelChange.cxx 
-  vtkImageErode.cxx
+  vtkImageErode.cxx 
+  vtkImageNeighborhoodFilter.cxx
+  vtkImageLabelOutline.cxx
   vtkSlicerTransformLogic.cxx
   vtkPichonFastMarching.cxx
   vtkPichonFastMarchingPDF.cxx
@@ -82,6 +86,7 @@ SET_SOURCE_FILES_PROPERTIES(
 # --------------------------------------------------------------------------
 # TCL Wrapping
 IF (VTK_WRAP_TCL)
+  SET(VTK_WRAP_HINTS ${CMAKE_CURRENT_SOURCE_DIR}/Wrapping/Tcl/hints)
   VTK_WRAP_TCL3(SlicerBaseLogic SlicerBaseLogic_TCL_SRCS "${SlicerBaseLogic_SRCS}" "")
 ENDIF (VTK_WRAP_TCL)
 
@@ -120,10 +125,10 @@ SET(VTK_LIBRARIES
 SET(libs
   MRML
   MRMLCLI
-  MRMLLogic
   vtkITK
   ${OPENTRACKER_LIB}
   FreeSurfer
+  vtkTeem
   ${VTK_LIBRARIES}
   )
 TARGET_LINK_LIBRARIES(${lib_name} ${libs})
@@ -168,14 +173,12 @@ IF(Slicer3_USE_PYTHONQT AND BUILD_SHARED_LIBS)
   ADD_LIBRARY(${lib_name}Python MODULE ${lib_name}PythonInit.cxx)
   
   TARGET_LINK_LIBRARIES(${lib_name}PythonD ${lib_name})
-  TARGET_LINK_LIBRARIES(${lib_name}PythonD MRMLLogicPythonD)
   
   FOREACH(c ${KIT_PYTHON_LIBRARIES})
     TARGET_LINK_LIBRARIES(${lib_name}PythonD ${c}PythonD)
   ENDFOREACH(c)
 
   TARGET_LINK_LIBRARIES(${lib_name}Python ${lib_name}PythonD)
-  TARGET_LINK_LIBRARIES(${lib_name}Python MRMLLogicPythonD)
 
   ## Python modules on Windows must have the extension ".pyd"
   IF(WIN32 AND NOT CYGWIN)

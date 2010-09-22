@@ -79,12 +79,13 @@ void vtkMRMLDoubleArrayNode::WriteXML(ostream& of, int nIndent)
   std::stringstream ssY;
   std::stringstream ssYerr;
 
-  if (this->Array->GetNumberOfComponents() >= 3 &&
-      this->Array->GetNumberOfTuples() > 0)
+  int n = this->Array->GetNumberOfComponents();
+  double xy[3];
+
+  if (this->Array->GetNumberOfComponents() >= 3)
     {
     // Put values to the string streams except the last values.
-    int n = this->Array->GetNumberOfTuples() - 1;
-    double xy[3];
+    n = this->Array->GetNumberOfTuples() - 1;
     for (int i = 0; i < n; i ++)
       {
       this->Array->GetTupleValue(i, xy);

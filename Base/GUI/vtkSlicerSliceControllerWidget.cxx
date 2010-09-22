@@ -1028,7 +1028,7 @@ void vtkSlicerSliceControllerWidget::CreateWidget ( )
 
   //--- Popup Scale with Entry (displayed when user clicks LabelOpacityButton
   //--- LabelOpacityButton, LabelOpacityScale and its entry will be observed
-  //--- and their events handled in sssGUIEvents;
+  //--- and their events handled in ProcessGUIEvents;
   //--- the pop-up and hide behavior of the latter two will be managed locally
   //--- in the GUI.
   //--- TODO: make a SlicerWidget that handles this behavior. Leave event?
@@ -1760,7 +1760,7 @@ void vtkSlicerSliceControllerWidget::FitSliceToBackground ( )
   // --- Find out whether SliceViewers are linked or unlinked
   // --- so we know how to handle control.
   //
-  if ( this->SliceCompositeNode && !this->MRMLScene->GetIsUpdating())
+  if ( this->SliceCompositeNode && !this->MRMLScene->GetIsClosed())
     {
     link = this->SliceCompositeNode->GetLinkedControl ( );
     }
@@ -1898,7 +1898,7 @@ void vtkSlicerSliceControllerWidget::RotateSliceToBackground ( )
   // --- Find out whether SliceViewers are linked or unlinked
   // --- so we know how to handle control.
   //
-  if ( this->SliceCompositeNode && !this->MRMLScene->GetIsUpdating())
+  if ( this->SliceCompositeNode && !this->MRMLScene->GetIsClosed())
     {
     link = this->SliceCompositeNode->GetLinkedControl ( );
     }
@@ -2040,7 +2040,7 @@ void vtkSlicerSliceControllerWidget::ProcessWidgetEvents ( vtkObject *caller,
   // --- Find out whether SliceViewers are linked or unlinked
   // --- so we know how to handle control.
   //
-  if ( this->SliceCompositeNode && !this->MRMLScene->GetIsUpdating())
+  if ( this->SliceCompositeNode && !this->MRMLScene->GetIsClosed())
     {
     link = this->SliceCompositeNode->GetLinkedControl ( );
     }
@@ -2880,6 +2880,7 @@ void vtkSlicerSliceControllerWidget::ProcessWidgetEvents ( vtkObject *caller,
     this->HideLightboxCustomLayoutFrame();
     }
 
+
   if ( button == this->PrescribedSliceSpacingCancelButton &&
        event == vtkKWPushButton::InvokedEvent )
     {
@@ -3060,7 +3061,7 @@ void vtkSlicerSliceControllerWidget::ProcessWidgetEvents ( vtkObject *caller,
     // wait until the ScaleValueChangedEvent to propagate to the other viewers)
     if ( link && sgui0 && (event != vtkKWScale::ScaleValueChangingEvent) &&
          ((layout->GetViewArrangement() == vtkMRMLLayoutNode::SlicerLayoutCompareView) ||
-          (layout->GetViewArrangement() == vtkMRMLLayoutNode::SlicerLayoutSideBySideLightboxView)) )
+          (layout->GetViewArrangement() == vtkMRMLLayoutNode::SlicerLayoutSideBySideCompareView)) )
       {
       modified |= this->UpdateCompareView( offset );
       }
@@ -3100,7 +3101,7 @@ void vtkSlicerSliceControllerWidget::ProcessWidgetEvents ( vtkObject *caller,
       // modify all slice logic to synch all Compare Slice viewers
       if ( link && sgui0 &&
          ((layout->GetViewArrangement() == vtkMRMLLayoutNode::SlicerLayoutCompareView) ||
-          (layout->GetViewArrangement() == vtkMRMLLayoutNode::SlicerLayoutSideBySideLightboxView)) )
+          (layout->GetViewArrangement() == vtkMRMLLayoutNode::SlicerLayoutSideBySideCompareView)) )
         {
         modified |= this->UpdateCompareView( newValue );
         }
@@ -3236,7 +3237,7 @@ void vtkSlicerSliceControllerWidget::PopUpLightboxCustomLayoutFrame()
 void vtkSlicerSliceControllerWidget::HideLabelOpacityScaleAndEntry (  )
 {
   int link;
-  if ( this->SliceCompositeNode && !this->MRMLScene->GetIsUpdating())
+  if ( this->SliceCompositeNode && !this->MRMLScene->GetIsClosed())
     {
     link = this->SliceCompositeNode->GetLinkedControl ( );
     }
@@ -3305,7 +3306,7 @@ void vtkSlicerSliceControllerWidget::PopUpLabelOpacityScaleAndEntry ( )
     }
 
   int link;
-  if ( this->SliceCompositeNode && !this->MRMLScene->GetIsUpdating())
+  if ( this->SliceCompositeNode && !this->MRMLScene->GetIsClosed())
     {
     link = this->SliceCompositeNode->GetLinkedControl ( );
     }
@@ -4089,7 +4090,7 @@ void vtkSlicerSliceControllerWidget::PrintSelf(ostream& os, vtkIndent indent)
   // widgets?
 }
 
-//----------------------------------------------------------------------------
+
 void vtkSlicerSliceControllerWidget::PopUpPrescribedSliceSpacingEntry()
 {
   if ( !this->MoreMenuButton || !this->MoreMenuButton->IsCreated())
@@ -4114,7 +4115,6 @@ void vtkSlicerSliceControllerWidget::PopUpPrescribedSliceSpacingEntry()
   
 }
 
-//----------------------------------------------------------------------------
 void vtkSlicerSliceControllerWidget::HidePrescribedSliceSpacingEntry()
 {
   if ( !this->PrescribedSliceSpacingTopLevel )
@@ -4124,7 +4124,6 @@ void vtkSlicerSliceControllerWidget::HidePrescribedSliceSpacingEntry()
   this->PrescribedSliceSpacingTopLevel->Withdraw();
 }
 
-//----------------------------------------------------------------------------
 void vtkSlicerSliceControllerWidget::SetSliceIndexEntryValueFromOffset(double sliceOffset)
 {
   int sliceIndex=this->SliceLogic->GetSliceIndexFromOffset(sliceOffset);
@@ -4135,13 +4134,13 @@ void vtkSlicerSliceControllerWidget::SetSliceIndexEntryValueFromOffset(double sl
     }
   else
     {
-    if (sliceIndex==vtkMRMLSliceLogic::SLICE_INDEX_ROTATED)
+    if (sliceIndex==vtkSlicerSliceLogic::SLICE_INDEX_ROTATED)
       {
       // reformatted slice
       this->SliceIndexEntry->SetWidth(4);
       this->SliceIndexEntry->SetValue("R");
       }
-    else if (sliceIndex==vtkMRMLSliceLogic::SLICE_INDEX_OUT_OF_VOLUME)
+    else if (sliceIndex==vtkSlicerSliceLogic::SLICE_INDEX_OUT_OF_VOLUME)
       {
       // out of volume
       this->SliceIndexEntry->SetWidth(4);

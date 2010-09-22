@@ -34,8 +34,6 @@
 
 #include "vtkMRMLProstateNavManagerNode.h"
 
-#define ROBOT_COVERAGE_AREA_NODE_NAME "RobotCoverageArea"
-
 class vtkProstateNavGUI;
 
 class VTK_PROSTATENAV_EXPORT vtkProstateNavLogic : public vtkSlicerModuleLogic 
@@ -92,7 +90,15 @@ class VTK_PROSTATENAV_EXPORT vtkProstateNavLogic : public vtkSlicerModuleLogic
   // Set a specific role for a loaded volume.
   int SelectVolumeInScene(vtkMRMLScalarVolumeNode* volumeNode, VolumeType volumeType);
 
-  int ShowCoverage(bool show);
+  // Description:
+  // Show/hide robot workspace. Returns with 0 in case of failure.
+  int ShowWorkspaceModel(bool show);
+  bool IsWorkspaceModelShown();
+
+  // Description:
+  // Show/hide robot. Returns with 0 in case of failure.
+  int ShowRobotModel(bool show);
+  bool IsRobotModelShown();
 
   // Description:
   // Switch mouse interaction mode to activate target placement
@@ -110,12 +116,20 @@ class VTK_PROSTATENAV_EXPORT vtkProstateNavLogic : public vtkSlicerModuleLogic
   //ETX
 
   void UpdateTargetListFromMRML();
+
+  // Description:
+  // Set Slicers's 2D view orientations from the image orientation.
+  void SetSliceViewFromVolume(vtkMRMLVolumeNode *volumeNode);
   
  protected:
 
   //BTX
   std::string GetFoRStrFromVolumeNodeID(const char* volNodeID);
   //ETX
+
+  // Description:
+  // Link targets to fiducials (when no FiducialIDs are available), based on fiducial position and label
+  void LinkTargetsToFiducials();
 
   // Description:
   // Helper method for loading a volume via the Volume module.
@@ -140,17 +154,13 @@ class VTK_PROSTATENAV_EXPORT vtkProstateNavLogic : public vtkSlicerModuleLogic
   
  private:
   
-  // Description:
-  // Set Slicers's 2D view orientations from the image orientation.
-  void SetSliceViewFromVolume(vtkMRMLVolumeNode *volumeNode);
-
   int GetTargetIndexFromFiducialID(const char* fiducialID);
 
   int CreateCoverageVolume();
   void DeleteCoverageVolume();
   int UpdateCoverageVolumeImage();
 
-  bool IsTargetReachable(int needleIndex, double rasLocation[3]);
+  vtkMRMLRobotNode* GetRobotNode();
 
   vtkProstateNavGUI* GUI;
 

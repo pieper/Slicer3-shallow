@@ -4,124 +4,102 @@ PROJECT(qSlicerBaseQTCore)
 # See CMake/Slicer3QTBaseLibraryMacros.cmake for details
 #
 
-SET(KIT_export_directive "Q_SLICER_BASE_QTCORE_EXPORT")
+SET(slicer_qtbase_export_directive "Q_SLICER_BASE_QTCORE_EXPORT")
 
 # Additional directories to include
-SET(KIT_include_directories
+SET(slicer_qtbase_include_directories
+  ${qSlicerBaseQTBase_SOURCE_DIR}
+  ${qSlicerBaseQTBase_BINARY_DIR}
   ${ModuleDescriptionParser_SOURCE_DIR}
   ${ModuleDescriptionParser_BINARY_DIR}
   ${MRMLCLI_SOURCE_DIR}
   ${MRMLCLI_BINARY_DIR}
-  ${MRMLLogic_SOURCE_DIR}
-  ${MRMLLogic_BINARY_DIR}
-  ${FreeSurfer_SOURCE_DIR} # for qSlicerXcedeCatalogIO
-  ${FreeSurfer_BINARY_DIR} # for qSlicerXcedeCatalogIO
+  ${qCTKWidgets_PYTHONQT_INCLUDE_DIR}
+  # HACK
+  #${MRML_SOURCE_DIR}
+  #${MRML_BINARY_DIR}
+  #${vtkSlicerVolumesModuleLogic_SOURCE_DIR}
+  #${vtkSlicerVolumesModuleLogic_BINARY_DIR}
   )
-
+  
 # Source files
-SET(KIT_SRCS
-  qSlicerAbstractCoreModule.cxx
-  qSlicerAbstractCoreModule.h
-  qSlicerAbstractModuleRepresentation.cxx
-  qSlicerAbstractModuleRepresentation.h
+SET(slicer_qtbase_SRCS
   qSlicerCoreApplication.cxx
   qSlicerCoreApplication.h
   qSlicerCoreCommandOptions.cxx
   qSlicerCoreCommandOptions.h
   qSlicerCoreIOManager.cxx
   qSlicerCoreIOManager.h
-  qSlicerIO.cxx
-  qSlicerIO.h
-  qSlicerIOOptions.cxx
-  qSlicerIOOptions.h
   qSlicerLoadableModuleFactory.cxx
   qSlicerLoadableModuleFactory.h
-  qSlicerModuleFactoryManager.cxx
-  qSlicerModuleFactoryManager.h
   qSlicerModuleManager.cxx
   qSlicerModuleManager.h
-  qSlicerObject.cxx
-  qSlicerObject.h
-  qSlicerSceneIO.cxx
-  qSlicerSceneIO.h
-  qSlicerSlicer2SceneReader.cxx
-  qSlicerSlicer2SceneReader.h
-  qSlicerUtils.cxx
-  qSlicerUtils.h
-  qSlicerXcedeCatalogIO.cxx
-  qSlicerXcedeCatalogIO.h
+  qSlicerModuleFactoryManager.cxx
+  qSlicerModuleFactoryManager.h
   )
 
 # Headers that should run through moc
-SET(KIT_MOC_SRCS
-  qSlicerAbstractCoreModule.h
+SET(slicer_qtbase_MOC_SRCS
   qSlicerCoreApplication.h
-  qSlicerCoreIOManager.h
-  qSlicerIO.h
   qSlicerModuleManager.h
-  qSlicerSceneIO.h
-  qSlicerSlicer2SceneReader.h
-  qSlicerXcedeCatalogIO.h
+  ${slicer_qtbase_pythonqt_MOC_SRCS}
   )
 
+# PythonQt decorator
+IF(Slicer3_USE_PYTHONQT)
+  SET(slicer_qtbase_MOC_SRCS ${slicer_qtbase_MOC_SRCS} qSlicerBaseQTBasePythonQtDecorators.h)
+ENDIF(Slicer3_USE_PYTHONQT)
+
+# UI files
+#SET(slicer_qtbase_UI_SRCS)
+
 # Additional Target libraries (QT libs already included)
-SET(KIT_target_libraries
+SET(slicer_qtbase_target_libraries
   ModuleDescriptionParser
-  SlicerBaseLogic
-  FreeSurfer # for qSlicerXcedeCatalogIO
-  CTKCore
-  CTKVisualizationVTKCore
+  MRMLCLI
+  qSlicerBaseQTBase
+  ${qCTKWidgets_PYTHONQT_LIBRARIES}
+  # HACK
+  #vtkSlicerVolumesModuleLogic
+  #MRML 
   )
 
 # Resources
-SET(KIT_resources
+SET(qt_module_resources
   Resources/qSlicerBaseQTCore.qrc
 )
 
-# Python wrap
+# Python wrap 
 IF(Slicer3_USE_PYTHONQT)
 
-  LIST(APPEND KIT_target_libraries
-    CTKScriptingPythonCore
-    vtkCommonPythonD # For vtkPythonUtils
-    PythonQt
-    )
-  IF(WIN32)
-    # TODO: this resolves link errors on windows, but shouldn't be
-    # needed - issue may lie with ctk external library macros?
-    LIST(APPEND KIT_target_libraries
-      ${PYTHONQT_LIBRARY}
-      )
-  ENDIF(WIN32)
-
   # Sources
-  LIST(APPEND KIT_SRCS
-    qSlicerCorePythonManager.cxx
-    qSlicerCorePythonManager.h
+  SET(slicer_qtbase_SRCS
+    ${slicer_qtbase_SRCS}
+    qSlicerPythonManager.cxx
+    qSlicerPythonManager.h
     )
 
   # Headers that should run through moc
-  LIST(APPEND KIT_MOC_SRCS
-    qSlicerCorePythonManager.h
-    qSlicerBaseQTCorePythonQtDecorators.h
+  SET(slicer_qtbase_MOC_SRCS
+    ${slicer_qtbase_MOC_SRCS}
+    qSlicerPythonManager.h
     )
-
+    
 ENDIF(Slicer3_USE_PYTHONQT)
 
 Slicer3_build_slicer_qtbase_library(
   NAME ${PROJECT_NAME}
-  EXPORT_DIRECTIVE ${KIT_export_directive}
-  INCLUDE_DIRECTORIES ${KIT_include_directories}
-  SRCS ${KIT_SRCS}
-  MOC_SRCS ${KIT_MOC_SRCS}
-  TARGET_LIBRARIES ${KIT_target_libraries}
-  RESOURCES ${KIT_resources}
+  EXPORT_DIRECTIVE ${slicer_qtbase_export_directive}
+  INCLUDE_DIRECTORIES ${slicer_qtbase_include_directories}
+  SRCS ${slicer_qtbase_SRCS}
+  MOC_SRCS ${slicer_qtbase_MOC_SRCS}
+  #UI_SRCS ${slicer_qtbase_UI_SRCS}
+  TARGET_LIBRARIES ${slicer_qtbase_target_libraries}
+  RESOURCES ${qt_module_resources}
   )
 
-# Plugins
+# Sub directories
 #ADD_SUBDIRECTORY(Plugins)
-
-# Testing
 IF(BUILD_TESTING)
   ADD_SUBDIRECTORY(Testing)
 ENDIF(BUILD_TESTING)

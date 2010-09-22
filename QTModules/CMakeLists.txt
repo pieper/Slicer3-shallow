@@ -17,13 +17,11 @@ ENDIF(NOT Slicer3_SOURCE_DIR)
 INCLUDE(${Slicer3_CMAKE_DIR}/Slicer3QTModuleMacros.cmake)
 
 SET(qtmodules
-  Annotation
-  EMSegment
-  #Measurements
   SlicerWelcome
-  TractographyDisplay
-  TractographyFiducialSeeding
   Volumes
+  Measurements
+  TractographyFiducialSeeding
+  miAnnotation
   )
 
 FOREACH(module ${qtmodules})

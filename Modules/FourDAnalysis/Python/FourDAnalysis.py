@@ -32,8 +32,6 @@ import copy
 
 import time
 
-from scipy.stats import chisquare
-
 # ----------------------------------------------------------------------
 # Base class for curve fitting algorithm classes
 # ----------------------------------------------------------------------
@@ -174,32 +172,13 @@ class CurveAnalysisBase(object):
 
     def GetOutputParamNameList(self):
         dict = self.CalcOutputParamDict(self.InitialParameter)
-
-        dict['CHISQ']   = 0.0
-        dict['CHISQ_P'] = 0.0
-
         list = []
         for key, value in dict.iteritems():
             list.append(key)
         return list
 
     def GetOutputParam(self):
-
-        #ddof = len(self.TargetCurve[:, 0])
-        ddof = len(self.InitialParameter)
-        dict = self.CalcOutputParamDict(self.Parameter)
-
-        # Goodness of fit by Chi-square and p-value
-        p_obs = self.TargetCurve[:, 1]
-        p_exp = self.GetFitCurve(self.TargetCurve[:, 0])
-
-        chisq, p_value = chisquare(p_obs, p_exp, ddof)
-        #print "sample's chi-square value =", chisq
-        #print "sample's p-value          =", p_value        
-        dict['CHISQ']   = chisq
-        dict['CHISQ_P'] = p_value
-
-        return dict
+        return self.CalcOutputParamDict(self.Parameter)
 
     # ------------------------------
     # Input curve

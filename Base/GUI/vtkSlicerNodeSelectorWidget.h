@@ -195,20 +195,12 @@ public:
   /// If this selector widget has vtkMRMLColorNodes, add color icons
   void AddColorIcons();
 
-  ///
+  /// 
   /// Flags to avoid event loops
   /// NOTE: don't use the SetMacro or it call modified itself and generate even more events!
   vtkGetMacro(InMRMLCallbackFlag, int);
   void SetInMRMLCallbackFlag (int flag) {
     this->InMRMLCallbackFlag = flag;
-  }
-
-  /// 
-  /// Flags to avoid too many refreshes when the scene is loading
-  /// NOTE: don't use the SetMacro or it call modified itself and generate even more events!
-  vtkGetMacro(IgnoreNodeAddedEvents, int);
-  void SetIgnoreNodeAddedEvents (int flag) {
-    this->IgnoreNodeAddedEvents = flag;
   }
 
 protected:
@@ -259,10 +251,6 @@ private:
   int InMRMLCallbackFlag;
 
   /// 
-  /// Flag to avoid refresh when loading the scene
-  int IgnoreNodeAddedEvents;
-
-  /// 
   /// Check for additional conditions to filter the NodeSelector. node is the current node to be checked.
   /// Returns true if the condition is fullfilled
   /// Note: This method has only effects if overwritten in a sub class.
@@ -282,7 +270,7 @@ private:
 
   /// pointers to icons for when have color nodes
   vtkSlicerColorLUTIcons *ColorIcons;
-   
+       
   vtkSlicerNodeSelectorWidget(const vtkSlicerNodeSelectorWidget&); /// Not implemented
   void operator=(const vtkSlicerNodeSelectorWidget&); /// Not Implemented
 };

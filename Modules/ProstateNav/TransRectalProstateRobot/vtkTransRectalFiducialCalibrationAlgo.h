@@ -24,6 +24,7 @@
 class vtkMatrix4x4;
 class vtkImageData;
 class vtkProstateNavTargetDescriptor;
+struct NeedleDescriptorStruct;
 class vtkMRMLTRProstateBiopsyModuleNode;
 class vtkPoints;
 
@@ -45,12 +46,6 @@ struct TRProstateBiopsyCalibrationFromImageInput
   std::string FoR; // frame of reference
 };
 
-struct TRProstateBiopsyCalibrationFromImageOutput
-{
-  bool MarkerFound[CALIB_MARKER_COUNT];
-  double MarkerPositions[CALIB_MARKER_COUNT][3]; // in RAS coordinates
-};
-
 struct TRProstateBiopsyCalibrationData
 {
   bool CalibrationValid;
@@ -62,6 +57,26 @@ struct TRProstateBiopsyCalibrationData
   double v1[3];
   double v2[3];
   std::string FoR; // frame of reference UID
+};
+
+struct TRProstateBiopsyTargetingParams
+{ 
+  std::string GetReachableString() const
+  { 
+    if (this->IsOutsideReach) 
+      return "No";
+    else
+      return "Yes";
+  }
+  
+  //////////
+  bool TargetingParametersValid;
+  double AxisRotation;    ///< Calculated value: Axis rotation in degree
+  double NeedleAngle;     ///< Calculated value: Needle angle in degree
+  double DepthCM;         ///< Calculated value: Insertion deepth in cm
+  bool IsOutsideReach;    ///< Calculated value: Can be reached or not with the current needle length and valid angle range
+  double HingePosition[3]; /// hinge position (RAS)
+  
 };
 
 //ETX
@@ -80,10 +95,18 @@ public:
 
   // Description
   // ... TODO: to be completed
-  bool CalibrateFromImage(const TRProstateBiopsyCalibrationFromImageInput &input, TRProstateBiopsyCalibrationFromImageOutput &output);  
+  bool CalibrateFromImage(const TRProstateBiopsyCalibrationFromImageInput &input);  
   //ETX
 
-  bool FindTargetingParams(vtkProstateNavTargetDescriptor *target);
+  static bool FindTargetingParams(vtkProstateNavTargetDescriptor *target, const TRProstateBiopsyCalibrationData &calibrationData, NeedleDescriptorStruct *needle, TRProstateBiopsyTargetingParams *targetingParams);
+
+  // Description
+  // Return true if the i-th marker position is successfully detected
+  bool GetMarkerFound(int i);
+
+  // Description
+  // Return the i-th marker position (in RAS coordinates)
+  double* GetMarkerPositions(int i);
 
   vtkImageData *GetCalibMarkerPreProcOutput(int i);
   vtkMatrix4x4* GetCalibMarkerPreProcOutputIJKToRAS();
@@ -100,7 +123,7 @@ public:
 
 protected:
 
-  bool RotatePoint(double H_before[3], double rotation_rad, double alpha_rad, double mainaxis[3], double I[3], /*out*/double H_after[3]);
+  static bool RotatePoint(double H_before[3], double rotation_rad, double alpha_rad, double mainaxis[3], double I[3], /*out*/double H_after[3]);
 
   //BTX
   void SegmentAxis(const double initPos1[3], const double initPos2[3], vtkMatrix4x4 *volumeIJKToRASMatrix, vtkImageData* calibVol,
@@ -132,6 +155,8 @@ protected:
   std::vector<PointType> CoordinatesVectorAxis2;
   std::vector<vtkImageData*> CalibMarkerPreProcOutput;
   vtkMatrix4x4* CalibMarkerPreProcOutputIJKToRAS;
+  bool MarkerFound[CALIB_MARKER_COUNT];
+  double MarkerPositions[CALIB_MARKER_COUNT][3]; // in RAS coordinates
   //ETX
 
   TRProstateBiopsyCalibrationData CalibrationData;

@@ -21,7 +21,7 @@
     <number>2</number>
    </property>
    <item>
-    <widget class="ctkCollapsibleGroupBox" name="SlidersGroupBox">
+    <widget class="qCTKCollapsibleGroupBox" name="SlidersGroupBox">
      <property name="title">
       <string>Translation</string>
      </property>
@@ -226,19 +226,19 @@
  </widget>
  <customwidgets>
   <customwidget>
-   <class>ctkCollapsibleGroupBox</class>
+   <class>qCTKCollapsibleGroupBox</class>
    <extends>QGroupBox</extends>
-   <header>ctkCollapsibleGroupBox.h</header>
+   <header>qCTKCollapsibleGroupBox.h</header>
    <container>1</container>
   </customwidget>
   <customwidget>
-   <class>ctkSliderWidget</class>
+   <class>qCTKSliderSpinBoxWidget</class>
    <extends>QWidget</extends>
-   <header>ctkSliderWidget.h</header>
+   <header>qCTKSliderSpinBoxWidget.h</header>
   </customwidget>
   <customwidget>
    <class>qMRMLLinearTransformSlider</class>
-   <extends>ctkSliderWidget</extends>
+   <extends>qCTKSliderSpinBoxWidget</extends>
    <header>qMRMLLinearTransformSlider.h</header>
    <container>1</container>
   </customwidget>

@@ -1,31 +1,11 @@
-/*==============================================================================
-
-  Program: 3D Slicer
-
-  Copyright (c) 2010 Kitware Inc.
-
-  See Doc/copyright/copyright.txt
-  or http://www.slicer.org/copyright/copyright.txt for details.
-
-  Unless required by applicable law or agreed to in writing, software
-  distributed under the License is distributed on an "AS IS" BASIS,
-  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-  See the License for the specific language governing permissions and
-  limitations under the License.
-
-  This file was originally developed by Jean-Christophe Fillion-Robin, Kitware Inc.
-  and was partially funded by NIH grant 3P41RR013218-12S1
-
-==============================================================================*/
-
 #ifndef __qMRMLEventLogger_h
 #define __qMRMLEventLogger_h
 
-// Qt includes
-#include <QObject>
+/// qCTK includes
+#include <qCTKPimpl.h>
 
-// CTK includes
-#include <ctkPimpl.h>
+/// QT includes
+#include <QObject>
 
 #include "qMRMLWidgetsExport.h"
 
@@ -42,7 +22,7 @@ public:
   virtual ~qMRMLEventLogger();
 
   /// 
-  /// Set the MRML \a scene that should be listened for events
+  /// Set the MRML scene that should be listened for events
   void setMRMLScene(vtkMRMLScene* scene);
 
   /// 
@@ -50,14 +30,15 @@ public:
   bool listeningNodeAddedEvent();
   bool listeningNodeRemovedEvent();
   bool listeningNewSceneEvent();
-  bool listeningSceneClosedEvent();
-  bool listeningSceneAboutToBeClosedEvent();
+  bool listeningSceneCloseEvent();
+  bool listeningSceneClosingEvent();
+  bool listeningSceneLoadingErrorEvent();
   bool listeningSceneEditedEvent();
   bool listeningMetadataAddedEvent();
-  bool listeningImportProgressFeedbackEvent();
+  bool listeningLoadProgressFeedbackEvent();
   bool listeningSaveProgressFeedbackEvent();
-  bool listeningSceneAboutToBeImportedEvent();
-  bool listeningSceneImportedEvent();
+  bool listeningSceneLoadStartEvent();
+  bool listeningSceneLoadEndEvent();
   bool listeningSceneRestoredEvent();
 
 public slots:
@@ -66,32 +47,30 @@ public slots:
   void listenNodeAddedEvent(bool listen);
   void listenNodeRemovedEvent(bool listen);
   void listenNewSceneEvent(bool listen);
-  void listenSceneClosedEvent(bool listen);
-  void listenSceneAboutToBeClosedEvent(bool listen);
+  void listenSceneCloseEvent(bool listen);
+  void listenSceneClosingEvent(bool listen);
+  void listenSceneLoadingErrorEvent(bool listen);
   void listenSceneEditedEvent(bool listen);
   void listenMetadataAddedEvent(bool listen);
-  void listenImportProgressFeedbackEvent(bool listen);
+  void listenLoadProgressFeedbackEvent(bool listen);
   void listenSaveProgressFeedbackEvent(bool listen);
-  void listenSceneAboutToBeImportedEvent(bool listen);
-  void listenSceneImportedEvent(bool listen);
+  void listenSceneLoadStartEvent(bool listen);
+  void listenSceneLoadEndEvent(bool listen);
   void listenSceneRestoredEvent(bool listen);
 
   virtual void onNodeAddedEvent(vtkObject* caller, vtkObject* call_data);
   virtual void onNodeRemovedEvent(vtkObject* caller, vtkObject* call_data);
   virtual void onNewSceneEvent();
-  virtual void onSceneClosedEvent();
-  virtual void onSceneAboutToBeClosedEvent();
+  virtual void onSceneCloseEvent();
+  virtual void onSceneClosingEvent();
+  virtual void onSceneLoadingErrorEvent();
   virtual void onSceneEditedEvent();
   virtual void onMetadataAddedEvent();
-  virtual void onImportProgressFeedbackEvent();
+  virtual void onLoadProgressFeedbackEvent();
   virtual void onSaveProgressFeedbackEvent();
-  virtual void onSceneAboutToBeImportedEvent();
-  virtual void onSceneImportedEvent();
+  virtual void onSceneLoadStartEvent();
+  virtual void onSceneLoadEndEvent();
   virtual void onSceneRestoredEvent();
-
-  ///
-  /// Enable / Disable console output
-  void setConsoleOutputEnabled(bool enabled);
 
 signals:
   /// 
@@ -99,22 +78,19 @@ signals:
   void signalNodeAddedEvent(vtkObject* calle, vtkObject* call_data);
   void signalNodeRemovedEvent(vtkObject* caller, vtkObject* call_data);
   void signalNewSceneEvent();
-  void signalSceneClosedEvent();
-  void signalSceneAboutToBeClosedEvent();
+  void signalSceneCloseEvent();
+  void signalSceneClosingEvent();
+  void signalSceneLoadingErrorEvent();
   void signalSceneEditedEvent();
   void signalMetadataAddedEvent();
-  void signalImportProgressFeedbackEvent();
+  void signalLoadProgressFeedbackEvent();
   void signalSaveProgressFeedbackEvent();
-  void signalSceneAboutToBeImportedEvent();
-  void signalSceneImportedEvent();
+  void signalSceneLoadStartEvent();
+  void signalSceneLoadEndEvent();
   void signalSceneRestoredEvent();
 
-protected:
-  QScopedPointer<qMRMLEventLoggerPrivate> d_ptr;
-
 private:
-  Q_DECLARE_PRIVATE(qMRMLEventLogger);
-  Q_DISABLE_COPY(qMRMLEventLogger);
+  QCTK_DECLARE_PRIVATE(qMRMLEventLogger);
 };
 
 #endif

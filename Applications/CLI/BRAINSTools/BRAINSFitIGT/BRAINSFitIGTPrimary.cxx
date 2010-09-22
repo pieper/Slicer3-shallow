@@ -284,9 +284,7 @@ int BRAINSFitIGTPrimary(int argc, char *argv[])
   if ( linearTransform.size() > 0 )
     {
     localOutputTransform = linearTransform;
-    if ( ( localTransformType.size() > 0 ) && 
-         ( ( localTransformType[localTransformType.size() - 1] == "BSpline" ) ||
-           ( localTransformType[localTransformType.size() - 1] == "ROIBSpline") ) )
+    if ( ( localTransformType.size() > 0 ) && ( localTransformType[localTransformType.size() - 1] == "BSpline" ) )
       {
       std::cout << "Error:  Linear transforms can not be used for BSpline registration!" << std::endl;
       exit(-1);
@@ -295,10 +293,7 @@ int BRAINSFitIGTPrimary(int argc, char *argv[])
   else if ( bsplineTransform.size() > 0 )
     {
     localOutputTransform = bsplineTransform;
-    if ( ( localTransformType.size() > 0 ) && 
-         ( localTransformType[localTransformType.size() - 1] != "BSpline" ) &&
-         ( localTransformType[localTransformType.size() - 1] != "ROIBSpline" ) ) 
-         
+    if ( ( localTransformType.size() > 0 ) && ( localTransformType[localTransformType.size() - 1] != "BSpline" ) )
       {
       std::cout << "Error:  BSpline registrations require output transform to be of type BSpline!" << std::endl;
       exit(-1);

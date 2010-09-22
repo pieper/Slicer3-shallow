@@ -1,43 +1,35 @@
-/*==============================================================================
+/*=auto=========================================================================
 
-  Program: 3D Slicer
+ Portions (c) Copyright 2005 Brigham and Women's Hospital (BWH) 
+ All Rights Reserved.
 
-  Copyright (c) 2010 Kitware Inc.
+ See Doc/copyright/copyright.txt
+ or http://www.slicer.org/copyright/copyright.txt for details.
 
-  See Doc/copyright/copyright.txt
-  or http://www.slicer.org/copyright/copyright.txt for details.
+ Program:   3D Slicer
 
-  Unless required by applicable law or agreed to in writing, software
-  distributed under the License is distributed on an "AS IS" BASIS,
-  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-  See the License for the specific language governing permissions and
-  limitations under the License.
-
-  This file was originally developed by Jean-Christophe Fillion-Robin, Kitware Inc.
-  and was partially funded by NIH grant 3P41RR013218-12S1
-
-==============================================================================*/
+=========================================================================auto=*/
 
 
 #ifndef __qSlicerCLILoadableModuleFactory_h
 #define __qSlicerCLILoadableModuleFactory_h
 
-// CTK includes
-#include <ctkPimpl.h>
-#include <ctkAbstractLibraryFactory.h>
-
-// SlicerQt includes
+/// SlicerQT includes
 #include "qSlicerAbstractModule.h"
 #include "qSlicerBaseQTCLIExport.h"
 
+/// qCTK includes
+#include <qCTKPimpl.h>
+#include <qCTKAbstractLibraryFactory.h>
+
 //-----------------------------------------------------------------------------
-class qSlicerCLILoadableModuleFactoryItem : public ctkFactoryLibraryItem<qSlicerAbstractCoreModule>
+class qSlicerCLILoadableModuleFactoryItem : public qCTKFactoryLibraryItem<qSlicerAbstractModule>
 {
 public:
   // Convenient typedef
-  typedef ctkFactoryLibraryItem<qSlicerAbstractCoreModule> Superclass;
+  typedef qCTKFactoryLibraryItem<qSlicerAbstractModule> Superclass;
   
-  explicit qSlicerCLILoadableModuleFactoryItem(const QString& itemPath);
+  explicit qSlicerCLILoadableModuleFactoryItem(const QString& itemKey, const QString& itemPath);
   virtual ~qSlicerCLILoadableModuleFactoryItem(){}
 
 protected:
@@ -45,31 +37,27 @@ protected:
   typedef qSlicerCLILoadableModuleFactoryItem Self;
   //typedef char * (*XMLModuleDescriptionFunction)();
 
-  virtual qSlicerAbstractCoreModule* instanciator();
+  virtual qSlicerAbstractModule* instanciator();
 };
 
 //-----------------------------------------------------------------------------
+class qSlicerCLILoadableModuleFactoryPrivate;
+
+//-----------------------------------------------------------------------------
 class Q_SLICER_BASE_QTCLI_EXPORT qSlicerCLILoadableModuleFactory :
-  public ctkAbstractLibraryFactory<qSlicerAbstractCoreModule>
+  public qCTKAbstractLibraryFactory<qSlicerAbstractModule,qSlicerCLILoadableModuleFactoryItem>
 {
 public:
 
-  typedef ctkAbstractLibraryFactory<qSlicerAbstractCoreModule> Superclass;
+  typedef qCTKAbstractLibraryFactory<qSlicerAbstractModule,
+                                     qSlicerCLILoadableModuleFactoryItem> Superclass;
   qSlicerCLILoadableModuleFactory();
+  virtual ~qSlicerCLILoadableModuleFactory(){}
 
-  /// Reimplemented to scan the directory of the command line modules
   virtual void registerItems();
 
-  ///
-  QString fileNameToKey(const QString& fileName)const;
-
-  ///
-  /// Extract module name given \a libraryName
-  /// \sa qSlicerUtils::extractModuleNameFromLibraryName
-  static QString extractModuleName(const QString& libraryName);
-protected: 
-  virtual ctkFactoryLibraryItem<qSlicerAbstractCoreModule>* createFactoryLibraryItem(
-    const QFileInfo& libraryFile)const;
+private:
+  QCTK_DECLARE_PRIVATE(qSlicerCLILoadableModuleFactory);
 };
 
 #endif

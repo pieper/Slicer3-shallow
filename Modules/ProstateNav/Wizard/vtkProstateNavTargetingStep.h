@@ -55,7 +55,7 @@ public:
   void RemoveMRMLObservers();
 
   void OnMultiColumnListUpdate(int row, int col, char * str);
-  void OnMultiColumnListSelectionChanged();
+  void OnMultiColumnListSelection();
   void UpdateTargetListGUI();
 
   void SetShowTargetOrientation(int show);
@@ -68,8 +68,6 @@ protected:
   void ShowTargetPlanningFrame();
   void ShowTargetListFrame();
   void ShowTargetControlFrame();
-
-  void ShowCoverage(bool show);
 
   void EnableAddTargetsOnClickButton(bool enable);
 
@@ -104,7 +102,8 @@ protected:
   vtkKWPushButton* LoadTargetingVolumeButton;
   vtkSlicerNodeSelectorWidget* VolumeSelectorWidget;
   vtkKWFrame *LoadVolumeDialogFrame;
-  vtkKWCheckButton *ShowCoverageButton;  
+  vtkKWCheckButton *ShowWorkspaceButton;  
+  vtkKWCheckButton *ShowRobotButton;  
   vtkKWCheckButton *AddTargetsOnClickButton;
   vtkKWMenuButtonWithLabel *NeedleTypeMenuList;  
   vtkMRMLFiducialListNode *TargetPlanListNode;

@@ -48,7 +48,6 @@ vtkMRMLInteractionNode::vtkMRMLInteractionNode()
   this->TransformModePersistence = 1;
   this->WindowLevelLock = 0;
   this->PlaceOperationLock = 0;
-
 }
 
 //----------------------------------------------------------------------------
@@ -103,10 +102,6 @@ int vtkMRMLInteractionNode::GetInteractionModeByString ( const char * modeString
     {
     return ( vtkMRMLInteractionNode::ViewZoom);
     }
-  else if ( !strcmp (modeString, "CustomTag" ))
-    {
-    return ( vtkMRMLInteractionNode::CustomTag);
-    }
   else
     {
     return (-1);
@@ -120,6 +115,8 @@ void vtkMRMLInteractionNode::NormalizeAllMouseModes()
   this->PlaceModePersistence = 0;
   this->TransformModePersistence = 1;
 }
+
+
 
 //----------------------------------------------------------------------------
 void vtkMRMLInteractionNode::SetPickModePersistence ( int val )
@@ -189,14 +186,13 @@ void vtkMRMLInteractionNode::SetCurrentInteractionMode ( int mode )
       this->CurrentInteractionMode = mode;
       this->InvokeEvent(this->InteractionModeChangedEvent, NULL);
       break;
-    case vtkMRMLInteractionNode::CustomTag:
-      this->CurrentInteractionMode = mode;
-      this->InvokeEvent(this->InteractionModeChangedEvent, NULL);
-      break;
     default:
       break;
     }
 }
+
+
+
 
 //----------------------------------------------------------------------------
 void vtkMRMLInteractionNode::WriteXML(ostream& of, int nIndent)
@@ -239,11 +235,7 @@ void vtkMRMLInteractionNode::WriteXML(ostream& of, int nIndent)
   else if ( this->GetCurrentInteractionMode() == vtkMRMLInteractionNode::ViewTransform )
     {
     of << indent << " currentInteractionMode=\"" << "ViewTransform" << "\"";    
-    }
-  else if ( this->GetCurrentInteractionMode() == vtkMRMLInteractionNode::CustomTag )
-    {
-    of << indent << " currentInteractionMode=\"" << "CustomTag" << "\"";
-    }
+    }  
 
   if ( this->GetLastInteractionMode() == vtkMRMLInteractionNode::PickManipulate )
     {
@@ -276,11 +268,7 @@ void vtkMRMLInteractionNode::WriteXML(ostream& of, int nIndent)
   else if ( this->GetLastInteractionMode() == vtkMRMLInteractionNode::ViewTransform )
     {
     of << indent << " lastInteractionMode=\"" << "ViewTransform" << "\"";    
-    }
-  else if ( this->GetLastInteractionMode() == vtkMRMLInteractionNode::CustomTag )
-    {
-    of << indent << " lastInteractionMode=\"" << "CustomTag" << "\"";
-    }
+    }  
 
 }
 
@@ -333,10 +321,6 @@ void vtkMRMLInteractionNode::ReadXMLAttributes(const char** atts)
         {
         this->CurrentInteractionMode = vtkMRMLInteractionNode::ViewTransform;
         }
-      else if ( !strcmp (attValue, "CustomTag" ))
-        {
-          this->CurrentInteractionMode = vtkMRMLInteractionNode::CustomTag;
-        }
       }
     else if (!strcmp(attName, "lastInteractionMode"))
       {
@@ -372,11 +356,8 @@ void vtkMRMLInteractionNode::ReadXMLAttributes(const char** atts)
         {
         this->LastInteractionMode = vtkMRMLInteractionNode::ViewTransform;
         }
-      else if ( !strcmp (attValue, "CustomTag" ))
-        {
-        this->LastInteractionMode = vtkMRMLInteractionNode::CustomTag;
-        }
       }
+    
     }
     
   this->EndModify(disabledModify);
@@ -397,7 +378,6 @@ void vtkMRMLInteractionNode::Copy(vtkMRMLNode *anode)
   vtkMRMLInteractionNode *node = (vtkMRMLInteractionNode *) anode;
 
   this->SetCurrentInteractionMode (node->GetCurrentInteractionMode());
-
   this->SetLastInteractionMode ( node->GetLastInteractionMode());
 
   this->EndModify(disabledModify);
@@ -451,9 +431,5 @@ const char * vtkMRMLInteractionNode::GetInteractionModeAsString(int mode)
     {
     return "ViewTransform";
     }
-  if (mode == this->CustomTag)
-      {
-      return "CustomTag";
-      }
   return "(unknown)";
 }

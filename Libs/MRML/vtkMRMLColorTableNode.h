@@ -159,7 +159,6 @@ public:
       FMRI = 8,
       FMRIPA = 9,
       Labels = 10,
-      Obsolete = 11,
       Random = 12,
       User = 13,
       File = 14,

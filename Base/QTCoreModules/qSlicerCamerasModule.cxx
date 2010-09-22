@@ -1,59 +1,33 @@
-/*==============================================================================
+/*=auto=========================================================================
 
-  Program: 3D Slicer
+ Portions (c) Copyright 2005 Brigham and Women's Hospital (BWH) 
+ All Rights Reserved.
 
-  Copyright (c) 2010 Kitware Inc.
+ See Doc/copyright/copyright.txt
+ or http://www.slicer.org/copyright/copyright.txt for details.
 
-  See Doc/copyright/copyright.txt
-  or http://www.slicer.org/copyright/copyright.txt for details.
+ Program:   3D Slicer
 
-  Unless required by applicable law or agreed to in writing, software
-  distributed under the License is distributed on an "AS IS" BASIS,
-  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-  See the License for the specific language governing permissions and
-  limitations under the License.
+=========================================================================auto=*/
 
-  This file was originally developed by Julien Finet, Kitware Inc.
-  and was partially funded by NIH grant 3P41RR013218-12S1
 
-==============================================================================*/
-
-// SlicerQt includes
 #include "qSlicerCamerasModule.h"
+
+// SlicerQT includes
 #include "qSlicerCamerasModuleWidget.h"
 
 //-----------------------------------------------------------------------------
-class qSlicerCamerasModulePrivate
+class qSlicerCamerasModulePrivate: public qCTKPrivate<qSlicerCamerasModule>
 {
 public:
+  QCTK_DECLARE_PUBLIC(qSlicerCamerasModule);
 };
 
 //-----------------------------------------------------------------------------
-qSlicerCamerasModule::qSlicerCamerasModule(QObject* _parent)
-  : Superclass(_parent)
-  , d_ptr(new qSlicerCamerasModulePrivate)
-{
-}
+QCTK_CONSTRUCTOR_1_ARG_CXX(qSlicerCamerasModule, QObject*);
 
 //-----------------------------------------------------------------------------
-qSlicerCamerasModule::~qSlicerCamerasModule()
-{
-}
-
-//-----------------------------------------------------------------------------
-QString qSlicerCamerasModule::category()const
-{
-  return "Developer Tools";
-}
-
-//-----------------------------------------------------------------------------
-QIcon qSlicerCamerasModule::icon()const
-{
-  return QIcon(":/Icons/Cameras.png");
-}
-
-//-----------------------------------------------------------------------------
-qSlicerAbstractModuleRepresentation * qSlicerCamerasModule::createWidgetRepresentation()
+qSlicerAbstractModuleWidget * qSlicerCamerasModule::createWidgetRepresentation()
 {
   return new qSlicerCamerasModuleWidget;
 }

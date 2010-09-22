@@ -997,8 +997,7 @@ int main(int argc, char** argv)
     // 
     // Setting up everything for new semgnetation mode with sourcing tcl file 
     //
-    vtkMRMLEMSTargetNode *inputNodes = emMRMLManager->GetTargetInputNode();
-    int newVersionFlag =  inputNodes->GetNumberOfInputChannelNames() ;
+    int newVersionFlag =  1;
     if (  newVersionFlag  ) 
        {
        // =======================================================================

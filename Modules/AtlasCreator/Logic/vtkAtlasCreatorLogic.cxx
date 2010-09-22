@@ -25,7 +25,7 @@ Version:   $Revision: 1.2 $
 // VTK includes
 #include "vtkObjectFactory.h"
 
-// STD includes
+// STL includes
 #include <string>
 #include <iostream>
 #include <sstream>

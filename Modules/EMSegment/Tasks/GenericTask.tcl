@@ -418,12 +418,12 @@ namespace eval EMSegmenterPreProcessingTcl {
            set outputAtlasNode [ $mrmlManager CloneAtlasNode $inputAtlasNode "Aligned"]
            $workingDN SetAlignedAtlasNodeID [$outputAtlasNode GetID]
         } else {
-        puts "Atlas was just synchronized"
+            puts "Atlas was just synchronized"
             $mrmlManager SynchronizeAtlasNode $inputAtlasNode $outputAtlasNode AlignedAtlas
         }
 
         set fixedTargetChannel 0
-    set fixedTargetVolumeNode [$subjectNode GetNthVolumeNode $fixedTargetChannel]
+        set fixedTargetVolumeNode [$subjectNode GetNthVolumeNode $fixedTargetChannel]
         if { [$fixedTargetVolumeNode GetImageData] == "" } {
         PrintError "RegisterAtlas: Fixed image is null, skipping registration"
         return 1;

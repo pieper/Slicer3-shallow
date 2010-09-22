@@ -45,8 +45,6 @@ public:
   virtual void HomeModuleCallback(char *name);
   virtual void TemporaryDirectoryCallback();
   virtual void LoadCommandLineModulesCallback(int state);
-  virtual void RedirectModuleStreamsCallback(int state);
-  virtual void DeleteTemporaryFilesCallback(int state);
   virtual void LoadModulesCallback(int state);
   virtual int  ModulePathsAddCallback();
   virtual void ModulePathsHasChangedCallback(int id);
@@ -123,8 +121,6 @@ private:
   vtkKWRadioButtonSet *FontFamilyButtons;
   vtkKWCheckButton  *LoadModulesCheckButton;
   vtkKWCheckButton  *LoadCommandLineModulesCheckButton;
-  vtkKWCheckButton  *RedirectModuleStreamsCheckButton;
-  vtkKWCheckButton  *DeleteTemporaryFilesCheckButton;
   vtkKWCheckButton  *EnableDaemonCheckButton;
 
   vtkKWFrameWithLabel *RemoteCacheSettingsFrame;

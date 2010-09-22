@@ -53,7 +53,6 @@ public:
   void PrintSelf(ostream& os, vtkIndent indent);
 
   /// access methods
-  vtkGetObjectMacro(RulerFromFiducialsButton, vtkKWPushButton);
   vtkGetObjectMacro(VisibilityButton, vtkKWPushButton);
   vtkGetObjectMacro(DistanceAnnotationVisibilityButton, vtkKWPushButton);
   vtkGetObjectMacro (AllVisibilityMenuButton, vtkKWMenuButton);
@@ -196,11 +195,7 @@ protected:
   ///
   /// generate a report about all rulers
   vtkKWLoadSaveButton *ReportButton;
-
-  ///
-  /// button to create a ruler from the last two selected fiducials on the
-  /// active fiducial list
-  vtkKWPushButton *RulerFromFiducialsButton;
+  
   /// 
   /// visibility button
   vtkKWPushButton *VisibilityButton;

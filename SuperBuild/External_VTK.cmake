@@ -25,12 +25,12 @@ if(NOT DEFINED VTK_DIR OR NOT DEFINED VTK_SOURCE_DIR)
       list(APPEND VTK_DEPENDENCIES tk)
     endif(NOT WIN32)
     set(VTK_WRAP_TCL ON)
-  endif()
+  endif(Slicer3_USE_KWWIDGETS)
 
   if (Slicer3_USE_PYTHONQT)
     set(VTK_WRAP_PYTHON ON)
     list(APPEND VTK_DEPENDENCIES python)
-  endif()
+  endif(Slicer3_USE_PYTHONQT)
 
   set(VTK_PYTHON_ARGS)
   if(Slicer3_USE_PYTHON OR Slicer3_USE_PYTHONQT)
@@ -38,7 +38,7 @@ if(NOT DEFINED VTK_DIR OR NOT DEFINED VTK_SOURCE_DIR)
       -DPYTHON_INCLUDE_DIR:PATH=${slicer_PYTHON_INCLUDE}
       -DPYTHON_LIBRARY:FILEPATH=${slicer_PYTHON_LIBRARY}
       )
-  endif()
+  endif(Slicer3_USE_PYTHON OR Slicer3_USE_PYTHONQT)
 
   # On Mac, since:
   #    - Qt can't be build with X11 support
@@ -55,7 +55,7 @@ if(NOT DEFINED VTK_DIR OR NOT DEFINED VTK_SOURCE_DIR)
         -DVTK_USE_QT:BOOL=ON
         -DQT_QMAKE_EXECUTABLE:FILEPATH=${QT_QMAKE_EXECUTABLE}
         )
-    endif()
+    endif(Slicer3_USE_QT)
   else()
     if(Slicer3_USE_KWWIDGETS AND NOT Slicer3_USE_QT)
       set(VTK_QT_ARGS
@@ -122,8 +122,7 @@ if(NOT DEFINED VTK_DIR OR NOT DEFINED VTK_SOURCE_DIR)
   ExternalProject_Add(${proj}
     SOURCE_DIR ${CMAKE_BINARY_DIR}/${proj}
     BINARY_DIR ${proj}-build
-    GIT_REPOSITORY "${git_protocol}://github.com/Slicer/VTK.git"
-    GIT_TAG "slicer-4.0"
+    GIT_REPOSITORY "${git_protocol}://github.com/pieper/SlicerVTK.git"
     CMAKE_GENERATOR ${gen}
     CMAKE_ARGS
       -DCMAKE_CXX_FLAGS:STRING=${CMAKE_CXX_FLAGS}
@@ -138,7 +137,6 @@ if(NOT DEFINED VTK_DIR OR NOT DEFINED VTK_SOURCE_DIR)
       -DVTK_USE_RPATH:BOOL=ON
       ${VTK_TCL_ARGS}
       -DVTK_WRAP_PYTHON:BOOL=${VTK_WRAP_PYTHON}
-      -DVTK_INSTALL_PYTHON_USING_CMAKE:BOOL=ON
       ${VTK_PYTHON_ARGS}
       ${VTK_QT_ARGS}
       ${VTK_MAC_ARGS}

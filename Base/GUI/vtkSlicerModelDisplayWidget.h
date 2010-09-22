@@ -39,7 +39,6 @@
 
 #include "vtkSlicerModelHierarchyLogic.h"
 
-class vtkKWEntryWithLabel;
 class VTK_SLICER_BASE_GUI_EXPORT vtkSlicerModelDisplayWidget : public vtkSlicerWidget
 {
   
@@ -85,7 +84,7 @@ public:
   vtkGetObjectMacro( ModelHierarchyLogic, vtkSlicerModelHierarchyLogic );
   vtkSetObjectMacro( ModelHierarchyLogic, vtkSlicerModelHierarchyLogic );
 
-protected:
+ protected:
   vtkSlicerModelDisplayWidget();
   virtual ~vtkSlicerModelDisplayWidget();
 
@@ -103,9 +102,6 @@ protected:
   vtkKWCheckButtonWithLabel *SelectedButton;
   vtkKWCheckButtonWithLabel *VisibilityButton;
   vtkKWCheckButtonWithLabel *ScalarVisibilityButton;
-  vtkKWCheckButtonWithLabel *AutoScalarRangeCheckButton;
-  vtkKWEntryWithLabel  *MinScalarRangeEntry;
-  vtkKWEntryWithLabel  *MaxScalarRangeEntry;
   vtkKWMenuButtonWithLabel *ScalarMenu;
   vtkSlicerNodeSelectorWidget* ColorSelectorWidget;
   vtkKWCheckButtonWithLabel *ClippingButton;
@@ -124,7 +120,7 @@ protected:
 
   int UpdatingMRML;
   int UpdatingWidget;
-
+  
 private:
 
 

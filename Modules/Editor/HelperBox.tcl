@@ -174,7 +174,6 @@ itcl::body HelperBox::select { } {
       $this colorSelectDialog
     }
   }
-  EffectSWidget::RotateToVolumePlanes ;# make sure slices are aligned to volumes
   [$o(mergeName) GetWidget] SetText $mergeText
   $this updateStructures
 }

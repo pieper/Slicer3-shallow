@@ -7,6 +7,7 @@
 
 #include "vtkSmartPointer.h"
 #include "vtkKWCompositeWidget.h"
+#include "vtkSlicerRenderWidget.h"
 #include "vtkKWGenericRenderWindowInteractor.h"
 #include <vector>
 //#include "vtkImageMapper.h"

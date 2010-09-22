@@ -1,43 +1,37 @@
-/*==============================================================================
+/*=auto=========================================================================
 
-  Program: 3D Slicer
+ Portions (c) Copyright 2005 Brigham and Women's Hospital (BWH) 
+ All Rights Reserved.
 
-  Copyright (c) 2010 Kitware Inc.
+ See Doc/copyright/copyright.txt
+ or http://www.slicer.org/copyright/copyright.txt for details.
 
-  See Doc/copyright/copyright.txt
-  or http://www.slicer.org/copyright/copyright.txt for details.
+ Program:   3D Slicer
 
-  Unless required by applicable law or agreed to in writing, software
-  distributed under the License is distributed on an "AS IS" BASIS,
-  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-  See the License for the specific language governing permissions and
-  limitations under the License.
+=========================================================================auto=*/
 
-  This file was originally developed by Jean-Christophe Fillion-Robin, Kitware Inc.
-  and was partially funded by NIH grant 3P41RR013218-12S1
-
-==============================================================================*/
 
 #ifndef __qSlicerCLIModuleWidget_p_h
 #define __qSlicerCLIModuleWidget_p_h
 
-// Qt includes
-#include <QHash>
-#include <QList>
-
-// CTK includes
-#include <ctkPimpl.h>
-
-// SlicerQt includes
 #include "qSlicerCLIModuleWidget.h"
 #include "ui_qSlicerCLIModule.h"
+
+/// SlicerQT includes
 #include "qSlicerCLIModuleWidget.h"
 #include "qSlicerWidget.h"
 
-// ModuleDescriptionParser includes
+/// qCTK includes
+#include <qCTKPimpl.h>
+
+/// QT includes
+#include <QHash>
+#include <QList>
+
+/// ModuleDescriptionParser includes
 #include <ModuleDescription.h>
 
-// STD includes
+/// STL includes
 #include <vector>
 
 class vtkSlicerCLIModuleLogic; 
@@ -46,19 +40,52 @@ class QBoxLayout;
 class vtkMRMLCommandLineModuleNode; 
 
 //-----------------------------------------------------------------------------
-class qSlicerCLIModuleUIHelper; 
+class WidgetValueWrapper
+{
+public:
+  WidgetValueWrapper(const QString& _label):Label(_label){}
+  virtual QVariant value()const = 0;
+  QString label(){ return this->Label; }
+  QString Label; 
+};
+
+//-----------------------------------------------------------------------------
+#define WIDGET_VALUE_WRAPPER(_NAME, _WIDGET, _VALUE_GETTER)           \
+namespace{                                                            \
+class _NAME##WidgetValueWrapper: public WidgetValueWrapper            \
+{                                                                     \
+public:                                                               \
+  _NAME##WidgetValueWrapper(const QString& _label, _WIDGET * widget): \
+    WidgetValueWrapper(_label), Widget(widget){}                      \
+  virtual QVariant value()const                                       \
+    {                                                                 \
+    QVariant _value(this->Widget->_VALUE_GETTER());                   \
+    return _value;                                                    \
+    }                                                                 \
+  _WIDGET* Widget;                                                    \
+};                                                                    \
+}
+
+//-----------------------------------------------------------------------------
+#define INSTANCIATE_WIDGET_VALUE_WRAPPER(_NAME, _LABEL, _WIDGET_INSTANCE)  \
+this->WidgetValueWrappers.push_back(new _NAME##WidgetValueWrapper(_LABEL, _WIDGET_INSTANCE));
 
 //-----------------------------------------------------------------------------
 class qSlicerCLIModuleWidgetPrivate: public QObject,
+                                     public qCTKPrivate<qSlicerCLIModuleWidget>,
                                      public Ui_qSlicerCLIModule
 {
   Q_OBJECT
-  Q_DECLARE_PUBLIC(qSlicerCLIModuleWidget);
-protected:
-  qSlicerCLIModuleWidget* const q_ptr;
+  QCTK_DECLARE_PUBLIC(qSlicerCLIModuleWidget);
+  
 public:
   typedef qSlicerCLIModuleWidgetPrivate Self;
-  qSlicerCLIModuleWidgetPrivate(qSlicerCLIModuleWidget& object);
+  qSlicerCLIModuleWidgetPrivate()
+    {
+    this->ProcessInformation = 0;
+    this->Name = "NA";
+    this->CommandLineModuleNode = 0; 
+    }
   
   /// 
   /// Convenient function to cast vtkSlicerLogic into vtkSlicerCLIModuleLogic
@@ -74,12 +101,27 @@ public:
   typedef std::vector<ModuleParameter>::const_iterator ParameterConstIterator;
   typedef std::vector<ModuleParameter>::iterator       ParameterIterator;
 
+  typedef std::vector<std::string>::const_iterator ElementConstIterator;
+  typedef std::vector<std::string>::iterator       ElementIterator;
+
 
   /// 
   /// Calling this method will loop trough the structure resulting
   /// from the XML parsing and generate the corresponding UI.
-  virtual void setupUi(qSlicerWidget* widget);
+  void setupUi(qSlicerWidget* widget);
+  
+  /// 
+  /// Initiliaze the maps containing the mapping
+  ///   parameter type -> MRML node type (classname)
+  static void initializeMaps();
 
+  /// 
+  /// Convenient method allowing to retrieve the node type associated
+  /// with the parameter type
+  static QString nodeTypeFromMap(const QString& defaultValue,
+                                 const QHash<QString, QString>& map,
+                                 const QString& attribute);
+                                 
   /// 
   void addParameterGroups();
   void addParameterGroup(QBoxLayout* layout,
@@ -89,17 +131,43 @@ public:
   void addParameters(QFormLayout* layout, const ModuleParameterGroup& parameterGroup);
   void addParameter(QFormLayout* layout, const ModuleParameter& moduleParameter);
 
+  /// 
+  /// Create widget corresponding to the different parameters
+  QWidget* createIntegerTagWidget(const ModuleParameter& moduleParameter);
+  QWidget* createBooleanTagWidget(const ModuleParameter& moduleParameter);
+  QWidget* createFloatTagWidget(const ModuleParameter& moduleParameter);
+  QWidget* createDoubleTagWidget(const ModuleParameter& moduleParameter);
+  QWidget* createStringTagWidget(const ModuleParameter& moduleParameter);
+  QWidget* createPointTagWidget(const ModuleParameter& moduleParameter);
+  QWidget* createRegionTagWidget(const ModuleParameter& moduleParameter);
+  QWidget* createImageTagWidget(const ModuleParameter& moduleParameter);
+  QWidget* createGeometryTagWidget(const ModuleParameter& moduleParameter);
+  QWidget* createTableTagWidget(const ModuleParameter& moduleParameter);
+  QWidget* createTransformTagWidget(const ModuleParameter& moduleParameter);
+  QWidget* createDirectoryTagWidget(const ModuleParameter& moduleParameter);
+  QWidget* createFileTagWidget(const ModuleParameter& moduleParameter);
+  QWidget* createEnumerationTagWidget(const ModuleParameter& moduleParameter);
+
+  /// 
+  /// Update MRMLCommandLineModuleNode properties using value entered using the UI
+  void updateMRMLCommandLineModuleNode();
+
 public slots:
+  void onApplyButtonPressed();
+  void onCancelButtonPressed();
+  void onDefaultButtonPressed();
+
   void enableCommandButtonState(bool enable);
 
-  /// Update the ui base on the command line module node
-  void updateUiFromCommandLineModuleNode(vtkObject* commandLineModuleNode);
-  void updateCommandLineModuleNodeFromUi(vtkObject* commandLineModuleNode);
-
-  void setDefaultNodeValue(vtkMRMLNode* commandLineModuleNode);
-  void onValueChanged(const QString& name, const QVariant& type);
-
 public:
+
+  /// Map used to store the different relation
+  ///  parameter type -> MRML node type
+  static bool MapInitialized; 
+  static QHash<QString, QString> ImageTypeAttributeToNodeType;
+  static QHash<QString, QString> GeometryTypeAttributeToNodeType;
+  static QHash<QString, QString> TableTypeAttributeToNodeType;
+  static QHash<QString, QString> TransformTypeAttributeToNodeType;  
 
   QString           Name;
   QString           Title;
@@ -108,13 +176,11 @@ public:
 
   std::vector<ModuleParameterGroup> ParameterGroups;
   ModuleProcessInformation*         ProcessInformation;
-  ModuleDescription                 ModuleDescriptionObject;
 
-  qSlicerCLIModuleUIHelper* CLIModuleUIHelper; 
+  QList<WidgetValueWrapper*> WidgetValueWrappers; 
   
   vtkMRMLCommandLineModuleNode* CommandLineModuleNode;
   QString                       ModuleEntryPoint;
-  QString                       ModuleType;
 };
 
 

@@ -47,7 +47,7 @@ int vtkMRMLStorageNodeTest1(int , char * [] )
   vtkSmartPointer< vtkMRMLStorageNodeTestHelper1 > node1 = vtkSmartPointer< vtkMRMLStorageNodeTestHelper1 >::New();
 
   EXERCISE_BASIC_OBJECT_METHODS( node1 );
-  
+
   vtkMRMLNode * newNode = node1->CreateNodeInstance();
 
   if( newNode == NULL )
@@ -56,8 +56,6 @@ int vtkMRMLStorageNodeTest1(int , char * [] )
     return EXIT_FAILURE;
     }
 
-  EXERCISE_BASIC_STORAGE_MRML_METHODS(vtkMRMLStorageNodeTestHelper1, node1);
-  
   newNode->Delete();
 
   return EXIT_SUCCESS;

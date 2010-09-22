@@ -105,10 +105,6 @@ itcl::body VolumeDisplaySWidget::positionActors { } {
 
 itcl::body VolumeDisplaySWidget::processEvent { {caller ""} {event ""} } {
 
-  if { $enabled != "true" } {
-    return
-  }
-
   if { [info command $sliceGUI] == "" || [$sliceGUI GetLogic] == "" } {
     # the sliceGUI was deleted behind our back, so we need to 
     # self destruct
@@ -164,8 +160,7 @@ itcl::body VolumeDisplaySWidget::processEvent { {caller ""} {event ""} } {
           foreach {startx starty} $_startPosition {currx curry} $_currentPosition {}
           set offx [expr $currx - $startx]
           set offy [expr $curry - $starty]
-          set imageData [$_layers(background,node) GetImageData]
-          set range [$imageData GetScalarRange]
+          set range [[$_layers(background,node) GetImageData] GetScalarRange]
           foreach {rangelo rangehi} $range {}
           # each pixel should be 1/500 of the scalar range
           set gain [expr ($rangehi - $rangelo) / 500.]

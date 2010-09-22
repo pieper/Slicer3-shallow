@@ -320,22 +320,6 @@ void vtkProstateNavCalibrationStep::ShowZFrameModel(bool show)
   this->MRMLScene->Modified();
 }
 
-
-//----------------------------------------------------------------------------
-void vtkProstateNavCalibrationStep::ShowWorkspaceModel(bool show)
-{
-
-  vtkMRMLModelNode*   modelNode = vtkMRMLModelNode::SafeDownCast(this->MRMLScene->GetNodeByID(this->GetProstateNavManager()->GetRobotNode()->GetWorkspaceObjectModelId()));
-  if (modelNode)
-    {
-    vtkMRMLDisplayNode* displayNode = modelNode->GetDisplayNode();
-    displayNode->SetVisibility(show);
-    modelNode->Modified();
-    this->MRMLScene->Modified();
-    }
-}
-
-
 /*
 //----------------------------------------------------------------------------
 const char* vtkProstateNavCalibrationStep::AddZFrameTransform(const char* nodeName)

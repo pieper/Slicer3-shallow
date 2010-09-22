@@ -18,7 +18,7 @@
 #include "vtkKWPushButton.h"
 #include "vtkKWMessageDialog.h"
 
-// STD includes
+// STL includes
 #include <string>
 #include <iostream>
 #include <sstream>
@@ -211,7 +211,7 @@ vtkIntArray *vtkModelMirrorGUI::NewObservableEvents()
  vtkIntArray *events = vtkIntArray::New();
   events->InsertNextValue(vtkMRMLScene::NodeAddedEvent);
   events->InsertNextValue(vtkMRMLScene::NodeRemovedEvent);
-  events->InsertNextValue(vtkMRMLScene::SceneClosedEvent);
+  events->InsertNextValue(vtkMRMLScene::SceneCloseEvent);
   // Slicer3.cxx calls delete on events
   return events;
 }

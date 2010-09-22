@@ -17,12 +17,11 @@
 
 #ifdef Slicer3_USE_QT
 
-#include "qSlicerAbstractCoreModule.h"
-#include "qSlicerAbstractModulePanel.h"
 #include "qSlicerApplication.h"
-#include "qSlicerIOManager.h"
-#include "qSlicerModuleManager.h"
 #include "qSlicerModulePanel.h"
+#include "qSlicerAbstractModule.h"
+#include "qSlicerAbstractModulePanel.h"
+#include "qSlicerModuleManager.h"
 
 // Qt includes
 #include <QDebug>
@@ -107,7 +106,7 @@
 #include "slicerPython.h"
 #endif
 
-// STD includes
+// STL includes
 #include <sstream>
 #include <string>
 
@@ -387,19 +386,17 @@ void vtkSlicerApplicationGUI::ProcessLoadSceneCommand()
     vtkErrorMacro ( "ProcessLoadSceneCommand: Got NULL MRMLScene." );
     return;
     }
-  if ( this->MainSlicerWindow == NULL )
-    {
-    vtkErrorMacro ( "ProcessLoadSceneCommand: Got NULL SlicerWindow." );
-    return;
-    }
   if ( this->LoadSceneDialog == NULL )
     {
     vtkErrorMacro ( "ProcessLoadSceneCommand: Got NULL LoadSceneDialog." );
     return;
     }
-#ifdef Slicer3_USE_QT
-  qSlicerApplication::application()->ioManager()->openLoadSceneDialog();
-#else
+  if ( this->MainSlicerWindow == NULL )
+    {
+    vtkErrorMacro ( "ProcessLoadSceneCommand: Got NULL SlicerWindow." );
+    return;
+    }
+
   if ( !this->LoadSceneDialog->IsCreated() )
     {
     this->LoadSceneDialog->SetParent ( this->MainSlicerWindow );
@@ -517,11 +514,9 @@ void vtkSlicerApplicationGUI::ProcessLoadSceneCommand()
                                                                       vtkMRMLInteractionNode::InteractionModeChangedEvent );
       }
     }
-
+  
   progressDialog->SetParent(NULL);
   progressDialog->Delete();
-#endif
-
   return;
 }
 
@@ -551,9 +546,7 @@ void vtkSlicerApplicationGUI::ProcessImportSceneCommand()
     vtkErrorMacro ( "ProcessImportSceneCommand: Got NULL SlicerWindow." );
     return;
     }
-#ifdef Slicer3_USE_QT
-  qSlicerApplication::application()->ioManager()->openAddSceneDialog();
-#else
+
   if ( !this->LoadSceneDialog->IsCreated() )
     {
     this->LoadSceneDialog->SetParent ( this->MainSlicerWindow );
@@ -607,9 +600,9 @@ void vtkSlicerApplicationGUI::ProcessImportSceneCommand()
       dialog->Delete();
       }
     }
+
   progressDialog->SetParent(NULL);
   progressDialog->Delete();
-#endif
   return;
 }
 
@@ -804,31 +797,19 @@ void vtkSlicerApplicationGUI::DownloadSampleVolume(const char *uri)
 //---------------------------------------------------------------------------
 void vtkSlicerApplicationGUI::ProcessAddDataCommand()
 {
-#ifdef Slicer3_USE_QT
-  qSlicerApplication::application()->ioManager()->openAddDataDialog();
-#else
   this->GetApplication()->Script("::Loader::ShowDialog");
-#endif
 }
 
 //---------------------------------------------------------------------------
 void vtkSlicerApplicationGUI::ProcessAddVolumeCommand()
 {
-#ifdef Slicer3_USE_QT
-  qSlicerApplication::application()->ioManager()->openAddVolumeDialog();
-#else
   this->GetApplication()->Script("::LoadVolume::ShowDialog");
-#endif
 }
 
 //---------------------------------------------------------------------------
 void vtkSlicerApplicationGUI::ProcessAddTransformCommand()
 {
-#ifdef Slicer3_USE_QT
-  qSlicerApplication::application()->ioManager()->openAddTransformDialog();
-#else
   this->GetApplication()->Script("::LoadTransform::ShowDialog");
-#endif
 }
 
 //---------------------------------------------------------------------------
@@ -953,7 +934,7 @@ const char* vtkSlicerApplicationGUI::GetCurrentLayoutStringName ( )
         {
         return ( "Conventional layout" );
         }
-      else if ( layout == vtkMRMLLayoutNode::SlicerLayoutSideBySideLightboxView )
+      else if ( layout == vtkMRMLLayoutNode::SlicerLayoutSideBySideCompareView )
         {
         return ( "Side-by-side Compare layout" );
         }
@@ -1083,8 +1064,6 @@ void vtkSlicerApplicationGUI::UpdateLayout ( )
 #endif
     this->RepackMainViewer (vtkMRMLLayoutNode::SlicerLayoutInitialView, NULL );
     this->SetCurrentLayout ( vtkMRMLLayoutNode::SlicerLayoutInitialView );
-    //TEST
-    this->ApplicationToolbar->ResumeViewRockOrSpin(mode);
     }
   else if ( target == vtkMRMLLayoutNode::SlicerLayoutConventionalView &&
       this->GetCurrentLayout()!= vtkMRMLLayoutNode::SlicerLayoutConventionalView )
@@ -1094,8 +1073,6 @@ void vtkSlicerApplicationGUI::UpdateLayout ( )
 #endif
     this->RepackMainViewer (vtkMRMLLayoutNode::SlicerLayoutConventionalView, NULL );
     this->SetCurrentLayout ( vtkMRMLLayoutNode::SlicerLayoutConventionalView );
-    //TEST
-    this->ApplicationToolbar->ResumeViewRockOrSpin(mode);
     }
   else if ( target == vtkMRMLLayoutNode::SlicerLayoutDual3DView &&
       this->GetCurrentLayout()!= vtkMRMLLayoutNode::SlicerLayoutDual3DView )
@@ -1105,8 +1082,6 @@ void vtkSlicerApplicationGUI::UpdateLayout ( )
 #endif
     this->RepackMainViewer (vtkMRMLLayoutNode::SlicerLayoutDual3DView, NULL );
     this->SetCurrentLayout ( vtkMRMLLayoutNode::SlicerLayoutDual3DView );
-    //TEST
-    this->ApplicationToolbar->ResumeViewRockOrSpin(mode);
     }
   else if ( target == vtkMRMLLayoutNode::SlicerLayoutOneUp3DView &&
             this->GetCurrentLayout()!= vtkMRMLLayoutNode::SlicerLayoutOneUp3DView )
@@ -1116,8 +1091,6 @@ void vtkSlicerApplicationGUI::UpdateLayout ( )
 #endif
     this->RepackMainViewer ( vtkMRMLLayoutNode::SlicerLayoutOneUp3DView, NULL);
     this->SetCurrentLayout ( vtkMRMLLayoutNode::SlicerLayoutOneUp3DView );
-    //TEST
-    this->ApplicationToolbar->ResumeViewRockOrSpin(mode);
     }
   else if ( target == vtkMRMLLayoutNode::SlicerLayoutFourUpView &&
             this->GetCurrentLayout()!= vtkMRMLLayoutNode::SlicerLayoutFourUpView)
@@ -1127,8 +1100,6 @@ void vtkSlicerApplicationGUI::UpdateLayout ( )
 #endif
     this->RepackMainViewer ( vtkMRMLLayoutNode::SlicerLayoutFourUpView, NULL );
     this->SetCurrentLayout ( vtkMRMLLayoutNode::SlicerLayoutFourUpView );
-    //TEST
-    this->ApplicationToolbar->ResumeViewRockOrSpin(mode);
     }
   else if ( target == vtkMRMLLayoutNode::SlicerLayoutTabbed3DView &&
             this->GetCurrentLayout()!= vtkMRMLLayoutNode::SlicerLayoutTabbed3DView )
@@ -1138,8 +1109,6 @@ void vtkSlicerApplicationGUI::UpdateLayout ( )
 #endif
     this->RepackMainViewer ( vtkMRMLLayoutNode::SlicerLayoutTabbed3DView, NULL );
     this->SetCurrentLayout ( vtkMRMLLayoutNode::SlicerLayoutTabbed3DView );
-    //TEST
-    this->ApplicationToolbar->ResumeViewRockOrSpin(mode);
     }
   else if ( target == vtkMRMLLayoutNode::SlicerLayoutTabbedSliceView &&
             this->GetCurrentLayout()!= vtkMRMLLayoutNode::SlicerLayoutTabbedSliceView )
@@ -1195,14 +1164,14 @@ void vtkSlicerApplicationGUI::UpdateLayout ( )
     this->RepackMainViewer ( vtkMRMLLayoutNode::SlicerLayoutOneUpRedSliceView, "Red");
     this->SetCurrentLayout ( vtkMRMLLayoutNode::SlicerLayoutOneUpRedSliceView );
     }
-  else if ( (target == vtkMRMLLayoutNode::SlicerLayoutSideBySideLightboxView ) )
+  else if ( (target == vtkMRMLLayoutNode::SlicerLayoutSideBySideCompareView ) )
     {
     // TO DO
 #ifndef TOOLBAR_DEBUG
     mode = this->ApplicationToolbar->StopViewRockOrSpin();
 #endif
-    this->RepackMainViewer ( vtkMRMLLayoutNode::SlicerLayoutSideBySideLightboxView, NULL );
-    this->SetCurrentLayout ( vtkMRMLLayoutNode::SlicerLayoutSideBySideLightboxView);
+    this->RepackMainViewer ( vtkMRMLLayoutNode::SlicerLayoutSideBySideCompareView, NULL );
+    this->SetCurrentLayout ( vtkMRMLLayoutNode::SlicerLayoutSideBySideCompareView);
     }
   else if ( (target == vtkMRMLLayoutNode::SlicerLayoutCompareView) )
     {
@@ -1301,9 +1270,6 @@ vtkMRMLLayoutNode *vtkSlicerApplicationGUI::GetGUILayoutNode()
 //---------------------------------------------------------------------------
 void vtkSlicerApplicationGUI::ProcessSaveSceneAsCommand()
 {
-#ifdef Slicer3_USE_QT
-  qSlicerApplication::application()->ioManager()->openSaveDataDialog();
-#else
   this->SaveDataWidget->SetAndObserveMRMLScene(this->GetMRMLScene());
   this->SaveDataWidget->AddObserver ( vtkSlicerMRMLSaveDataWidget::DataSavedEvent,  (vtkCommand *)this->GUICallbackCommand );
   this->SaveDataWidget->SetVersion(this->GetSlicerApplication()->GetSvnRevision());
@@ -1311,7 +1277,6 @@ void vtkSlicerApplicationGUI::ProcessSaveSceneAsCommand()
 
   this->SaveDataWidget->RemoveObservers ( vtkSlicerMRMLSaveDataWidget::DataSavedEvent,  (vtkCommand *)this->GUICallbackCommand );
   return;
-#endif
 }
 
 //---------------------------------------------------------------------------
@@ -1630,7 +1595,7 @@ void vtkSlicerApplicationGUI::ProcessMRMLEvents ( vtkObject *caller,
     }
   else if (scene != NULL &&
            scene == this->MRMLScene &&
-           event == vtkMRMLScene::SceneAboutToBeClosedEvent )
+           event == vtkMRMLScene::SceneClosingEvent )
     {
     this->SceneClosing = true;
     // scene closing, let's try to release all the dependencies
@@ -1638,7 +1603,7 @@ void vtkSlicerApplicationGUI::ProcessMRMLEvents ( vtkObject *caller,
     }
   else if (scene != NULL &&
            scene == this->MRMLScene &&
-           event == vtkMRMLScene::SceneClosedEvent )
+           event == vtkMRMLScene::SceneCloseEvent )
     {
     // is the scene closing?
     this->SceneClosing = true;
@@ -1665,7 +1630,7 @@ void vtkSlicerApplicationGUI::ProcessMRMLEvents ( vtkObject *caller,
     }
   else if ( scene != NULL &&
             scene == this->MRMLScene &&
-            event == vtkMRMLScene::ImportProgressFeedbackEvent )
+            event == vtkMRMLScene::LoadProgressFeedbackEvent )
     {
     this->UpdateLoadStatusText();
     }
@@ -1807,12 +1772,6 @@ void vtkSlicerApplicationGUI::SelectModuleForNode ( vtkMRMLNode *node )
     {
     moduleName = "Color";
     }
-  else if (node->IsA("vtkMRMLCameraNode"))
-    {
-    // disable this for now, as swapping views when select a new view from the
-    //View drop down in the Cameras gui isn't working
-    //moduleName = "Cameras";
-    }
   if (moduleName)
     {
     this->SelectModule(moduleName, node);
@@ -1917,11 +1876,11 @@ void vtkSlicerApplicationGUI::BuildGUI ( )
   // Observe an event that updates the status text during loading of data.
 
   vtkIntArray *events = vtkIntArray::New();
-  events->InsertNextValue(vtkMRMLScene::ImportProgressFeedbackEvent);
+  events->InsertNextValue(vtkMRMLScene::LoadProgressFeedbackEvent);
   events->InsertNextValue(vtkMRMLScene::SaveProgressFeedbackEvent);
   events->InsertNextValue( vtkMRMLScene::NodeAddedEvent );
   events->InsertNextValue( vtkMRMLScene::NodeRemovedEvent );
-  events->InsertNextValue( vtkMRMLScene::SceneClosedEvent );
+  events->InsertNextValue( vtkMRMLScene::SceneCloseEvent );
   events->InsertNextValue( vtkCommand::ModifiedEvent );
   this->SetAndObserveMRMLSceneEvents (this->MRMLScene, events );
   events->Delete();
@@ -2822,17 +2781,7 @@ void vtkSlicerApplicationGUI::UpdateActiveViewerWidgetDependencies(
   
 #ifndef VIEWCONTROL_DEBUG
   vtkSlicerViewControlGUI *vcGUI = this->GetViewControlGUI ( );
-  if (vcGUI != NULL)
-    {
-    if (active_viewer != NULL)
-      {
-      vcGUI->SetViewNode( active_viewer->GetViewNode());
-      }
-    else
-      {
-      vcGUI->SetViewNode(NULL);
-      }
-    }
+  vcGUI->SetViewNode(active_viewer ? active_viewer->GetViewNode() : NULL);
   //this->InitializeViewControlGUI();
 #endif
 
@@ -3112,8 +3061,8 @@ void vtkSlicerApplicationGUI::PackMainViewer ( int arrangmentType, const char *w
         case vtkMRMLLayoutNode::SlicerLayoutLightboxView:
           this->PackLightboxView ( );
           break;
-        case vtkMRMLLayoutNode::SlicerLayoutSideBySideLightboxView:
-          this->PackSideBySideLightboxView();
+        case vtkMRMLLayoutNode::SlicerLayoutSideBySideCompareView:
+          this->PackSideBySideCompareView();
           break;
         case vtkMRMLLayoutNode::SlicerLayoutCompareView:
           this->PackCompareView();
@@ -3170,8 +3119,8 @@ void vtkSlicerApplicationGUI::UnpackMainViewer ( )
         case vtkMRMLLayoutNode::SlicerLayoutLightboxView:
           this->UnpackLightboxView ( );
           break;
-        case vtkMRMLLayoutNode::SlicerLayoutSideBySideLightboxView:
-          this->UnpackSideBySideLightboxView();
+        case vtkMRMLLayoutNode::SlicerLayoutSideBySideCompareView:
+          this->UnpackSideBySideCompareView();
           break;
         case vtkMRMLLayoutNode::SlicerLayoutCompareView:
           this->UnpackCompareView();
@@ -3733,7 +3682,7 @@ void vtkSlicerApplicationGUI::PackTabbedSliceView ( )
 }
 
 //---------------------------------------------------------------------------
-void vtkSlicerApplicationGUI::PackSideBySideLightboxView()
+void vtkSlicerApplicationGUI::PackSideBySideCompareView()
 {
 
     if ( this->GetApplication() != NULL )
@@ -3877,9 +3826,9 @@ void vtkSlicerApplicationGUI::PackSideBySideLightboxView()
     layout->DisableModifiedEventOn();
     layout->SetBottomPanelVisibility( 1 );
     int cur = layout->GetViewArrangement();
-    if ( cur != vtkMRMLLayoutNode::SlicerLayoutSideBySideLightboxView )
+    if ( cur != vtkMRMLLayoutNode::SlicerLayoutSideBySideCompareView )
       {
-      layout->SetViewArrangement( vtkMRMLLayoutNode::SlicerLayoutSideBySideLightboxView );
+      layout->SetViewArrangement( vtkMRMLLayoutNode::SlicerLayoutSideBySideCompareView );
       }
     layout->DisableModifiedEventOff();
     }
@@ -3887,7 +3836,7 @@ void vtkSlicerApplicationGUI::PackSideBySideLightboxView()
 }
 
 //---------------------------------------------------------------------------
-void vtkSlicerApplicationGUI::UnpackSideBySideLightboxView()
+void vtkSlicerApplicationGUI::UnpackSideBySideCompareView()
 {
   // Unpack the 3D viewer widget
   // (we don't know if it is the active widget or not)
@@ -4421,18 +4370,18 @@ void vtkSlicerApplicationGUI::AddMainSliceGUI(const char *layoutName)
     // if get "compare0" is NULL, add it
     //---wjpTEST >
     //--- somehow GetSliceLogic isn't returning good value.
-    vtkMRMLSliceLogic *sliceLogic = this->GetApplicationLogic()->GetSliceLogic(layoutName);
+    vtkSlicerSliceLogic *sliceLogic = this->GetApplicationLogic()->GetSliceLogic(layoutName);
     if (sliceLogic == NULL)
       {
       vtkIntArray *events = vtkIntArray::New();
       events->InsertNextValue(vtkMRMLScene::NewSceneEvent);
-      events->InsertNextValue(vtkMRMLScene::SceneClosedEvent);
-      events->InsertNextValue(vtkMRMLScene::SceneAboutToBeClosedEvent);
+      events->InsertNextValue(vtkMRMLScene::SceneCloseEvent);
+      events->InsertNextValue(vtkMRMLScene::SceneClosingEvent);
       events->InsertNextValue(vtkMRMLScene::SceneRestoredEvent);
       events->InsertNextValue(vtkMRMLScene::NodeAddedEvent);
       events->InsertNextValue(vtkMRMLScene::NodeRemovedEvent);
 
-      sliceLogic = vtkMRMLSliceLogic::New ( );
+      sliceLogic = vtkSlicerSliceLogic::New ( );
       this->GetApplicationLogic()->AddSliceLogic(layoutName, sliceLogic);
       sliceLogic->SetName(layoutName);
 
@@ -4579,13 +4528,13 @@ void vtkSlicerApplicationGUI::RemoveMainSliceViewerObservers ( )
     }
 }
 
-// to do: the three vtkMRMLSliceLogic pointers should be changed with a
-// pointer to a vtkMRMLSliceLogic map.
+// to do: the three vtkSlicerSliceLogic pointers should be changed with a
+// pointer to a vtkSlicerSliceLogic map.
 // current implementation only takes 3 for red, yellow, and green
 //---------------------------------------------------------------------------
-void vtkSlicerApplicationGUI::SetAndObserveMainSliceLogic ( vtkMRMLSliceLogic *l0,
-                                                            vtkMRMLSliceLogic *l1,
-                                                            vtkMRMLSliceLogic *l2 )
+void vtkSlicerApplicationGUI::SetAndObserveMainSliceLogic ( vtkSlicerSliceLogic *l0,
+                                                            vtkSlicerSliceLogic *l1,
+                                                            vtkSlicerSliceLogic *l2 )
 {
         //if (this->SlicesGUI)
         //{
@@ -4862,19 +4811,16 @@ void vtkSlicerApplicationGUI::SetCurrentQtModule(const char* moduleTitle)
 
   QString moduleName = moduleManager->moduleName(QLatin1String(moduleTitle));
   // Check if the corresponding QT module is loaded
-  qSlicerAbstractCoreModule* module = moduleManager->module(moduleName);
-  bool moduleRep = module ? module->widgetRepresentation() != 0 : false;
+  bool moduleLoaded = moduleManager->isLoaded(moduleName);
 
-  qDebug() << "QT Module [" << QLatin1String(moduleTitle) << "] loaded:"
-           << moduleManager->isLoaded(moduleName);
-  qDebug() << "QT Module [" << QLatin1String(moduleTitle) << "] representation:" << moduleRep;
+  qDebug() << "QT Module [" << QLatin1String(moduleTitle) << "] loaded:" << moduleLoaded;
 
   // Set module panel visibility accordingly
   qSlicerApplication::application()->setTopLevelWidgetVisible(
-    this->GetSlicerApplication()->modulePanel(), moduleRep);
+    this->GetSlicerApplication()->modulePanel(), moduleLoaded);
 
   // Show module and update geometry if required
-  if (moduleRep)
+  if (moduleLoaded)
     {
     this->GetSlicerApplication()->modulePanel()->setModule(moduleName);
     this->ReposModulePanel();
@@ -5010,11 +4956,14 @@ void vtkSlicerApplicationGUI::ModifyAllWidgetLock(int lockFlag)
 
   if (m == NULL)
     {
-    vtkWarningMacro ( "ApplicationGUI::ModifyAllWidgetLock: Got NULL Measurements Modules. Not modifying lock on measurements widgets." );
-    return;
+    vtkDebugMacro ( "ApplicationGUI::ModifyAllWidgetLock: Got NULL Measurements Modules. Not modifying lock on measurements widgets." );
     }
-  app->Script("$::slicer3::MeasurementsGUI ModifyAllLock %d", lockFlag);
-
+  else
+    {
+    app->Script("$::slicer3::MeasurementsGUI ModifyAllLock %d", lockFlag);
+    /// 2d rulers
+    app->Script("foreach r [itcl::find objects -class RulerSWidget] {$r lockWidget %d }", lockFlag);
+    }
 
 
   ///

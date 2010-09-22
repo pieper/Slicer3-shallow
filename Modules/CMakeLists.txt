@@ -70,7 +70,7 @@ SET(modules
 # MRAblation <- not working either
   ModelMirror
   ModelTransform
-  # EMSegment # EMSegment is build from the top-level cmake
+  EMSegment
   # DistanceTransformModel <- culled from slicer 3.6
   ClipModel
   Measurements
@@ -92,7 +92,6 @@ if(Slicer3_USE_OPENIGTLINK)
     OpenIGTLinkIF
     NeuroNav
     ProstateNav
-    BrainlabModule
     # IGTNavigation
     # OpenCV
     )

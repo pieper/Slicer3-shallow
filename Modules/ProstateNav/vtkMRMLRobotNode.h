@@ -28,8 +28,9 @@ class vtkMRMLModelNode;
 class vtkMRMLScalarVolumeNode;
 class vtkSlicerApplication;
 class vtkProstateNavTargetDescriptor;
+struct NeedleDescriptorStruct;
 
-class VTK_PROSTATENAV_EXPORT vtkMRMLRobotNode : public vtkMRMLNode
+class VTK_PROSTATENAV_EXPORT vtkMRMLRobotNode : public vtkMRMLTransformableNode
 {
 
  public:
@@ -39,6 +40,7 @@ class VTK_PROSTATENAV_EXPORT vtkMRMLRobotNode : public vtkMRMLNode
   //----------------------------------------------------------------
 
   //BTX
+
   // Events
   enum {
     ChangeStatusEvent     = 200907,
@@ -60,7 +62,12 @@ class VTK_PROSTATENAV_EXPORT vtkMRMLRobotNode : public vtkMRMLNode
   };
   //ETX
 
-
+  /// 
+  /// Transformable node methods
+  /// Only linear transforms are supported
+  virtual bool CanApplyNonLinearTransforms();
+  virtual void ApplyTransform(vtkAbstractTransform* transform);
+  virtual void ApplyTransform(vtkMatrix4x4* transformMatrix);
 
  public:
 
@@ -69,11 +76,10 @@ class VTK_PROSTATENAV_EXPORT vtkMRMLRobotNode : public vtkMRMLNode
   //----------------------------------------------------------------
 
   static vtkMRMLRobotNode *New();
-  vtkTypeMacro(vtkMRMLRobotNode,vtkMRMLNode);
-  
-  void PrintSelf(ostream& os, vtkIndent indent);
-
+  vtkTypeMacro(vtkMRMLRobotNode,vtkMRMLTransformableNode);  
   virtual vtkMRMLNode* CreateNodeInstance();
+
+  void PrintSelf(ostream& os, vtkIndent indent);
 
   // Description:
   // Set node attributes
@@ -94,23 +100,25 @@ class VTK_PROSTATENAV_EXPORT vtkMRMLRobotNode : public vtkMRMLNode
 
 // Description:
   // Update the stored reference to another node in the scene
-  void UpdateReferenceID(const char *oldID, const char *newID);
+  virtual void UpdateReferenceID(const char *oldID, const char *newID);
 
   // Description:
   // Updates this node if it depends on other nodes 
   // when the node is deleted in the scene
-  void UpdateReferences();
+  virtual void UpdateReferences();
+
+  virtual void RemoveChildNodes();
 
   // Description:
   // Get node XML tag name (like Volume, Model)
   virtual const char* GetNodeTagName()
     {return "Robot";};
 
-  virtual const char* GetWorkflowStepsString()
-    {return "PointTargeting PointVerification"; };
-
   // method to propagate events generated in mrml
   virtual void ProcessMRMLEvents ( vtkObject *caller, unsigned long event, void *callData );
+
+  virtual const char* GetWorkflowStepsString()
+    {return "PointTargeting PointVerification"; };
 
   // Description:
   // Get/Set robot target (vtkMRMLLinearTransformNode)
@@ -118,18 +126,26 @@ class VTK_PROSTATENAV_EXPORT vtkMRMLRobotNode : public vtkMRMLNode
   vtkMRMLTransformNode* GetTargetTransformNode();
   void SetAndObserveTargetTransformNodeID(const char *transformNodeID);
 
-  virtual int Init(vtkSlicerApplication* app);
+  virtual int Init(vtkSlicerApplication* app, const char* moduleShareDir);
 
   virtual int  MoveTo(const char *transformNodeId) { return 0; };
 
   virtual void SwitchStep(const char *stepName) {};
 
   virtual int OnTimer() {return 1; };
+ 
+  // Computes needle orientation in unit vector, pointing towards then needle tip
+  // when the robot targets the specified point.
+  // needleDirection is a pointer to a double[3] array which is updated with the orientation
+  // Returns false if the information cannot be determined.
+  virtual bool GetNeedleDirectionAtTarget(vtkProstateNavTargetDescriptor *targetDesc, NeedleDescriptorStruct *needle, double* needleDirection) { return false; };
 
-  virtual bool FindTargetingParams(vtkProstateNavTargetDescriptor *targetDesc) { return false; };
-  virtual bool ShowRobotAtTarget(vtkProstateNavTargetDescriptor *targetDesc) { return false; };
+  virtual bool ShowRobotAtTarget(vtkProstateNavTargetDescriptor *targetDesc, NeedleDescriptorStruct *needle) { return false; };
   //BTX
-  virtual std::string GetTargetInfoText(vtkProstateNavTargetDescriptor *targetDesc) { return ""; };
+  virtual std::string GetTargetInfoText(vtkProstateNavTargetDescriptor *targetDesc, NeedleDescriptorStruct *needle) { return ""; };
+  // Split the full target info text (convert "main info*****additional info" to "main info"+"additional info")
+  static void SplitTargetInfoText(const std::string targetInfoText, std::string &mainInfo, std::string &additionalInfo);
+  static std::string GetTargetInfoSectionSeparator() { return "-----\n"; };
   //ETX
 
   // Description:
@@ -141,7 +157,6 @@ class VTK_PROSTATENAV_EXPORT vtkMRMLRobotNode : public vtkMRMLNode
 
   // The following method is defined tentatively to pass registration parameter.
   virtual int PerformRegistration(vtkMRMLScalarVolumeNode* volumeNode, int param1, int param2) { return 0; };
-
 
   // Description:
   // Get calibration object (Z frame, fiducials, etc.) model and transform
@@ -170,7 +185,7 @@ class VTK_PROSTATENAV_EXPORT vtkMRMLRobotNode : public vtkMRMLNode
   //----------------------------------------------------------------
   
   vtkMRMLRobotNode();
-  ~vtkMRMLRobotNode();
+  virtual ~vtkMRMLRobotNode();
   vtkMRMLRobotNode(const vtkMRMLRobotNode&);
   void operator=(const vtkMRMLRobotNode&);
 
@@ -180,6 +195,7 @@ class VTK_PROSTATENAV_EXPORT vtkMRMLRobotNode : public vtkMRMLNode
 
   //BTX
   std::vector<StatusDescriptor> StatusDescriptors;
+  std::string ModuleShareDirectory; // needed for model files, etc.
   //ETX
 
  protected:

@@ -117,6 +117,11 @@ public:
 
   virtual void UpdateGUI() {};
 
+  void ShowWorkspaceModel(bool show);
+  bool IsWorkspaceModelShown();
+  void ShowRobotModel(bool show);
+  bool IsRobotModelShown();
+
 protected:
   vtkProstateNavStep();
   ~vtkProstateNavStep();

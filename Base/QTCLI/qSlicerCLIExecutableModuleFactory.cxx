@@ -1,34 +1,27 @@
-/*==============================================================================
+/*=auto=========================================================================
 
-  Program: 3D Slicer
+ Portions (c) Copyright 2005 Brigham and Women's Hospital (BWH) 
+ All Rights Reserved.
 
-  Copyright (c) 2010 Kitware Inc.
+ See Doc/copyright/copyright.txt
+ or http://www.slicer.org/copyright/copyright.txt for details.
 
-  See Doc/copyright/copyright.txt
-  or http://www.slicer.org/copyright/copyright.txt for details.
+ Program:   3D Slicer
 
-  Unless required by applicable law or agreed to in writing, software
-  distributed under the License is distributed on an "AS IS" BASIS,
-  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-  See the License for the specific language governing permissions and
-  limitations under the License.
+=========================================================================auto=*/
 
-  This file was originally developed by Jean-Christophe Fillion-Robin, Kitware Inc.
-  and was partially funded by NIH grant 3P41RR013218-12S1
-
-==============================================================================*/
-
-// Qt includes
-#include <QStringList>
-
-// SlicerQt includes
 #include "qSlicerCLIExecutableModuleFactory.h"
+
+// SlicerQT includes
 #include "qSlicerCLIModule.h"
 #include "qSlicerCLIModuleFactoryHelper.h"
 
+// QT includes
+#include <QStringList>
+
 //-----------------------------------------------------------------------------
-qSlicerCLIExecutableModuleFactoryItem::qSlicerCLIExecutableModuleFactoryItem(
-  const QString& itemPath):Superclass(),Path(itemPath)
+qSlicerCLIExecutableModuleFactoryItem::qSlicerCLIExecutableModuleFactoryItem(const QString& itemKey,
+  const QString& itemPath):Superclass(itemKey),Path(itemPath)
 {
 }
 
@@ -39,66 +32,36 @@ bool qSlicerCLIExecutableModuleFactoryItem::load()
 }
 
 //-----------------------------------------------------------------------------
-QString qSlicerCLIExecutableModuleFactoryItem::path()const
+QString qSlicerCLIExecutableModuleFactoryItem::path()
 {
   return this->Path;
 }
 
 //-----------------------------------------------------------------------------
-qSlicerAbstractCoreModule* qSlicerCLIExecutableModuleFactoryItem::instanciator()
+qSlicerAbstractModule* qSlicerCLIExecutableModuleFactoryItem::instanciator()
 {
   qDebug() << "CmdLineExecutableModuleItem::instantiate - name:" << this->path();
   return 0;
 }
 
 //-----------------------------------------------------------------------------
-class qSlicerCLIExecutableModuleFactoryPrivate
+class qSlicerCLIExecutableModuleFactoryPrivate:public qCTKPrivate<qSlicerCLIExecutableModuleFactory>
 {
 public:
+  QCTK_DECLARE_PUBLIC(qSlicerCLIExecutableModuleFactory);
+  qSlicerCLIExecutableModuleFactoryPrivate()
+    {
+    }
 };
 
 //-----------------------------------------------------------------------------
-qSlicerCLIExecutableModuleFactory::qSlicerCLIExecutableModuleFactory()
-  : Superclass()
-  , d_ptr(new qSlicerCLIExecutableModuleFactoryPrivate)
+qSlicerCLIExecutableModuleFactory::qSlicerCLIExecutableModuleFactory():Superclass()
 {
-}
-
-//-----------------------------------------------------------------------------
-qSlicerCLIExecutableModuleFactory::~qSlicerCLIExecutableModuleFactory()
-{
+  QCTK_INIT_PRIVATE(qSlicerCLIExecutableModuleFactory);
 }
 
 //-----------------------------------------------------------------------------
 void qSlicerCLIExecutableModuleFactory::registerItems()
 {
   
-}
-
-//-----------------------------------------------------------------------------
-ctkAbstractFactoryItem<qSlicerAbstractCoreModule>* qSlicerCLIExecutableModuleFactory
-::createFactoryPluginItem(const QFileInfo& plugin)const
-{
-  return new qSlicerCLIExecutableModuleFactoryItem(plugin.filePath());
-}
-
-//-----------------------------------------------------------------------------
-// QString qSlicerCLIExecutableModuleFactory::objectNameToKey(const QString& objectName)
-// {
-//   return Self::extractModuleName(objectName);
-// }
-
-//-----------------------------------------------------------------------------
-QString qSlicerCLIExecutableModuleFactory::extractModuleName(const QString& executableName)
-{
-  QString moduleName = executableName;
-
-  // Remove extension if needed
-  int index = moduleName.indexOf(".");
-  if (index > 0)
-    {
-    moduleName.truncate(index);
-    }
-
-  return moduleName.toLower();
 }

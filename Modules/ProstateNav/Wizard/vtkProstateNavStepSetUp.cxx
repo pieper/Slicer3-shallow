@@ -182,7 +182,8 @@ void vtkProstateNavStepSetUp::ProcessGUIEvents( vtkObject *caller,
     vtkMRMLIGTLConnectorNode* node = vtkMRMLIGTLConnectorNode::SafeDownCast(this->RobotConnectorSelector->GetSelected());
     if (robotNode && node)
       {      
-      robotNode->Init(vtkSlicerApplication::SafeDownCast(this->GetApplication())); // :TODO: this may not be the best place for robot initialization (e.g., when scene is loaded from MRML the GUI will not be used)    
+      vtksys_stl::string moduleShareDir=this->GetLogic()->GetModuleShareDirectory();
+      robotNode->Init(vtkSlicerApplication::SafeDownCast(this->GetApplication()),moduleShareDir.c_str()); // :TODO: this may not be the best place for robot initialization (e.g., when scene is loaded from MRML the GUI will not be used)    
       robotNode->SetAndObserveRobotConnectorNodeID(node->GetID());
       }
     }

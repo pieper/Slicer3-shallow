@@ -2064,6 +2064,7 @@ AddTargetSelectedVolumeByMRMLID(char* mrmlID)
 }
 
 //----------------------------------------------------------------------------
+
 void
 vtkEMSegmentMRMLManager::
 RemoveTargetSelectedVolume(vtkIdType volumeID)
@@ -2075,7 +2076,12 @@ RemoveTargetSelectedVolume(vtkIdType volumeID)
     vtkErrorMacro("Volume not present in target: " << volumeID);
     return;
     }
+  this->RemoveTargetSelectedVolumeIndex(vtkIdType(imageIndex));
+}
 
+void  vtkEMSegmentMRMLManager::RemoveTargetSelectedVolumeIndex(vtkIdType imageIndex)
+{
+  
   // remove from target
   this->GetTargetInputNode()->RemoveNthVolume(imageIndex);
 
@@ -3138,6 +3144,67 @@ GetAtlasNumberOfTrainingSamples()
     }
 }
 
+
+//----------------------------------------------------------------------------
+void
+vtkEMSegmentMRMLManager::
+ComputeAtlasNumberOfTrainingSamples()
+{
+  cout << "vtkEMSegmentMRMLManager::ComputeAtlasNumberOfTrainingSamples: Start" << endl;
+
+ vtkMRMLEMSAtlasNode *atlasInputNode = this->GetAtlasInputNode();
+  if (atlasInputNode == NULL)
+    {
+    return;
+    }
+
+  if (!this->GetWorkingDataNode()->GetAlignedTargetNode() || !this->GetWorkingDataNode()->GetAlignedTargetNodeIsValid())
+    {
+      atlasInputNode->SetNumberOfTrainingSamples(0);
+      return;
+    }
+
+  int maxNum = 0;
+  int setFlag = 0;
+
+  typedef vtkstd::vector<vtkIdType>  NodeIDList;
+  typedef NodeIDList::const_iterator NodeIDListIterator;
+  NodeIDList nodeIDList;
+
+  this->GetListOfTreeNodeIDs(this->GetTreeRootNodeID(), nodeIDList);
+  for (NodeIDListIterator i = nodeIDList.begin(); i != nodeIDList.end(); ++i)
+    {
+      if (this->GetTreeNodeIsLeaf(*i)) 
+        {  
+           std::string atlasVolumeKey =  this->GetTreeParametersNode(*i)->GetSpatialPriorVolumeName() ? this->GetTreeParametersNode(*i)->GetSpatialPriorVolumeName() : "";
+           int atlasVolumeIndex       = atlasInputNode->GetIndexByKey(atlasVolumeKey.c_str());
+           if (atlasVolumeIndex >= 0)
+              {
+                 vtkImageData* imageData = atlasInputNode->GetNthVolumeNode(atlasVolumeIndex)->GetImageData();
+         if (imageData)
+           {
+                    double range[2];
+                       imageData->GetScalarRange(range);
+                       cout << "Max of " << atlasInputNode->GetNthVolumeNode(atlasVolumeIndex)->GetName() << ": " << range[1] << endl;
+                   if (!setFlag ||  int(range[1]) > maxNum) 
+                     {
+                             maxNum = int(range[1]);
+                 setFlag = 1;
+                     }
+           }
+          }
+    }
+    }
+  if (!setFlag) 
+    {
+      // Just set it to 1 so that it does not create problems later when running the EMSegmenter
+      maxNum =1 ;
+    }
+    atlasInputNode->SetNumberOfTrainingSamples(maxNum);
+    cout << "New NumberOfTrainingSamples: " << maxNum << endl;
+}
+
+
 // ????
 //----------------------------------------------------------------------------
 int
@@ -4034,7 +4101,9 @@ void
 vtkEMSegmentMRMLManager::
 PropogateAdditionOfSelectedTargetImage()
 {
-  this->GetGlobalParametersNode()->AddTargetInputChannel();
+  if ( this->GetGlobalParametersNode()->GetNumberOfTargetInputChannels() < this->GetTargetInputNode()->GetNumberOfVolumes() ) {
+    this->GetGlobalParametersNode()->AddTargetInputChannel();
+  }
 
   // iterate over tree nodes
   typedef vtkstd::vector<vtkIdType>  NodeIDList;
@@ -4043,8 +4112,9 @@ PropogateAdditionOfSelectedTargetImage()
   this->GetListOfTreeNodeIDs(this->GetTreeRootNodeID(), nodeIDList);
   for (NodeIDListIterator i = nodeIDList.begin(); i != nodeIDList.end(); ++i)
     {
-    this->GetTreeParametersNode(*i)->
-      AddTargetInputChannel();
+      if (int(this->GetTreeParametersNode(*i)->GetNumberOfTargetInputChannels()) < int(this->GetTargetInputNode()->GetNumberOfVolumes()) ) {
+    this->GetTreeParametersNode(*i)->AddTargetInputChannel();
+      }
     }
 }
 
@@ -4329,16 +4399,18 @@ CheckMRMLNodeStructure(int ignoreOutputFlag)
   // check the tree recursively!!!
 
   // check that the number of target nodes is consistent
-  int numTargetInputChannels = this->GetTargetInputNode()->GetNumberOfVolumes();
-  if (this->GetGlobalParametersNode()->GetNumberOfTargetInputChannels() !=
-      numTargetInputChannels)
+  if (!ignoreOutputFlag)
     {
-    vtkErrorMacro("Inconsistent number of input channles. Target="
+      int numTargetInputChannels = this->GetTargetInputNode()->GetNumberOfVolumes();
+      if (this->GetGlobalParametersNode()->GetNumberOfTargetInputChannels() != numTargetInputChannels)
+       {
+          vtkErrorMacro("Inconsistent number of input channles. Target="
                   << numTargetInputChannels
                   << " Global Parameters="
                   << this->GetGlobalParametersNode()->
                   GetNumberOfTargetInputChannels());
-    return 0;    
+        return 0;    
+       }
     }
   
   // check the tree recursively!!!
@@ -5247,4 +5319,17 @@ void vtkEMSegmentMRMLManager::CreateOutputVolumeNode()
   const char* ID = outputNode->GetID();
   outputNode->Delete();
   this->SetOutputVolumeMRMLID(ID);
+}
+
+//----------------------------------------------------------------------------
+vtkMRMLVolumeNode*  vtkEMSegmentMRMLManager::GetAlignedSpatialPriorFromTreeNodeID(vtkIdType nodeID)
+{
+   vtkMRMLEMSAtlasNode* workingAtlas = this->GetWorkingDataNode()->GetAlignedAtlasNode();
+   std::string atlasVolumeKey = this->GetTreeParametersNode(nodeID)->GetSpatialPriorVolumeName() ? this->GetTreeParametersNode(nodeID)->GetSpatialPriorVolumeName() : "";
+   int atlasVolumeIndex       = workingAtlas->GetIndexByKey(atlasVolumeKey.c_str());
+    if (atlasVolumeIndex >= 0 )
+    {
+      return workingAtlas->GetNthVolumeNode(atlasVolumeIndex);   
+    }
+    return NULL;
 }

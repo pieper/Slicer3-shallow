@@ -550,7 +550,7 @@ void vtkFourDImageGUI::AddGUIObservers ( )
   vtkIntArray* events = vtkIntArray::New();
   events->InsertNextValue(vtkMRMLScene::NodeAddedEvent);
   events->InsertNextValue(vtkMRMLScene::NodeRemovedEvent);
-  events->InsertNextValue(vtkMRMLScene::SceneClosedEvent);
+  events->InsertNextValue(vtkMRMLScene::SceneCloseEvent);
   
   if (this->GetMRMLScene() != NULL)
     {
@@ -1284,7 +1284,7 @@ void vtkFourDImageGUI::ProcessMRMLEvents ( vtkObject *vtkNotUsed(caller),
     //  SelectActiveTimeSeriesBundle(bundleNode);
     //  }
     }
-  else if (event == vtkMRMLScene::SceneClosedEvent)
+  else if (event == vtkMRMLScene::SceneCloseEvent)
     {
     UpdateFrameList(NULL);
     }

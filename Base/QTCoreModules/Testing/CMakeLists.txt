@@ -1,10 +1,8 @@
 SET(KIT QTCoreModules)
 SET(CMAKE_TESTDRIVER_BEFORE_TESTMAIN "DEBUG_LEAKS_ENABLE_EXIT_ERROR();" )
 CREATE_TEST_SOURCELIST(Tests ${KIT}CxxTests.cxx
-  qSlicerCoreModuleTest1.cxx
   qSlicerCamerasModuleTest1.cxx
   qSlicerCamerasModuleWidgetTest1.cxx
-  qSlicerCoreModuleFactoryTest1.cxx
   qSlicerTransformsModuleTest1.cxx
   qSlicerTransformsModuleWidgetTest1.cxx
   EXTRA_INCLUDE TestingMacros.h
@@ -16,24 +14,26 @@ REMOVE (TestsToRun ${KIT}CxxTests.cxx)
 SET(LIBRARY_NAME ${PROJECT_NAME})
 
 ADD_EXECUTABLE(${KIT}CxxTests ${Tests})
-TARGET_LINK_LIBRARIES(${KIT}CxxTests ${PROJECT_NAME})
+TARGET_LINK_LIBRARIES(${KIT}CxxTests 
+  ${lib_name} 
+  qSlicerBaseQTBase  # FIXME: This shouldn't be necessary: there is a library dependency problem
+  qSlicerBaseQTCore  # FIXME: This shouldn't be necessary: there is a library dependency problem
+  )
 
-SET( KIT_TESTS ${CXX_TEST_PATH}/${KIT}CxxTests)
+SET( QTCoreModules_TESTS ${CXX_TEST_PATH}/${KIT}CxxTests)
 
 IF(WIN32)
-  SET(KIT_TESTS ${CXX_TEST_PATH}/${CMAKE_BUILD_TYPE}/${KIT}CxxTests)
+  SET(QTCoreModules_TESTS ${CXX_TEST_PATH}/${CMAKE_BUILD_TYPE}/${KIT}CxxTests)
 ENDIF(WIN32)
 
 MACRO( SIMPLE_TEST  TESTNAME )
-  ADD_TEST( ${TESTNAME} ${LAUNCH_EXE} ${KIT_TESTS} ${TESTNAME} 
+  ADD_TEST( ${TESTNAME} ${LAUNCH_EXE} ${QTCoreModules_TESTS} ${TESTNAME} 
     ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/SlicerQT
     )
 ENDMACRO( SIMPLE_TEST  )
 
-SIMPLE_TEST( qSlicerCoreModuleTest1 )
 SIMPLE_TEST( qSlicerCamerasModuleTest1 )
 SIMPLE_TEST( qSlicerCamerasModuleWidgetTest1 )
-SIMPLE_TEST( qSlicerCoreModuleFactoryTest1 )
 SIMPLE_TEST( qSlicerTransformsModuleTest1 )
 SIMPLE_TEST( qSlicerTransformsModuleWidgetTest1 )
 

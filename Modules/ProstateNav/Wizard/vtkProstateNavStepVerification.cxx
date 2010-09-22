@@ -40,6 +40,7 @@
 #include "vtkSlicerApplication.h"
 #include "vtkSlicerApplicationLogic.h"
 #include "vtkMRMLFiducialListNode.h"
+#include "vtkSlicerSliceLogic.h"
 #include "vtkMRMLSliceNode.h"
 #include "vtkSlicerVolumesGUI.h"
 #include "vtkMRMLInteractionNode.h"
@@ -85,7 +86,7 @@ enum
   COL_IS_ERROR,
   COL_COUNT // all valid columns should be inserted above this line
 };
-static const char* COL_LABELS[COL_COUNT] = { "Name", "X", "Y", "Z", "Needle", "Overall Error", "LR Error", "AP Error", "IS Error" };
+static const char* COL_LABELS[COL_COUNT] = { "Name", "R", "A", "S", "Needle", "Overall Error", "RL Error", "AP Error", "SI Error" };
 static const int COL_WIDTHS[COL_COUNT] =   { 8,      6,   6,   6,   6,        6,               6,          6,          6 };
 
 static const char NEEDLE_TIP_LABEL[]="V-Needle tip";
@@ -107,13 +108,14 @@ vtkProstateNavStepVerification::vtkProstateNavStepVerification()
   this->VolumeSelectionFrame=NULL;
   this->LoadVerificationVolumeButton=NULL;
   this->VolumeSelectorWidget=NULL;
+  this->ShowWorkspaceButton=NULL;
+  this->ShowRobotButton=NULL;
 
   // TargetList frame
   this->TargetListFrame=NULL;
   this->TargetList=NULL;
   this->VerifyButton=NULL;
   this->ClearButton=NULL;
-
 
   // TargetControl frame
   this->VerificationControlFrame=NULL;
@@ -140,6 +142,8 @@ vtkProstateNavStepVerification::~vtkProstateNavStepVerification()
   // TargetPlanning
   DELETE_IF_NULL_WITH_SETPARENT_NULL(VolumeSelectionFrame);
   DELETE_IF_NULL_WITH_SETPARENT_NULL(LoadVerificationVolumeButton);  
+  DELETE_IF_NULL_WITH_SETPARENT_NULL(ShowWorkspaceButton);
+  DELETE_IF_NULL_WITH_SETPARENT_NULL(ShowRobotButton);
   DELETE_IF_NULL_WITH_SETPARENT_NULL(VolumeSelectorWidget);
 
   // TargetList frame
@@ -217,10 +221,17 @@ void vtkProstateNavStepVerification::ShowUserInterface()
 
   vtkSmartPointer<vtkMRMLFiducialListNode> verifNode=vtkSmartPointer<vtkMRMLFiducialListNode>::New();
   verifNode->SetName("Verification");
+
+  // This is just a temporary node for showing points in the GUI
+  verifNode->SetSaveWithScene(false);
+  verifNode->SetHideFromEditors(true);
+  
   SetVerificationPointListNode(verifNode);
 
   this->AddGUIObservers();
   this->AddMRMLObservers();
+  
+  UpdateGUI();
 }
 
 //----------------------------------------------------------------------------
@@ -238,7 +249,7 @@ void vtkProstateNavStepVerification::ShowVolumeSelectionFrame()
     this->VolumeSelectionFrame->Create();
     }
 
-  this->Script("pack %s -side top -anchor nw -fill x -padx 0 -pady 2",
+  this->Script("pack %s -side top -anchor nw -padx 0 -pady 2",
     this->VolumeSelectionFrame->GetWidgetName());
 
   if (!this->LoadVerificationVolumeButton)
@@ -256,12 +267,37 @@ void vtkProstateNavStepVerification::ShowVolumeSelectionFrame()
     this->LoadVerificationVolumeButton->SetActiveBackgroundColor(1,1,1);        
     this->LoadVerificationVolumeButton->SetText( "Load volume");
     this->LoadVerificationVolumeButton->SetBalloonHelpString("Click to load a volume. Need to additionally select the volume to make it the current verification volume.");
-    }  
-  this->Script("pack %s -side top -fill x -anchor nw -padx 2 -pady 2", this->LoadVerificationVolumeButton->GetWidgetName());
+    }
+
+  if (!this->ShowRobotButton)
+    {
+    this->ShowRobotButton = vtkKWCheckButton::New();
+    } 
+  if (!this->ShowRobotButton->IsCreated()) 
+    {
+    this->ShowRobotButton->SetParent(this->VolumeSelectionFrame);
+    this->ShowRobotButton->Create();
+    this->ShowRobotButton->SelectedStateOff();
+    this->ShowRobotButton->SetText("Show Robot");
+    this->ShowRobotButton->SetBalloonHelpString("Show the robot");
+    }
+
+  if (!this->ShowWorkspaceButton)
+    {
+    this->ShowWorkspaceButton = vtkKWCheckButton::New();
+    } 
+  if (!this->ShowWorkspaceButton->IsCreated())
+    {
+    this->ShowWorkspaceButton->SetParent(this->VolumeSelectionFrame);
+    this->ShowWorkspaceButton->Create();
+    this->ShowWorkspaceButton->SelectedStateOff();
+    this->ShowWorkspaceButton->SetText("Show Workspace");
+    this->ShowWorkspaceButton->SetBalloonHelpString("Show workspace of the robot");
+    } 
 
   if (!this->VolumeSelectorWidget)
     {
-     this->VolumeSelectorWidget = vtkSlicerNodeSelectorWidget::New();
+    this->VolumeSelectorWidget = vtkSlicerNodeSelectorWidget::New();
     }
   if (!this->VolumeSelectorWidget->IsCreated())
     {
@@ -270,12 +306,18 @@ void vtkProstateNavStepVerification::ShowVolumeSelectionFrame()
     this->VolumeSelectorWidget->SetBorderWidth(2);  
     this->VolumeSelectorWidget->SetNodeClass("vtkMRMLVolumeNode", NULL, NULL, NULL);
     this->VolumeSelectorWidget->SetMRMLScene(this->GetLogic()->GetApplicationLogic()->GetMRMLScene());
+    this->VolumeSelectorWidget->SetNoneEnabled(true);
     this->VolumeSelectorWidget->GetWidget()->GetWidget()->IndicatorVisibilityOff();
     this->VolumeSelectorWidget->GetWidget()->GetWidget()->SetWidth(24);
     this->VolumeSelectorWidget->SetLabelText( "Verification Volume: ");
     this->VolumeSelectorWidget->SetBalloonHelpString("Select the targeting volume from the current scene.");
     }
-  this->Script("pack %s -side top -fill x -anchor nw -padx 2 -pady 2", this->VolumeSelectorWidget->GetWidgetName());
+
+  this->Script("grid %s -row 0 -column 0 -padx 2 -pady 2 -sticky ew", this->LoadVerificationVolumeButton->GetWidgetName());
+  this->Script("grid %s -row 0 -column 1 -padx 2 -pady 2 -sticky e", this->ShowRobotButton->GetWidgetName());
+  this->Script("grid %s -row 0 -column 2 -padx 2 -pady 2 -sticky e", this->ShowWorkspaceButton->GetWidgetName());
+
+  this->Script("grid %s -row 1 -column 0 -columnspan 3 -padx 2 -pady 2 -sticky ew", this->VolumeSelectorWidget->GetWidgetName());
 
 }
 
@@ -429,10 +471,8 @@ void vtkProstateNavStepVerification::ProcessGUIEvents(vtkObject *caller,
     if (targetDesc!=NULL)
     {
       targetDesc->SetTargetValidated(false);
-      targetDesc->SetOverallError(0);
-      targetDesc->SetAPError(0);
-      targetDesc->SetLRError(0);
-      targetDesc->SetISError(0);
+      targetDesc->SetErrorDistanceFromNeedleLine(0);
+      targetDesc->SetErrorVector(0,0,0);
       UpdateTargetListGUI();
     }
     StopVerification();
@@ -444,6 +484,18 @@ void vtkProstateNavStepVerification::ProcessGUIEvents(vtkObject *caller,
   if (this->LoadVerificationVolumeButton && this->LoadVerificationVolumeButton == vtkKWPushButton::SafeDownCast(caller) && (event == vtkKWPushButton::InvokedEvent))
     {
     this->GetApplication()->Script("::LoadVolume::ShowDialog");
+    }
+
+  // show workspace button
+  if (this->ShowWorkspaceButton && this->ShowWorkspaceButton == vtkKWCheckButton::SafeDownCast(caller) && (event == vtkKWCheckButton::SelectedStateChangedEvent))
+    {
+      this->ShowWorkspaceModel(this->ShowWorkspaceButton->GetSelectedState() == 1);
+    }
+
+  // show robot button
+  if (this->ShowRobotButton && this->ShowRobotButton == vtkKWCheckButton::SafeDownCast(caller) && (event == vtkKWCheckButton::SelectedStateChangedEvent))
+    {
+      this->ShowRobotModel(this->ShowRobotButton->GetSelectedState() == 1);
     }
 
   // -----------------------------------------------------------------
@@ -503,7 +555,6 @@ void vtkProstateNavStepVerification::ProcessMRMLEvents(vtkObject *caller,
     switch (event)
       {
       case vtkMRMLProstateNavManagerNode::CurrentTargetChangedEvent:
-        this->GUI->BringTargetToViewIn2DViews(vtkProstateNavGUI::BRING_MARKERS_TO_VIEW_ALIGN_TO_NEEDLE);
         break;
       }
     }
@@ -513,7 +564,7 @@ void vtkProstateNavStepVerification::ProcessMRMLEvents(vtkObject *caller,
 //----------------------------------------------------------------------------
 void vtkProstateNavStepVerification::AddMRMLObservers()
 {
-  if (VerificationPointListNode!=NULL)
+  if (this->VerificationPointListNode!=NULL)
   {
     vtkSmartPointer<vtkIntArray> events = vtkSmartPointer<vtkIntArray>::New();
     events->InsertNextValue(vtkCommand::ModifiedEvent);
@@ -536,10 +587,6 @@ void vtkProstateNavStepVerification::AddMRMLObservers()
 //----------------------------------------------------------------------------
 void vtkProstateNavStepVerification::RemoveMRMLObservers()
 {
-  if (VerificationPointListNode!=NULL)
-  {    
-    this->MRMLObserverManager->SetAndObserveObjectEvents(vtkObjectPointer(&VerificationPointListNode), NULL, NULL);
-  }
   vtkMRMLProstateNavManagerNode* manager=this->GetProstateNavManager();
   if (manager!=NULL)
   {
@@ -552,7 +599,7 @@ void vtkProstateNavStepVerification::RemoveMRMLObservers()
 }
 
 //---------------------------------------------------------------------------
-void vtkProstateNavStepVerification::OnMultiColumnListSelectionChanged()
+void vtkProstateNavStepVerification::OnMultiColumnListSelection()
 {
 
   vtkMRMLFiducialListNode* fidList = this->GetProstateNavManager()->GetTargetPlanListNode();
@@ -564,14 +611,13 @@ void vtkProstateNavStepVerification::OnMultiColumnListSelectionChanged()
 
   int numRows = this->TargetList->GetWidget()->GetNumberOfSelectedRows();
   if (numRows == 1)
-    {   
-    
+    {       
     int rowIndex = this->TargetList->GetWidget()->GetIndexOfFirstSelectedRow();    
     int targetIndex=this->TargetList->GetWidget()->GetRowAttributeAsInt(rowIndex, TARGET_INDEX_ATTR);
-    //vtkProstateNavTargetDescriptor* targetDesc=this->GetProstateNavManager()->GetTargetDescriptorAtIndex(targetIndex);    
           
-    this->GetProstateNavManager()->SetCurrentTargetIndex(targetIndex);
-    DisplayVerificationResultsForCurrentTarget();
+    this->GetProstateNavManager()->SetCurrentTargetIndex(targetIndex);    
+
+    this->GUI->BringTargetToViewIn2DViews(vtkProstateNavGUI::BRING_MARKERS_TO_VIEW_ALIGN_TO_NEEDLE);
     }
 }
 
@@ -602,7 +648,7 @@ void vtkProstateNavStepVerification::UpdateTargetListGUI()
   // create new target points, if necessary
   this->GetLogic()->UpdateTargetListFromMRML();
 
-  vtkMRMLProstateNavManagerNode *manager = this->GetGUI()->GetProstateNavManager();
+  vtkMRMLProstateNavManagerNode *manager = this->GetGUI()->GetProstateNavManagerNode();
   if (!manager)
     {
     return;
@@ -626,6 +672,7 @@ void vtkProstateNavStepVerification::UpdateTargetListGUI()
     {      
     int targetIndex=row;
     vtkProstateNavTargetDescriptor* target = manager->GetTargetDescriptorAtIndex(targetIndex);
+    NeedleDescriptorStruct* needle = manager->GetNeedle(target);
 
     vtkKWMultiColumnList* columnList = this->TargetList->GetWidget();
 
@@ -655,33 +702,53 @@ void vtkProstateNavStepVerification::UpdateTargetListGUI()
         {
         if (recreateRows || columnList->GetCellTextAsDouble(row,COL_X+i) != xyz[i])
           {
-          columnList->SetCellTextAsDouble(row,COL_X+i,xyz[i]);
+          std::ostrstream os;    
+          os << std::setiosflags(ios::fixed | ios::showpoint) << std::setprecision(vtkProstateNavGUI::POSITION_PRECISION_DIGITS);
+          os << xyz[i] << std::ends;
+          columnList->SetCellText(row,COL_X+i,os.str());
+          os.rdbuf()->freeze();
           }
         }
       }
 
-    if (target->GetNeedleTypeString().compare(columnList->GetCellText(row,COL_NEEDLE)) != 0)
+    if (needle->mDescription.compare(columnList->GetCellText(row,COL_NEEDLE)) != 0)
     {
-      columnList->SetCellText(row,COL_NEEDLE,target->GetNeedleTypeString().c_str());
+      columnList->SetCellText(row,COL_NEEDLE,needle->mDescription.c_str());
     }
 
     if (target->GetTargetValidated())
       {
-      if (recreateRows || columnList->GetCellTextAsDouble(row,COL_OVERALL_ERROR) != target->GetOverallError())
+        if (recreateRows || columnList->GetCellTextAsDouble(row,COL_OVERALL_ERROR) != target->GetErrorDistanceFromNeedleLine())
         {
-        columnList->SetCellTextAsDouble(row,COL_OVERALL_ERROR,target->GetOverallError());
+          std::ostrstream os;    
+          os << std::setiosflags(ios::fixed | ios::showpoint) << std::setprecision(vtkProstateNavGUI::POSITION_PRECISION_DIGITS*2); // *2 to have double precision as the position that it was computed from
+          os << target->GetErrorDistanceFromNeedleLine() << std::ends;
+          columnList->SetCellText(row,COL_OVERALL_ERROR,os.str());
+          os.rdbuf()->freeze();
         }
-      if (recreateRows || columnList->GetCellTextAsDouble(row,COL_LR_ERROR) != target->GetLRError())
+        if (recreateRows || columnList->GetCellTextAsDouble(row,COL_LR_ERROR) != target->GetErrorVector()[0])
         {
-        columnList->SetCellTextAsDouble(row,COL_LR_ERROR,target->GetLRError());
+        std::ostrstream os;    
+        os << std::setiosflags(ios::fixed | ios::showpoint) << std::setprecision(vtkProstateNavGUI::POSITION_PRECISION_DIGITS*3);
+        os << target->GetErrorVector()[0] << std::ends;
+        columnList->SetCellText(row,COL_LR_ERROR,os.str());
+        os.rdbuf()->freeze();
         }
-      if (recreateRows || columnList->GetCellTextAsDouble(row,COL_AP_ERROR) != target->GetAPError())
+      if (recreateRows || columnList->GetCellTextAsDouble(row,COL_AP_ERROR) != target->GetErrorVector()[1])
         {
-        columnList->SetCellTextAsDouble(row,COL_AP_ERROR,target->GetAPError());
+        std::ostrstream os;    
+        os << std::setiosflags(ios::fixed | ios::showpoint) << std::setprecision(vtkProstateNavGUI::POSITION_PRECISION_DIGITS*3);
+        os << target->GetErrorVector()[1] << std::ends;
+        columnList->SetCellText(row,COL_AP_ERROR,os.str());
+        os.rdbuf()->freeze();
         }
-      if (recreateRows || columnList->GetCellTextAsDouble(row,COL_IS_ERROR) != target->GetISError())
+      if (recreateRows || columnList->GetCellTextAsDouble(row,COL_IS_ERROR) != target->GetErrorVector()[2])
         {
-        columnList->SetCellTextAsDouble(row,COL_IS_ERROR,target->GetISError());
+        std::ostrstream os;    
+        os << std::setiosflags(ios::fixed | ios::showpoint) << std::setprecision(vtkProstateNavGUI::POSITION_PRECISION_DIGITS*3);
+        os << target->GetErrorVector()[2] << std::ends;
+        columnList->SetCellText(row,COL_IS_ERROR,os.str());
+        os.rdbuf()->freeze();
         }
       }
     else
@@ -705,6 +772,28 @@ void vtkProstateNavStepVerification::UpdateTargetListGUI()
           }
       }
     }
+
+  int selectedTargetIndex=-1;
+  int numRows = this->TargetList->GetWidget()->GetNumberOfSelectedRows();
+  if (numRows == 1)
+  {       
+    int rowIndex = this->TargetList->GetWidget()->GetIndexOfFirstSelectedRow();    
+    selectedTargetIndex=this->TargetList->GetWidget()->GetRowAttributeAsInt(rowIndex, TARGET_INDEX_ATTR);
+  }
+  int currentTargetIndex=this->GetProstateNavManager()->GetCurrentTargetIndex();
+  if (currentTargetIndex!=selectedTargetIndex)
+  {
+    for (int rowIndex=0; rowIndex<this->TargetList->GetWidget()->GetNumberOfRows(); rowIndex++)
+    {
+      if (this->TargetList->GetWidget()->GetRowAttributeAsInt(rowIndex, TARGET_INDEX_ATTR)==currentTargetIndex)
+      {
+        // found the row corresponding to the current target
+        this->TargetList->GetWidget()->SelectSingleRow(rowIndex);
+        break;
+      }
+    }
+  } 
+
 }
 
 
@@ -718,6 +807,14 @@ void vtkProstateNavStepVerification::AddGUIObservers()
     {
     this->LoadVerificationVolumeButton->AddObserver(vtkKWPushButton::InvokedEvent, (vtkCommand *)this->GUICallbackCommand); 
     }
+  if (this->ShowWorkspaceButton)
+    {
+    this->ShowWorkspaceButton->AddObserver(vtkKWCheckButton::SelectedStateChangedEvent, (vtkCommand *)this->GUICallbackCommand);
+    }  
+  if (this->ShowRobotButton)
+    {
+    this->ShowRobotButton->AddObserver(vtkKWCheckButton::SelectedStateChangedEvent, (vtkCommand *)this->GUICallbackCommand);
+    }  
   if (this->VolumeSelectorWidget)
     {
     this->VolumeSelectorWidget->AddObserver ( vtkSlicerNodeSelectorWidget::NodeSelectedEvent, (vtkCommand *)this->GUICallbackCommand);  
@@ -733,7 +830,7 @@ void vtkProstateNavStepVerification::AddGUIObservers()
   if (this->TargetList)
     {
     this->TargetList->GetWidget()->SetCellUpdatedCommand(this, "OnMultiColumnListUpdate");
-    this->TargetList->GetWidget()->SetSelectionChangedCommand(this, "OnMultiColumnListSelectionChanged");
+    this->TargetList->GetWidget()->SetSelectionCommand(this, "OnMultiColumnListSelection");
     }
 }
 //-----------------------------------------------------------------------------
@@ -743,6 +840,14 @@ void vtkProstateNavStepVerification::RemoveGUIObservers()
     {
     this->LoadVerificationVolumeButton->RemoveObserver((vtkCommand *)this->GUICallbackCommand); 
     }
+  if (this->ShowWorkspaceButton)
+    {
+    this->ShowWorkspaceButton->RemoveObserver((vtkCommand *)this->GUICallbackCommand);
+    }  
+  if (this->ShowRobotButton)
+    {
+    this->ShowRobotButton->RemoveObserver((vtkCommand *)this->GUICallbackCommand);
+    }  
   if (this->VolumeSelectorWidget)
     {
     this->VolumeSelectorWidget->RemoveObserver ((vtkCommand *)this->GUICallbackCommand);  
@@ -758,14 +863,14 @@ void vtkProstateNavStepVerification::RemoveGUIObservers()
   if (this->TargetList)
     {
     this->TargetList->GetWidget()->SetCellUpdatedCommand(this, "");
-    this->TargetList->GetWidget()->SetSelectionChangedCommand(this, "");
+    this->TargetList->GetWidget()->SetSelectionCommand(this, "");
     }
 }
 
 //--------------------------------------------------------------------------------
 void vtkProstateNavStepVerification::UpdateGUI()
 {
-  vtkMRMLProstateNavManagerNode *mrmlNode = this->GetGUI()->GetProstateNavManager();
+  vtkMRMLProstateNavManagerNode *mrmlNode = this->GetGUI()->GetProstateNavManagerNode();
 
   if (!mrmlNode)
   {
@@ -782,9 +887,9 @@ void vtkProstateNavStepVerification::UpdateGUI()
     }
     this->Message->SetText("Select a target, click on 'Verify target' button, then click on two points along the visible needle line.");
   }
-  const char* volNodeID = mrmlNode->GetVerificationVolumeNodeID();
+  const char* volNodeID = mrmlNode->GetVerificationVolumeNodeRef();
   vtkMRMLScalarVolumeNode *volNode=vtkMRMLScalarVolumeNode::SafeDownCast(this->GetLogic()->GetApplicationLogic()->GetMRMLScene()->GetNodeByID(volNodeID));
-  if ( volNode )
+  if ( volNode && this->VolumeSelectorWidget!=NULL && this->VolumeSelectorWidget->IsCreated())
   {
     this->VolumeSelectorWidget->UpdateMenu();
     this->VolumeSelectorWidget->SetSelected( volNode );
@@ -792,14 +897,23 @@ void vtkProstateNavStepVerification::UpdateGUI()
 
   UpdateTargetListGUI();
 
+  if (this->ShowRobotButton &&this->ShowRobotButton->IsCreated()) 
+  {
+    this->ShowRobotButton->SetSelectedState(IsRobotModelShown());
+  }
+  if (this->ShowWorkspaceButton &&this->ShowWorkspaceButton->IsCreated()) 
+  {
+    this->ShowWorkspaceButton->SetSelectedState(IsWorkspaceModelShown());  
+  }  
+
+  DisplayVerificationResultsForCurrentTarget();
 }
 
 //----------------------------------------------------------------------------
 void vtkProstateNavStepVerification::HideUserInterface()
 {
+  TearDownGUI(); // HideUserInterface deletes the reference to the scene, so TearDownGUI shall be done before calling HideUserInterface
   Superclass::HideUserInterface();
-
-  TearDownGUI();  
 }
 
 //----------------------------------------------------------------------------
@@ -923,10 +1037,8 @@ void vtkProstateNavStepVerification::UpdateVerificationResultsForCurrentTarget()
 
   // set the variable values in target descriptor
   targetDesc->SetTargetValidated(true);
-  targetDesc->SetOverallError(overallErr);
-  targetDesc->SetAPError(apErr);
-  targetDesc->SetLRError(lrErr);
-  targetDesc->SetISError(isErr);
+  targetDesc->SetErrorDistanceFromNeedleLine(overallErr);
+  targetDesc->SetErrorVector(apErr, lrErr, isErr);
 
   this->GetProstateNavManager()->Modified();
 }
@@ -955,6 +1067,13 @@ void vtkProstateNavStepVerification::DisplayVerificationResultsForCurrentTarget(
   {
     targetValidated=targetDesc->GetTargetValidated();
   }
+
+  if (this->VerificationPointListNode==NULL)
+  {
+    // no node has been created yet
+    return;
+  }
+
   if (!targetValidated)
   {
     // no target is selected

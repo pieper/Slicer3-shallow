@@ -18,7 +18,7 @@
 #ifndef __InitialImageToImageRegistrationMethod_h
 #define __InitialImageToImageRegistrationMethod_h
 
-#include "itkImage.h"
+#include "itkOrientedImage.h"
 #include "itkCommand.h"
 
 #include "itkImageToImageRegistrationMethod.h"

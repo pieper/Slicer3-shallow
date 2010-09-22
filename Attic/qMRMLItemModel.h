@@ -43,7 +43,7 @@ public:
   //virtual bool setItemData(const QModelIndex &index, const QMap<int, QVariant> &roles);
   virtual Qt::DropActions supportedDropActions()const;
 private:
-  CTK_DECLARE_PRIVATE(qMRMLItemModel);
+  QCTK_DECLARE_PRIVATE(qMRMLItemModel);
 };
 
 #endif

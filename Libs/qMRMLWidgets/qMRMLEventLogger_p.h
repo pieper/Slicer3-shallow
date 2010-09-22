@@ -1,17 +1,18 @@
 #ifndef __qMRMLEventLogger_p_h
 #define __qMRMLEventLogger_p_h
 
-/// Qt includes
+#include "qMRMLEventLogger.h"
+
+/// qVTK includes
+#include <qVTKObject.h>
+
+/// qCTK includes
+#include <qCTKPimpl.h>
+
+/// QT includes
 #include <QHash>
 #include <QObject>
 #include <QString>
-
-/// CTK includes
-#include <ctkPimpl.h>
-#include <ctkVTKObject.h>
-
-// qMRML includes
-#include "qMRMLEventLogger.h"
 
 /// VTK includes
 #include <vtkWeakPointer.h>
@@ -19,15 +20,14 @@
 class vtkMRMLScene;
 
 //------------------------------------------------------------------------------
-class qMRMLEventLoggerPrivate: public QObject
+class qMRMLEventLoggerPrivate: public QObject, public qCTKPrivate<qMRMLEventLogger>
 {
   QVTK_OBJECT
-  Q_DECLARE_PUBLIC(qMRMLEventLogger);
-protected:
-  qMRMLEventLogger* const q_ptr;
 public:
-  qMRMLEventLoggerPrivate(qMRMLEventLogger& object);
+  QCTK_DECLARE_PUBLIC(qMRMLEventLogger);
+
   typedef QObject Superclass;
+  qMRMLEventLoggerPrivate();
 
   void init();
 

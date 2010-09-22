@@ -2,7 +2,6 @@
 // MRML includes
 #include "vtkMRMLFiberBundleNode.h"
 #include "vtkMRMLFiducialListNode.h"
-#include "vtkMRMLDiffusionTensorVolumeNode.h"
 
 // Tractography Logic includes
 #include "vtkSlicerTractographyFiducialSeedingLogic.h"
@@ -13,27 +12,22 @@
 #include "ui_qSlicerTractographyFiducialSeedingModule.h"
 
 //-----------------------------------------------------------------------------
-class qSlicerTractographyFiducialSeedingModuleWidgetPrivate:
+class qSlicerTractographyFiducialSeedingModuleWidgetPrivate: 
+  public qCTKPrivate<qSlicerTractographyFiducialSeedingModuleWidget>,
   public Ui_qSlicerTractographyFiducialSeedingModule
 {
 };
 
 //-----------------------------------------------------------------------------
-qSlicerTractographyFiducialSeedingModuleWidget::qSlicerTractographyFiducialSeedingModuleWidget(QWidget *_parent)
-  : Superclass(_parent)
-  , d_ptr(new qSlicerTractographyFiducialSeedingModuleWidgetPrivate)
+qSlicerTractographyFiducialSeedingModuleWidget::qSlicerTractographyFiducialSeedingModuleWidget(QWidget *_parent):Superclass(_parent)
 {
   this->TractographyFiducialSeedingNode = 0;
-}
-//-----------------------------------------------------------------------------
-qSlicerTractographyFiducialSeedingModuleWidget::~qSlicerTractographyFiducialSeedingModuleWidget()
-{
 }
 
 //-----------------------------------------------------------------------------
 void qSlicerTractographyFiducialSeedingModuleWidget::setMRMLScene(vtkMRMLScene* scene)
 {
-  this->Superclass::setMRMLScene(scene);
+  qSlicerWidget::setMRMLScene(scene);
 
   // find parameters node or create it if there is no one in the scene
   if (this->TractographyFiducialSeedingNode == 0)
@@ -56,7 +50,7 @@ void qSlicerTractographyFiducialSeedingModuleWidget::setMRMLScene(vtkMRMLScene* 
 //-----------------------------------------------------------------------------
 void qSlicerTractographyFiducialSeedingModuleWidget::setup()
 {
-  Q_D(qSlicerTractographyFiducialSeedingModuleWidget);
+  QCTK_D(qSlicerTractographyFiducialSeedingModuleWidget);
   d->setupUi(this);
 
 
@@ -231,7 +225,7 @@ void qSlicerTractographyFiducialSeedingModuleWidget::setFiberBundleNode(vtkMRMLN
 //-----------------------------------------------------------------------------
 void qSlicerTractographyFiducialSeedingModuleWidget::updateWidgetFromMRML()
 {
-  Q_D(qSlicerTractographyFiducialSeedingModuleWidget);
+  QCTK_D(qSlicerTractographyFiducialSeedingModuleWidget);
   
   vtkMRMLTractographyFiducialSeedingNode *paramNode = this->TractographyFiducialSeedingNode;
 

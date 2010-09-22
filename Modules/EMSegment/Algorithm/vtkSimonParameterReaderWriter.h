@@ -39,9 +39,9 @@
 
 #include "vtkObject.h"
 //!!!bcd!!!#include "vtkSlicer.h"
-#include "vtkEMSegmentAlgorithm.h"
+#include "vtkEMSegment.h"
 
-class  VTK_EMSEGMENT_ALGORITHM_EXPORT vtkSimonParameterReaderWriter : public vtkObject
+class  VTK_EMSEGMENT_EXPORT vtkSimonParameterReaderWriter : public vtkObject
 {
 public:
   static vtkSimonParameterReaderWriter *New();

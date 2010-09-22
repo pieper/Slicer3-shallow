@@ -12,6 +12,7 @@ class vtkKWEntryWithLabel;
 class vtkKWCheckButtonWithLabel;
 class vtkKWCheckButton;
 class vtkKWWidget;
+class vtkKWLabel;
 class VTK_EMSEGMENT_EXPORT vtkEMSegmentNodeParametersStep : public vtkEMSegmentStep
 {
 public:
@@ -104,7 +105,9 @@ protected:
 
   vtkKWFrameWithLabel                *NodeParametersInputChannelWeightFrame;
   vtkKWFrameWithLabel                *NodeParametersClassOverviewWeightGlobalFrame;
-   
+
+  vtkKWLabel                         *NodeParametersLabel;
+
   //BTX
   vtkstd::vector<vtkKWScaleWithEntry*>  NodeParametersInputChannelWeight;
   vtkstd::vector<vtkKWScaleWithEntry*>  NodeParametersClassOverviewWeightEntry;

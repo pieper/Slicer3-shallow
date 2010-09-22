@@ -13,6 +13,7 @@
 #include "vtkKWWizardWidget.h"
 #include "vtkKWWizardWorkflow.h"
 #include "vtkMRMLEMSTargetNode.h"
+#include "vtkMRMLEMSGlobalParametersNode.h"
 
 //----------------------------------------------------------------------------
 vtkStandardNewMacro(vtkEMSegmentRegistrationParametersStep);
@@ -29,6 +30,7 @@ vtkEMSegmentRegistrationParametersStep::vtkEMSegmentRegistrationParametersStep()
   this->RegistrationParametersAffineMenuButton        = NULL;
   this->RegistrationParametersDeformableMenuButton    = NULL;
   this->RegistrationParametersInterpolationMenuButton = NULL;
+  this->RegistrationAtlasInputFrame = NULL;
 }
 
 //----------------------------------------------------------------------------
@@ -71,6 +73,13 @@ vtkEMSegmentRegistrationParametersStep::~vtkEMSegmentRegistrationParametersStep(
     this->RegistrationParametersFrame->Delete();
     this->RegistrationParametersFrame = NULL;
     }
+
+  if (this->RegistrationAtlasInputFrame)
+    {
+      this->RegistrationAtlasInputFrame->SetParent(NULL);
+      this->RegistrationAtlasInputFrame->Delete();
+      this->RegistrationAtlasInputFrame = NULL;
+    }
 }
 
 //----------------------------------------------------------------------------
@@ -106,8 +115,21 @@ void vtkEMSegmentRegistrationParametersStep::ShowUserInterface()
 
   char buffer[256];
 
-  int enabled = parent->GetEnabled();
 
+ if (!this->RegistrationAtlasInputFrame)
+    {
+    this->RegistrationAtlasInputFrame = vtkKWFrame::New();
+    }
+  if (!this->RegistrationAtlasInputFrame->IsCreated())
+    {
+      this->RegistrationAtlasInputFrame->SetParent(this->RegistrationParametersFrame->GetFrame());
+    this->RegistrationAtlasInputFrame->Create();
+    }
+  this->Script(
+    "pack %s -side top -anchor nw -fill x -padx 0 -pady 2", 
+    this->RegistrationAtlasInputFrame->GetWidgetName());
+
+  int enabled = parent->GetEnabled();
   // Create the atlas image volume selector
   this->AssignAtlasScansToInputChannels( enabled);
 
@@ -279,7 +301,7 @@ void vtkEMSegmentRegistrationParametersStep::ShowUserInterface()
     else if 
       (v == vtkEMSegmentMRMLManager::AtlasToTargetAffineRegistrationRigidMMISlow)
       {
-      value = "Slow";
+      value = "Accurate";
       }
     else if 
       (v == vtkEMSegmentMRMLManager::AtlasToTargetAffineRegistrationRigidNCCFast)
@@ -322,7 +344,7 @@ void vtkEMSegmentRegistrationParametersStep::ShowUserInterface()
     else if (v == vtkEMSegmentMRMLManager::
              AtlasToTargetDeformableRegistrationBSplineMMISlow)
       {
-      value = "Slow";
+      value = "Accurate";
       }
     else if (v == vtkEMSegmentMRMLManager::
              AtlasToTargetDeformableRegistrationBSplineNCCFast)
@@ -411,7 +433,9 @@ void vtkEMSegmentRegistrationParametersStep::AssignAtlasScansToInputChannels(int
 {
   vtkEMSegmentMRMLManager *mrmlManager = this->GetGUI()->GetMRMLManager();
   vtkMRMLEMSTargetNode *inputNodes = mrmlManager->GetTargetInputNode();
-  if (!inputNodes) 
+  vtkMRMLEMSGlobalParametersNode* globalNode = mrmlManager->GetGlobalParametersNode();
+
+  if (!inputNodes || !globalNode) 
     {
       return;
     }
@@ -425,7 +449,9 @@ void vtkEMSegmentRegistrationParametersStep::AssignAtlasScansToInputChannels(int
     {
       if (this->RegistrationParametersAtlasImageMenuButton[i])
         {
+      this->RegistrationParametersAtlasImageMenuButton[i]->Unpack();
           this->RegistrationParametersAtlasImageMenuButton[i]->Delete();
+      this->RegistrationParametersAtlasImageMenuButton[i] = NULL;
         }
     }
     }
@@ -447,11 +473,11 @@ void vtkEMSegmentRegistrationParametersStep::AssignAtlasScansToInputChannels(int
     }
       if (!this->RegistrationParametersAtlasImageMenuButton[i]->IsCreated())
     {
-      this->RegistrationParametersAtlasImageMenuButton[i]->SetParent(this->RegistrationParametersFrame->GetFrame());
+      this->RegistrationParametersAtlasImageMenuButton[i]->SetParent(this->RegistrationAtlasInputFrame);
       this->RegistrationParametersAtlasImageMenuButton[i]->Create();
       this->RegistrationParametersAtlasImageMenuButton[i]->GetWidget()->SetWidth(EMSEG_MENU_BUTTON_WIDTH);
       this->RegistrationParametersAtlasImageMenuButton[i]->GetLabel()->SetWidth(EMSEG_WIDGETS_LABEL_WIDTH);
-      this->RegistrationParametersAtlasImageMenuButton[i]->SetLabelText(inputNodes->GetNthInputChannelName(i));
+      this->RegistrationParametersAtlasImageMenuButton[i]->SetLabelText(globalNode->GetNthTargetInputChannelName(i));
       this->RegistrationParametersAtlasImageMenuButton[i]->SetBalloonHelpString("Select atlas volume representing the --- channel.");
     }
       this->Script( "pack %s -side top -anchor nw -padx 2 -pady 2", this->RegistrationParametersAtlasImageMenuButton[i]->GetWidgetName());

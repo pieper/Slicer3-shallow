@@ -24,7 +24,7 @@
 #include "vtkSlicerViewControlGUI.h"
 #include "vtkSlicerModuleChooseGUI.h"
 #include "vtkSlicerLogoDisplayGUI.h"
-#include "vtkMRMLSliceLogic.h"
+#include "vtkSlicerSliceLogic.h"
 
 #include "vtkSlicerWindow.h"
 #include "vtkKWFrame.h"
@@ -241,7 +241,7 @@ class VTK_SLICER_BASE_GUI_EXPORT vtkSlicerApplicationGUI : public vtkSlicerCompo
     virtual void PackTabbedSliceView ( );
     virtual void PackLightboxView ( );
     virtual void PackCompareView();
-    virtual void PackSideBySideLightboxView();
+    virtual void PackSideBySideCompareView();
     virtual void PackDual3DView();
     virtual void UnpackConventionalView ( );
     virtual void UnpackOneUp3DView ( );
@@ -251,7 +251,7 @@ class VTK_SLICER_BASE_GUI_EXPORT vtkSlicerApplicationGUI : public vtkSlicerCompo
     virtual void UnpackTabbedSliceView ( );
     virtual void UnpackLightboxView ( );
     virtual void UnpackCompareView();
-    virtual void UnpackSideBySideLightboxView();
+    virtual void UnpackSideBySideCompareView();
     virtual void UnpackDual3DView();
 
     /// 
@@ -259,9 +259,9 @@ class VTK_SLICER_BASE_GUI_EXPORT vtkSlicerApplicationGUI : public vtkSlicerCompo
     virtual void ConfigureMainSliceViewers ( );
     virtual void AddMainSliceViewerObservers ( );
     virtual void RemoveMainSliceViewerObservers ( );
-    virtual void SetAndObserveMainSliceLogic ( vtkMRMLSliceLogic *l1,
-                                               vtkMRMLSliceLogic *l2,
-                                               vtkMRMLSliceLogic *l3 );
+    virtual void SetAndObserveMainSliceLogic ( vtkSlicerSliceLogic *l1,
+                                               vtkSlicerSliceLogic *l2,
+                                               vtkSlicerSliceLogic *l3 );
     
     /// 
     /// These methods populate the various GUI Panel frames

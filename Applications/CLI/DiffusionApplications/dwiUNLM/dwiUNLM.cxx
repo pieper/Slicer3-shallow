@@ -25,7 +25,7 @@
 #endif
 #include <math.h>
 
-#include "localPluginUtilities.h"
+#include "itkPluginUtilities.h"
 
 #include "itkUNLMFilter.h"
 

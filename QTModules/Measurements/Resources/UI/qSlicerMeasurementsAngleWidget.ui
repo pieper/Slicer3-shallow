@@ -18,7 +18,7 @@
     <number>6</number>
    </property>
    <item>
-    <widget class="ctkCollapsibleButton" name="ModifyAllAngleGroupBox">
+    <widget class="qCTKCollapsibleButton" name="ModifyAllAngleGroupBox">
      <property name="text">
       <string>Modify All Angle Nodes</string>
      </property>
@@ -27,11 +27,11 @@
      </property>
      <layout class="QHBoxLayout" name="horizontalLayout">
       <item>
-       <widget class="ctkComboBox" name="AllAnglesVisibilityComboBox">
-        <property name="defaultText">
+       <widget class="qCTKTitleComboBox" name="AllAnglesVisibilityComboBox">
+        <property name="title">
          <string/>
         </property>
-        <property name="defaultIcon">
+        <property name="icon">
          <iconset>
           <normaloff>:/Icons/VisibleOrInvisible.png</normaloff>:/Icons/VisibleOrInvisible.png</iconset>
         </property>
@@ -41,7 +41,7 @@
          </property>
          <property name="icon">
           <iconset>
-           <normaloff>:/Icons/VisibleOn.png</normaloff>:/Icons/VisibleOn.png</iconset>
+           <normaloff>:/Icons/Visible.png</normaloff>:/Icons/Visible.png</iconset>
          </property>
         </item>
         <item>
@@ -50,7 +50,7 @@
          </property>
          <property name="icon">
           <iconset>
-           <normaloff>:/Icons/VisibleOff.png</normaloff>:/Icons/VisibleOff.png</iconset>
+           <normaloff>:/Icons/Invisible.png</normaloff>:/Icons/Invisible.png</iconset>
          </property>
         </item>
        </widget>
@@ -72,7 +72,7 @@
     </widget>
    </item>
    <item>
-    <widget class="ctkCollapsibleButton" name="ModifySelectedAngleNodeGroupBox">
+    <widget class="qCTKCollapsibleButton" name="ModifySelectedAngleNodeGroupBox">
      <property name="text">
       <string>Modify Selected Angle Node</string>
      </property>
@@ -90,7 +90,7 @@
          </widget>
         </item>
         <item row="0" column="1">
-         <widget class="qMRMLNodeComboBox" name="AngleNodeSelector">
+         <widget class="qMRMLNodeSelector" name="AngleNodeSelector">
           <property name="nodeTypes">
            <stringlist>
             <string>vtkMRMLMeasurementsAngleNode</string>
@@ -120,7 +120,7 @@
          </widget>
         </item>
         <item row="2" column="1">
-         <widget class="ctkCoordinatesWidget" name="AnglePosition1CoordinatesWidget">
+         <widget class="qCTKCoordinatesWidget" name="AnglePosition1CoordinatesWidget">
           <property name="Dimension">
            <number>3</number>
           </property>
@@ -134,7 +134,7 @@
          </widget>
         </item>
         <item row="3" column="1">
-         <widget class="ctkCoordinatesWidget" name="AnglePosition2CoordinatesWidget"/>
+         <widget class="qCTKCoordinatesWidget" name="AnglePosition2CoordinatesWidget"/>
         </item>
         <item row="4" column="0">
          <widget class="QLabel" name="AnglePositionCenterLabel">
@@ -144,12 +144,12 @@
          </widget>
         </item>
         <item row="4" column="1">
-         <widget class="ctkCoordinatesWidget" name="AnglePositionCenterCoordinatesWidget"/>
+         <widget class="qCTKCoordinatesWidget" name="AnglePositionCenterCoordinatesWidget"/>
         </item>
        </layout>
       </item>
       <item>
-       <widget class="ctkCollapsibleGroupBox" name="ConstrainAngleToModelsGroupBox">
+       <widget class="qCTKCollapsibleGroupBox" name="ConstrainAngleToModelsGroupBox">
         <property name="title">
          <string>Constrain Angle To Models</string>
         </property>
@@ -191,7 +191,7 @@
        </widget>
       </item>
       <item>
-       <widget class="ctkCollapsibleGroupBox" name="DisplayOptionsGroupBox">
+       <widget class="qCTKCollapsibleGroupBox" name="DisplayOptionsGroupBox">
         <property name="title">
          <string>Display Options</string>
         </property>
@@ -212,7 +212,7 @@
             </widget>
            </item>
            <item>
-            <widget class="ctkColorPickerButton" name="AngleEndPointsColorPicker"/>
+            <widget class="qCTKColorPickerButton" name="AngleEndPointsColorPicker"/>
            </item>
            <item>
             <widget class="QLabel" name="AngleLineColorLabel">
@@ -225,7 +225,7 @@
             </widget>
            </item>
            <item>
-            <widget class="ctkColorPickerButton" name="AngleLineColorPicker"/>
+            <widget class="qCTKColorPickerButton" name="AngleLineColorPicker"/>
            </item>
           </layout>
          </item>
@@ -315,36 +315,36 @@
  </widget>
  <customwidgets>
   <customwidget>
-   <class>ctkCollapsibleButton</class>
+   <class>qCTKCollapsibleButton</class>
    <extends>QWidget</extends>
-   <header>ctkCollapsibleButton.h</header>
+   <header>qCTKCollapsibleButton.h</header>
    <container>1</container>
   </customwidget>
   <customwidget>
-   <class>ctkCollapsibleGroupBox</class>
+   <class>qCTKCollapsibleGroupBox</class>
    <extends>QGroupBox</extends>
-   <header>ctkCollapsibleGroupBox.h</header>
+   <header>qCTKCollapsibleGroupBox.h</header>
    <container>1</container>
   </customwidget>
   <customwidget>
-   <class>ctkColorPickerButton</class>
+   <class>qCTKColorPickerButton</class>
    <extends>QPushButton</extends>
-   <header>ctkColorPickerButton.h</header>
+   <header>qCTKColorPickerButton.h</header>
   </customwidget>
   <customwidget>
-   <class>ctkCoordinatesWidget</class>
+   <class>qCTKCoordinatesWidget</class>
    <extends>QWidget</extends>
-   <header>ctkCoordinatesWidget.h</header>
+   <header>qCTKCoordinatesWidget.h</header>
   </customwidget>
   <customwidget>
-   <class>ctkComboBox</class>
+   <class>qCTKTitleComboBox</class>
    <extends>QComboBox</extends>
-   <header>ctkComboBox.h</header>
+   <header>qCTKTitleComboBox.h</header>
   </customwidget>
   <customwidget>
-   <class>qMRMLNodeComboBox</class>
+   <class>qMRMLNodeSelector</class>
    <extends>QWidget</extends>
-   <header>qMRMLNodeComboBox.h</header>
+   <header>qMRMLNodeSelector.h</header>
   </customwidget>
   <customwidget>
    <class>qSlicerWidget</class>

@@ -33,7 +33,6 @@
 #include "vtkMRMLScalarVolumeNode.h"
 #include "vtkMRMLFiberBundleNode.h"
 #include "vtkMRMLFiberBundleStorageNode.h"
-#include "vtkMRMLInteractionNode.h"
 
 #include "itkRealTimeClock.h"
 
@@ -632,7 +631,7 @@ void vtkFetchMILogic::RequestResourceUpload ( )
     int success = this->RestoreFileNamesOnSelectedResources();
     if ( !success )
       {
-      //--- post message to user. filoenames may be corrupt.
+      //--- post message to user. filenames may be corrupt.
       msg = "Error restoring filenames associated with loaded datasets after a remote upload failure. Warning: file paths may be corrupted. As a precautionary measure, please save all datasets and scene file to a safe location on local disk or file system.";
       this->FetchMINode->SetErrorMessage (msg.c_str() );
       this->FetchMINode->InvokeEvent ( vtkMRMLFetchMINode::RemoteIOErrorEvent );

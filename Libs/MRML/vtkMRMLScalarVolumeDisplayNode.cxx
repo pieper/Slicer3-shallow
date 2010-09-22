@@ -37,6 +37,7 @@ vtkMRMLScalarVolumeDisplayNode* vtkMRMLScalarVolumeDisplayNode::New()
 }
 
 //----------------------------------------------------------------------------
+
 vtkMRMLNode* vtkMRMLScalarVolumeDisplayNode::CreateNodeInstance()
 {
   // First try to create the object from the vtkObjectFactory
@@ -112,22 +113,20 @@ vtkMRMLScalarVolumeDisplayNode::~vtkMRMLScalarVolumeDisplayNode()
 
 }
 
-//----------------------------------------------------------------------------
 void vtkMRMLScalarVolumeDisplayNode::UpdateImageDataPipeline()
 {
   Superclass::UpdateImageDataPipeline();
 
   vtkScalarsToColors *lookupTable = NULL;
-  vtkMRMLColorNode* colorNode = this->GetColorNode();
-  if (colorNode)
+  if (this->GetColorNode())
     {
-    lookupTable = colorNode->GetLookupTable();
+    lookupTable = this->GetColorNode()->GetLookupTable();
     if (lookupTable == NULL)
       {
-      if (vtkMRMLProceduralColorNode::SafeDownCast(colorNode) != NULL)
+      if (vtkMRMLProceduralColorNode::SafeDownCast(this->GetColorNode()) != NULL)
         {
         vtkDebugMacro("UpdateImageDataPipeline: getting color transfer function");
-        lookupTable = (vtkScalarsToColors*)(vtkMRMLProceduralColorNode::SafeDownCast(colorNode)->GetColorTransferFunction());
+        lookupTable = (vtkScalarsToColors*)(vtkMRMLProceduralColorNode::SafeDownCast(this->GetColorNode())->GetColorTransferFunction());
         }
       }
     }

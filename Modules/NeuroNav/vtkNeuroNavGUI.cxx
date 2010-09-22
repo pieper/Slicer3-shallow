@@ -346,7 +346,7 @@ void vtkNeuroNavGUI::AddGUIObservers ( )
   vtkIntArray* events = vtkIntArray::New();
   //events->InsertNextValue(vtkMRMLScene::NodeAddedEvent);
   //events->InsertNextValue(vtkMRMLScene::NodeRemovedEvent);
-  events->InsertNextValue(vtkMRMLScene::SceneClosedEvent);
+  events->InsertNextValue(vtkMRMLScene::SceneCloseEvent);
   
   if (this->GetMRMLScene() != NULL)
     {
@@ -667,7 +667,7 @@ void vtkNeuroNavGUI::ProcessLogicEvents ( vtkObject *vtkNotUsed(caller),
 void vtkNeuroNavGUI::ProcessMRMLEvents ( vtkObject *vtkNotUsed(caller),
                                          unsigned long event, void *vtkNotUsed(callData))
 {
-  if (event == vtkMRMLScene::SceneClosedEvent)
+  if (event == vtkMRMLScene::SceneCloseEvent)
     {
     if (this->LocatorCheckButton != NULL && this->LocatorCheckButton->GetSelectedState())
       {
@@ -782,13 +782,38 @@ void vtkNeuroNavGUI::BuildGUIForHelpFrame()
   // ----------------------------------------------------------------
 
   // Define your help text here.
-
-  const char *help = "NeuroNav is an intraoperative navigation system for neurosurgery. Please check this link for details: \n<a>http://wiki.slicer.org/slicerWiki/index.php/Modules:NeuroNav-Documentation-3.6</a>";
-  const char *about = "This work is supported by NA-MIC, NAC, BIRN, NCIGT, and the Slicer Community. See <a>http://www.slicer.org</a> for details. The NeuroNav module was contributed by Haiying Liu and Noby Hata at SPL, BWH (Ron Kikinis).";
+  std::stringstream helpss;
+//  helpss << "Module Revision: " << NEURONav_REVISION << std::endl;
+  helpss << "The **NeuroNav Module** is an intraoperative navigation system for neurosurgery."; 
+  helpss << "See <a>http://www.slicer.org/slicerWiki/index.php/Modules:NeuroNav-Documentation-3.6</a> for details.";
+  
+  std::stringstream aboutss;
+  aboutss << "This work is supported by NA-MIC, NAC, BIRN, NCIGT, ";
+  aboutss << "and the Slicer Community. See <a>http://www.slicer.org</a> for details.";
+  aboutss << "The NeuroNav module was contributed by Haiying Liu and Noby Hata at SPL, BWH (Ron Kikinis).";
 
   vtkKWWidget *page = this->UIPanel->GetPageWidget ( "NeuroNav" );
-  this->BuildHelpAndAboutFrame (page, help, about);
+  this->BuildHelpAndAboutFrame (page, helpss.str().c_str(), aboutss.str().c_str());
 
+  vtkSmartPointer<vtkKWLabel> NAMICLabel = vtkSmartPointer<vtkKWLabel>::New();
+  NAMICLabel->SetParent ( this->GetLogoFrame() );
+  NAMICLabel->Create();
+  NAMICLabel->SetImageToIcon ( this->GetAcknowledgementIcons()->GetNAMICLogo() );    
+
+  vtkSmartPointer<vtkKWLabel> NCIGTLabel = vtkSmartPointer<vtkKWLabel>::New();
+  NCIGTLabel->SetParent ( this->GetLogoFrame() );
+  NCIGTLabel->Create();
+  NCIGTLabel->SetImageToIcon ( this->GetAcknowledgementIcons()->GetNCIGTLogo() );
+    
+  vtkSlicerApplication *app = vtkSlicerApplication::SafeDownCast (this->GetApplication() );
+  if ( !app )
+    {
+    vtkErrorMacro ( "BuildGUIForHelpFrame: got Null SlicerApplication" );
+    return;
+    }
+
+  app->Script ( "grid %s -row 0 -column 0 -padx 2 -pady 2 -sticky w", NAMICLabel->GetWidgetName());
+  app->Script ("grid %s -row 0 -column 1 -padx 2 -pady 2 -sticky w", NCIGTLabel->GetWidgetName());    
 }
 
 
