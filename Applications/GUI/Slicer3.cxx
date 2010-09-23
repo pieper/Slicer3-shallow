@@ -2499,7 +2499,7 @@ int Slicer3_main(int& argc, char *argv[])
   scene->Delete ();
 
   // -- event broker
-  // - free up the reference from the interpeter
+  // - free up the reference from the interpreter
   slicerApp->Script ("$::slicer3::Broker Delete");
 
   //--- application last

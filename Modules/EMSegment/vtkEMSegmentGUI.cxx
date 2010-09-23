@@ -695,7 +695,7 @@ void vtkEMSegmentGUI::StartSegmentation()
     if (currentStep != wizard_workflow->GetCurrentStep()) {
       this->StartSegmentation();
     } else {
-      // Error occured 
+      // Error occurred
       this->StartSegmentStep = NULL;
     }
   }

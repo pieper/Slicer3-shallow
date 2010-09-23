@@ -616,7 +616,7 @@ private:
 
 
   //
-  // convienience functions for managing ID mapping (mrml id <-> vtkIdType)
+  // convenience functions for managing ID mapping (mrml id <-> vtkIdType)
   //
   virtual const char*  MapVTKNodeIDToMRMLNodeID(vtkIdType vtkID);
 
@@ -646,7 +646,7 @@ private:
 
   //
   // The api of this class exposes vtkIdType ids for tree nodes and
-  // volumes.  This esentially hides the mrml ids from client code and
+  // volumes.  This essentially hides the mrml ids from client code and
   // insulates the client from changes in the slicer mrml id
   // mechanism.
   //

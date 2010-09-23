@@ -78,7 +78,7 @@ protected:
   // parent of this node
   char*                               ParentNodeID;
   
-  // childrent of this node
+  // children of this node
   //BTX
   std::vector<std::string>            ChildNodeIDs;
   //ETX
