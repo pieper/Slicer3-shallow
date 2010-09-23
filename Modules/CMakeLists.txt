@@ -84,6 +84,7 @@ SET(modules
   CollectFiducials
   PETCTFusion
   IGTToolSelector
+  IGTRecorder
   )
 
 if(Slicer3_USE_OPENIGTLINK)
