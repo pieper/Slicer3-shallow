@@ -17,6 +17,7 @@ Version:   $Revision: 979 $
 
 // KWWidgets includes
 #include "vtkKWApplication.h"
+#include "vtkKWTkUtilities.h"
 
 #include "vtkSlicerConfigure.h" /* Slicer3_USE_* */
 
@@ -210,20 +211,30 @@ void vtkScriptedModuleGUI::ProcessGUIEvents(vtkObject *caller,
                                             void *vtkNotUsed(callData)) 
 {
   vtkKWObject *kwObject = vtkKWObject::SafeDownCast(caller);
+  if ( caller == NULL )
+    {
+    vtkErrorMacro("ignoring scripted event with null caller.");
+    return;
+    }
+
+  const char *tclName = vtkKWTkUtilities::GetTclNameFromPointer(
+                                            this->GetApplication(), caller);
+  if ( tclName == NULL )
+    {
+    vtkErrorMacro("ignoring scripted event with non-tcl wrapped caller.");
+    return;
+    }
 
   if (this->Language == vtkScriptedModuleGUI::Tcl)
     {
-    if (kwObject != NULL)
-      {
-      this->GetApplication()->Script("%sProcessGUIEvents %s %s %ld", 
-        this->GetModuleName(), this->GetTclName(), kwObject->GetTclName(), event);
-      }
+    this->GetApplication()->Script("%sProcessGUIEvents %s %s %ld", 
+      this->GetModuleName(), this->GetTclName(), tclName, event);
     }
   else if (this->Language == vtkScriptedModuleGUI::Python)
     {
 #ifdef Slicer3_USE_PYTHON
     std::stringstream pythonCommand;
-    pythonCommand << "SlicerScriptedModuleInfo.Modules['" << this->GetModuleName() << "']['gui'].ProcessGUIEvents(Slicer.GetPythonWrapper('" << kwObject->GetTclName() << "')," << event << ")\n";
+    pythonCommand << "SlicerScriptedModuleInfo.Modules['" << this->GetModuleName() << "']['gui'].ProcessGUIEvents(Slicer.GetPythonWrapper('" << tclName << "')," << event << ")\n";
     if (PyRun_SimpleString( pythonCommand.str().c_str() ) != 0)
       {
       PyErr_Print();
