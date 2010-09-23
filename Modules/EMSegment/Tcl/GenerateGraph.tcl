@@ -67,6 +67,7 @@ itcl::body EMSegmenterGraph::constructor { } {
     set _modLogic           [ $_modGui GetLogic ]
     set _mrmlManager        [ $_modGui GetMRMLManager ]
     set _workingDN          [ $_mrmlManager GetWorkingDataNode]
+    set _globalNode         [ $_mrmlManager GetGlobalParametersNode]
     #set _slicesGUI          [$::slicer3::ApplicationGUI GetSlicesGUI] 
     set _sliceGUI0          [$::slicer3::ApplicationGUI GetMainSliceGUI "Red"]
     set _sliceGUI1          [$::slicer3::ApplicationGUI GetMainSliceGUI "Yellow"]
@@ -137,7 +138,7 @@ itcl::body EMSegmenterGraph::constructor { } {
     set VolumeNode [$_alignedTarget GetNthVolumeNode $i ]
     set VolumeID [$VolumeNode GetID]
     lappend EMSegment(SelVolList,VolumeList)  $VolumeID
-    set Volume($VolumeID,name)  [ $_inputTarget GetNthInputChannelName $i ] 
+    set Volume($VolumeID,name)  [ $_globalNode GetNthTargetInputChannelName $i ] 
     set Volume($VolumeID,node)  $VolumeNode
     set Volume($VolumeID,data)  [$VolumeNode GetImageData]
     # puts "What Volume($VolumeID,node)  $VolumeNode"
@@ -206,10 +207,10 @@ itcl::body EMSegmenterGraph::constructor { } {
 itcl::body EMSegmenterGraph::destructor { } {
     global Gui
     catch {
-    _nullVolume Delete
+        _nullVolume Delete
     }
     catch {
-    wm withdraw $Gui(wEMSegment)
+       wm withdraw $Gui(wEMSegment)
     }
 
     if {$_event0 !=  { } } {
@@ -252,9 +253,9 @@ itcl::body  EMSegmenterGraph::CreateWindow { } {
     }
     # Set parameters corectly 
     if {$EMSegment(NumInputChannel)  > 1 } {
-    set EMSegment(NumGraph) 3 
+      set EMSegment(NumGraph) 3 
     } else {
-    set EMSegment(NumGraph) 1
+      set EMSegment(NumGraph) 1
     }
 
     #-------------------------------------------
