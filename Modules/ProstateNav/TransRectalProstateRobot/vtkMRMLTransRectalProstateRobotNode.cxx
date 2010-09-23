@@ -700,7 +700,7 @@ void vtkMRMLTransRectalProstateRobotNode::SetCalibrationInputs(const char *calib
 
   if (calibVolRef!=NULL && this->CalibrationVolumeNodeID!=NULL)
   {
-    if (strcmp(calibVolRef,this->CalibrationVolumeNodeID)!=NULL)
+    if (strcmp(calibVolRef,this->CalibrationVolumeNodeID))
     {
       modified=true;
       SetAndObserveCalibrationVolumeNodeID(calibVolRef);      
@@ -786,7 +786,7 @@ void vtkMRMLTransRectalProstateRobotNode::UpdateCalibration()
     calibrationPointListNode->RemoveFiducial(i);
   }
   fidCount=calibrationPointListNode->GetNumberOfFiducials();
-  for (int i=0; i<CALIB_MARKER_COUNT && i<fidCount; i++)
+  for (unsigned int i=0; i<CALIB_MARKER_COUNT && i<static_cast<unsigned int>(fidCount); i++)
   {
     if (strcmp(calibrationPointListNode->GetNthFiducialLabelText(i),MARKER_LABEL_NAMES[i])!=0)
     {
@@ -864,7 +864,6 @@ void vtkMRMLTransRectalProstateRobotNode::UpdateCalibration()
 
   for (unsigned int i=0; i<CALIB_MARKER_COUNT; i++)
   {
-    bool valid=false;
     
     float* rasPoint=calibrationPointListNode->GetNthFiducialXYZ(i);
     if (rasPoint==NULL)

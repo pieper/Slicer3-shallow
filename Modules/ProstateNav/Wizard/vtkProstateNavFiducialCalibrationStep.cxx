@@ -1117,8 +1117,8 @@ vtkMRMLFiducialListNode* vtkProstateNavFiducialCalibrationStep::GetCalibrationPo
   {  
     return NULL;
   }
-  vtkMRMLFiducialListNode *fidNode=robot->GetCalibrationPointListNode();
   /*
+  vtkMRMLFiducialListNode *fidNode=robot->GetCalibrationPointListNode();
   if (fidNode==NULL)
   {
     // the fiducial node hasn't been created yet
