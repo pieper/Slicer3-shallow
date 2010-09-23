@@ -1,6 +1,7 @@
 from SlicerScriptedModule import ScriptedModuleGUI
 import Slicer
 from Slicer import slicer
+import numpy
 
 vtkSlicerNodeSelectorWidget_NodeSelectedEvent = 11000
 vtkKWPushButton_InvokedEvent = 10000
@@ -13,6 +14,9 @@ class IGTRecorderGUI(ScriptedModuleGUI):
         self.vtkScriptedModuleGUI.SetCategory("IGT")
         self.TransformNodeSelector = slicer.vtkSlicerNodeSelectorWidget()
         self.StartStopButton = slicer.vtkKWPushButton()
+        self.LabelMapSelector = slicer.vtkSlicerNodeSelectorWidget()
+        self.LabelMapIJKToRAS = slicer.vtkMatrix4x4()
+        self.LabelMapTransform = slicer.vtkMatrix4x4()
         self.ObservedTransform = 0
     
     def Destructor(self):
@@ -85,15 +89,30 @@ Pressing Stop Recording will stop listenting to the transform and will stop modi
         pageWidgetName = self.GetUIPanel().GetPageWidget("IGTRecorder").GetWidgetName()
         slicer.TkCall("pack %s -side top -anchor nw -fill x -padx 2 -pady 2 -in %s" % (widgetName,pageWidgetName))
 
-        self.TransformNodeSelector.SetNodeClass("vtkMRMLTransformNode","","","")
+        self.TransformNodeSelector.SetNodeClass("vtkMRMLLinearTransformNode","","","")
         self.TransformNodeSelector.SetParent(moduleFrame.GetFrame())
         self.TransformNodeSelector.Create()
+        self.TransformNodeSelector.NewNodeEnabledOn()
         self.TransformNodeSelector.SetMRMLScene(self.GetLogic().GetMRMLScene())
         self.TransformNodeSelector.UpdateMenu()
         self.TransformNodeSelector.SetBorderWidth(2)
         self.TransformNodeSelector.SetLabelText("Transform: ")
-        self.TransformNodeSelector.SetBalloonHelpString("select a camera that will fly along this path.")
+        self.TransformNodeSelector.SetBalloonHelpString("Select a transform for recording.")
         slicer.TkCall("pack %s -side top -anchor e -padx 20 -pady 4 -expand true -fill x" % self.TransformNodeSelector.GetWidgetName())
+
+        self.LabelMapSelector.SetParent(moduleFrame.GetFrame())
+        self.LabelMapSelector.Create()
+        self.LabelMapSelector.SetNodeClass("vtkMRMLScalarVolumeNode","LabelMap","1","")
+        self.LabelMapSelector.NewNodeEnabledOff()
+        self.LabelMapSelector.NoneEnabledOff()
+        self.LabelMapSelector.DefaultEnabledOn()
+        self.LabelMapSelector.ShowHiddenOn()
+        self.LabelMapSelector.ChildClassesEnabledOff()
+        self.LabelMapSelector.SetMRMLScene(self.GetLogic().GetMRMLScene())
+        self.LabelMapSelector.UpdateMenu()
+        self.LabelMapSelector.SetLabelText("Label Map: ")
+        self.LabelMapSelector.SetBalloonHelpString("Pick the label map to define the anatomy that the transform passes through.")
+        slicer.TkCall("pack %s -side top -anchor e -padx 20 -pady 4 -fill x -expand true" % self.LabelMapSelector.GetWidgetName())
     
         self.StartStopButton.SetParent(moduleFrame.GetFrame())
         self.StartStopButton.Create()
@@ -136,7 +155,6 @@ Pressing Stop Recording will stop listenting to the transform and will stop modi
           return
 
         xlate = self.ObservedTransform.GetTransformToParent().TransformPoint(0,0,0)
-        self.Status("IGTRecorder update for %g %g %g..." % (xlate[0], xlate[1], xlate[2]))
 
         try:
             self.modelID
@@ -166,6 +184,11 @@ Pressing Stop Recording will stop listenting to the transform and will stop modi
             idArray.Reset()
             idArray.InsertNextTuple1(0)
 
+            colors = vtk.vtkUnsignedCharArray()
+            colors.SetNumberOfComponents(1)
+            colors.SetName("Colors")
+            polyData.GetPointData().AddArray(colors)
+
             # create model node
             modelNode = vtk.vtkMRMLModelNode()
             modelNode.SetScene(Slicer.slicer.MRMLScene)
@@ -190,11 +213,44 @@ Pressing Stop Recording will stop listenting to the transform and will stop modi
         points = polyData.GetPoints()
         lines = polyData.GetLines()
         linesIDArray = lines.GetData()
+        colors = polyData.GetPointData().GetArray("Colors")
 
         pointIndex = points.InsertNextPoint (xlate[0], xlate[1], xlate[2])
         linesIDArray.InsertNextTuple1(pointIndex)
         linesIDArray.SetTuple1( 0, linesIDArray.GetNumberOfTuples() - 1 )
         lines.SetNumberOfCells(1)
+        
+        # if there's a selected label map:
+        # - make the poly data us the same lookup table
+        # - show the scalars
+        # - make the scalar field match the label at the RAS point
+        labelMap = self.LabelMapSelector.GetSelected()
+        displayNode = modelNode.GetDisplayNode()
+        index = 0
+        if labelMap:
+          colorID = labelMap.GetDisplayNode().GetColorNodeID()
+          displayNode.ScalarVisibilityOn()
+          displayNode.SetActiveScalarName("Colors")
+          displayNode.SetAndObserveColorNodeID(colorID)
+          # now get the pixel-to-world space (IJKToRAS) for the label map
+          labelMap.GetIJKToRASMatrix(self.LabelMapIJKToRAS)
+          transform = labelMap.GetParentTransformNode()
+          if transform:
+            transform.GetMatrixTransformToWorld(self.LabelMapTransform)
+            self.LabelMapIJKToRAS.Multiply4x4(self.LabelMapIJKToRAS, self.LabelMapTransform, self.LabelMapIJKToRAS)
+          # invert so not it is world-to-index (RASToIJK including transform)
+          self.LabelMapIJKToRAS.Invert()
+          ijk = self.LabelMapIJKToRAS.MultiplyPoint(xlate[0], xlate[1], xlate[2], 1.0)
+          i = int(0.5+ijk[0])
+          j = int(0.5+ijk[1])
+          k = int(0.5+ijk[2])
+          dims = labelMap.GetImageData().GetDimensions()
+          if i >= 0 and i < dims[0] and j >= 0 and j < dims[1] and k >= 0 and k < dims[2]:
+            index = int(labelMap.GetImageData().GetScalarComponentAsDouble(i,j,k,0))
+        else:
+          displayNode.ScalarVisibilityOff()
+        colors.InsertNextTuple1(index)
 
         polyData.Modified()
+        self.Status("IGTRecorder update for %g %g %g (index %s)..." % (xlate[0], xlate[1], xlate[2], index))
 
