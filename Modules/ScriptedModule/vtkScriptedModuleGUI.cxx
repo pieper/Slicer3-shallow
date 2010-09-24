@@ -210,7 +210,6 @@ void vtkScriptedModuleGUI::ProcessGUIEvents(vtkObject *caller,
                                             unsigned long event,
                                             void *vtkNotUsed(callData)) 
 {
-  vtkKWObject *kwObject = vtkKWObject::SafeDownCast(caller);
   if ( caller == NULL )
     {
     vtkErrorMacro("ignoring scripted event with null caller.");
