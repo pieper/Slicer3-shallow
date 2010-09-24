@@ -61,6 +61,7 @@ set(SlicerBaseLogic_SRCS
   vtkDataIOManagerLogic.cxx
   # slicer's vtk extensions (filters)
   vtkImageSlicePaint.cxx 
+  vtkImageStash.cxx 
   vtkImageSlice.cxx 
   vtkImageFillROI.cxx
   vtkSlicerGlyphSource2D.cxx
