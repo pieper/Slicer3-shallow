@@ -162,8 +162,8 @@ proc EditorBuildGUI {this} {
   set ::Editor($this,enableCheckPoint) [vtkKWCheckButton New]
   $::Editor($this,enableCheckPoint) SetParent $::Editor($this,toolsEditFrame)
   $::Editor($this,enableCheckPoint) Create
-  $::Editor($this,enableCheckPoint) SetText "Check Points"
-  $::Editor($this,enableCheckPoint) SetBalloonHelpString "Volume Check Points allow you to move back and forth through recent edits.\n\nNote: for large volumes, you may run out of system memory when this is enabled."
+  $::Editor($this,enableCheckPoint) SetText "Undo/Redo"
+  $::Editor($this,enableCheckPoint) SetBalloonHelpString "Volume Check Points allow you to undo and redo recent edits.\n\nNote: for large volumes, you may run out of system memory when this is enabled."
   $::Editor($this,enableCheckPoint) SetSelectedState 0
   pack [$::Editor($this,enableCheckPoint) GetWidgetName] -side left
   set ::Editor(checkPointsEnabled) 0
@@ -524,8 +524,8 @@ proc EditorFreeVolumes {volumeList} {
 proc EditorSetCheckPointEnabled {onoff} {
   if { !$onoff } {
     EditorFreeCheckPointVolumes
-    EditorUpdateCheckPointButtons
   }
+  EditorUpdateCheckPointButtons
   set ::Editor(checkPointsEnabled) $onoff
 }
 
@@ -568,7 +568,7 @@ proc EditorStoreCheckPoint {node} {
   # invalidate NextCheckPoint list
   EditorFreeVolumes $::Editor(nextCheckPointImages)
 
-  EditorUpdateCheckPointButtons 
+  EditorUpdateCheckPointButtons
 }
 
 
