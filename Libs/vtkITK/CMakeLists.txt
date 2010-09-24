@@ -75,6 +75,7 @@ set(vtkITK_SRCS
   vtkITKBSplineTransform.cxx
   vtkITKTimeSeriesDatabase.cxx
   vtkITKIslandMath.cxx
+  vtkITKGrowCutSegmentationImageFilter.cxx
   )
 
 # Abstract/pure virtual classes
