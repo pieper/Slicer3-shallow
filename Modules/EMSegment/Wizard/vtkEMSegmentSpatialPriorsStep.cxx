@@ -24,7 +24,7 @@ vtkCxxRevisionMacro(vtkEMSegmentSpatialPriorsStep, "$Revision: 1.2 $");
 vtkEMSegmentSpatialPriorsStep::vtkEMSegmentSpatialPriorsStep()
 {
   this->SetName("4/9. Define Atlas");
-  this->SetDescription("Define probability maps and image scans of atlas.");
+  this->SetDescription("Assign structure specific atlases to corresponding anatomy in the tree.");
 
   this->ImageFrame      = NULL;
   this->SpatialPriorsFrame      = NULL;

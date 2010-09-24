@@ -402,7 +402,7 @@ void vtkEMSegmentNodeParametersStep::ShowUserInterface()
     this->NodeParametersGlobalPriorScale->SetResolution(0.01);
     this->NodeParametersGlobalPriorScale->GetEntry()->
       SetCommandTriggerToAnyChange();
-    this->NodeParametersGlobalPriorScale->SetBalloonHelpString("Probability that a voxel belonging to the parent structure will also belong to this structure.  The value must be in the range [0,1].  Class weights across siblings must sum to 1."); 
+    this->NodeParametersGlobalPriorScale->SetBalloonHelpString("Relative weight of this over other anatomical structures. For example, one can address the overestimation of a specific structure, e.g. grey matter, by reducing the corresponding class weight and increasing the weight of a sibling, such as white matter.The value must be in the range [0,1].  Class weights across siblings must sum to 1.");  
     }
 
   this->Script("grid %s -column 0 -row 1 -sticky nw -padx 2 -pady 2",  this->NodeParametersGlobalPriorScale->GetWidgetName());
@@ -427,7 +427,7 @@ void vtkEMSegmentNodeParametersStep::ShowUserInterface()
     this->NodeParametersSpatialPriorWeightScale->SetResolution(0.01);
     this->NodeParametersSpatialPriorWeightScale->GetEntry()->
       SetCommandTriggerToAnyChange();
-    this->NodeParametersSpatialPriorWeightScale->SetBalloonHelpString("Weight of the atlas (spatial prior) in the segmentation decision.  The value must be in the range [0,1], where 0 indicates that the atlas is ignored and 1 indicates the maximum atlas weight."); 
+    this->NodeParametersSpatialPriorWeightScale->SetBalloonHelpString("Weight of the atlas (spatial prior) versus the image data. The value must be in the range [0,1], where 0 indicates that the atlas is ignored and 1 indicates the maximum atlas weight. For example, when skullstripping an image, one should set the atlas weight to 1 as the algorithm requires spatial information to seperate the neck from the brain"); 
     }
 
   this->Script("grid %s -column 0 -row 2 -sticky nw -padx 2 -pady 2",

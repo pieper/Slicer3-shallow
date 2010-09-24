@@ -35,6 +35,7 @@ vtkImageEMLocalSuperClass* vtkImageEMLocalSuperClass::New()
 //------------------------------------------------------------------------------
 void vtkImageEMLocalSuperClass::CreateVariables() {
   this->NumClasses          = 0;  
+  this->Alpha = 0.7;                     // 0 <= alpha <= 1. Be carefull - has great influence over outcome 
   this->ClassList           = NULL;
   this->ClassListType       = NULL;
   this->MrfParams           = NULL;
@@ -565,6 +566,7 @@ void vtkImageEMLocalSuperClass::PrintSelf(ostream& os,vtkIndent indent) {
   os << indent << "---------------------------------------- SUPERCLASS ----------------------------------------------" << endl;
   this->vtkImageEMLocalGenericClass::PrintSelf(os,indent); 
   os << indent << "NumClasses:                    " << this->NumClasses << endl;
+  os << indent << "Alpha:                         " << this->Alpha << "\n";
   os << indent << "PrintFrequency:                " << this->PrintFrequency << endl;
   os << indent << "PrintBias:                     " << this->PrintBias<< endl;
   os << indent << "PrintLabelMap:                 " << this->PrintLabelMap << endl;

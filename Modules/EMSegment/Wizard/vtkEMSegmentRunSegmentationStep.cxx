@@ -50,8 +50,8 @@ vtkCxxRevisionMacro(vtkEMSegmentRunSegmentationStep, "$Revision: 1.2 $");
 //----------------------------------------------------------------------------
 vtkEMSegmentRunSegmentationStep::vtkEMSegmentRunSegmentationStep()
 {
-  this->SetName("9/9. Run Segmentation");
-  this->SetDescription("Apply EM algorithm to segment target image.");
+  this->SetName("9/9. Define Miscellaneous Parameters ");
+  this->SetDescription("Define miscellaneous parameter for performing segmentation.");
 
   this->RunSegmentationSaveFrame                   = NULL;
   this->RunSegmentationDirectoryFrame              = NULL;

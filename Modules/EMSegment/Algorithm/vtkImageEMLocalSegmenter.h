@@ -58,8 +58,6 @@ class VTK_EMSEGMENT_EXPORT vtkImageEMLocalSegmenter : public vtkImageEMGeneral
   // -----------------------------------------------------
   // Setting Algorithm 
   // -----------------------------------------------------
-  vtkSetMacro(Alpha, double);
-  vtkGetMacro(Alpha, double);
 
   vtkSetMacro(SmoothingWidth, int);
   vtkGetMacro(SmoothingWidth, int);
@@ -157,8 +155,6 @@ protected:
   // Checks all intput image if they have coresponding dimensions 
   int CheckInputImage(vtkImageData * inData,int DataTypeOrig, vtkFloatingPointType DataSpacingOrig[3], int num);
 
-
-  double Alpha;        // alpha - Paramter 0<= alpaha <= 1
 
   int SmoothingWidth;  // Width for Gausian to regularize weights   
   int SmoothingSigma;  // Sigma paramter for regularizing Gaussian

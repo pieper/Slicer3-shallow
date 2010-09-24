@@ -60,7 +60,7 @@ template  <class T> void EMLocalAlgorithm<T>::InitializeEM(vtkImageEMLocalSegmen
   this->RealMaxY                 = Extent[3] - Extent[2] + 1;
   this->RealMaxZ                 = Extent[5] - Extent[4] + 1;
 
-  this->Alpha                         = vtk_filter->GetAlpha();
+  this->Alpha                         = vtk_filter->GetActiveSuperClass()->GetAlpha();
   if ((this->Alpha > 0) && (vtk_filter->GetActiveSuperClass()->GetStopMFAMaxIter() < 1)) {
     vtkEMAddWarningMessage("Alpha is set to " <<this->Alpha << " even though StopMFAMaxIter < 1 ! Thus, we disable MeanField and set Alpha to 0" );
     this->Alpha = 0.0;

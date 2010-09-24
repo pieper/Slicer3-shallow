@@ -235,6 +235,8 @@ class VTK_EMSEGMENT_EXPORT vtkImageEMLocalSuperClass : public vtkImageEMLocalGen
   // Do not maximize over the shape setting  - just use the current setting  
   void SetPCAShapeModelTypeToApply() {this->PCAShapeModelType = EMSEGMENT_PCASHAPE_APPLY;} 
  
+  vtkSetMacro(Alpha, double);
+  vtkGetMacro(Alpha, double);
 
 protected:
   vtkImageEMLocalSuperClass() {this->CreateVariables();}
@@ -259,6 +261,8 @@ protected:
 
   int PrintEMLabelMapConvergence;  // Prints out the number of voxels changed from last to this iteration
   int PrintEMWeightsConvergence; // Prints out the difference in percent 
+
+  double Alpha;                     // 0 <= alpha <= 1. Be carefull - has great influence over outcome 
 
   int StopEMType;       // After which criteria should be stopped   
                         // 0 = fixed iterations 

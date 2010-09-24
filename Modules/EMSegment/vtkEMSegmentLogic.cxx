@@ -2032,19 +2032,12 @@ CopyGlobalDataToSegmenter(vtkImageEMLocalSegmenter* segmenter)
   segmenter->SetPrintDir(this->MRMLManager->GetSaveWorkingDirectory());
   
   //
-  // NB: In the algorithm code alpha is defined globally.  In this
-  // logic, it is defined for each parent node.  For now copy alpha
-  // from the root tree node. !!!todo!!!
-  //
-  vtkIdType rootNodeID = this->MRMLManager->GetTreeRootNodeID();
-  segmenter->SetAlpha(this->MRMLManager->GetTreeNodeAlpha(rootNodeID));
-                      
-  //
   // NB: In the algorithm code smoothing widht and sigma parameters
   // are defined globally.  In this logic, they are defined for each
   // parent node.  For now copy parameters from the root tree
   // node. !!!todo!!!
   //
+  vtkIdType rootNodeID = this->MRMLManager->GetTreeRootNodeID();
   segmenter->
     SetSmoothingWidth(this->MRMLManager->
                       GetTreeNodeSmoothingKernelWidth(rootNodeID));
@@ -2306,6 +2299,11 @@ CopyTreeParentDataToSegmenter(vtkImageEMLocalSuperClass* node,
 
   node->SetGenerateBackgroundProbability
     (this->MRMLManager->GetTreeNodeGenerateBackgroundProbability(nodeID));
+
+  // New in 3.6. : Alpha now reflects user interface and is now correctly set for each parent node
+  // cout << "Alpha setting for " << this->MRMLManager->GetTreeNodeName(nodeID) << " " << this->MRMLManager->GetTreeNodeAlpha(nodeID) << endl;
+  node->SetAlpha(this->MRMLManager->GetTreeNodeAlpha(nodeID)); 
+                      
 }
 
 //-----------------------------------------------------------------------------

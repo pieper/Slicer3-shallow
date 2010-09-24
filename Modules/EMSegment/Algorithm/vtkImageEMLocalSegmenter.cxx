@@ -37,7 +37,6 @@ vtkImageEMLocalSegmenter* vtkImageEMLocalSegmenter::New()
 //----------------------------------------------------------------------------
 vtkImageEMLocalSegmenter::vtkImageEMLocalSegmenter()
 {
-  this->Alpha = 0.7;                     // 0 <= alpha <= 1. Be carefull - has great influence over outcome 
   this->SmoothingWidth = 11;             // Width for Gausian to regularize weights
   this->SmoothingSigma = 5;              // Sigma paramter for regularizing Gaussian
   this->NumInputImages = 0;              // Number of input images
@@ -88,10 +87,8 @@ void vtkImageEMLocalSegmenter::PrintSelf(ostream& os,vtkIndent indent) {
   int i;
   // vtkImageEMGeneral::PrintSelf(os,indent);
    
-  os << indent << "Alpha:                      " << this->Alpha << "\n";
   os << indent << "SmoothingWidth:             " << this->SmoothingWidth << "\n";
   os << indent << "SmoothingSigma:             " << this->SmoothingSigma << "\n";
-
   os << indent << "NumInputImages:             " << this->NumInputImages << "\n";
   os << indent << "PrintDir:                   " << (this->PrintDir ? this->PrintDir : "(none)") << "\n"; 
   os << indent << "NumberOfTrainingSamples:    " << this->NumberOfTrainingSamples << "\n";
