@@ -65,7 +65,7 @@ if { [itcl::find class PaintEffect] == "" } {
 itcl::body PaintEffect::constructor {sliceGUI} {
 
   $this configure -sliceGUI $sliceGUI
- 
+  
   set o(brush) [vtkNew vtkPolyData]
   set o(rasToXY) [vtkNew vtkMatrix4x4]
   $this createGlyph $o(brush)
