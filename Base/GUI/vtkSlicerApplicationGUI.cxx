@@ -934,9 +934,9 @@ const char* vtkSlicerApplicationGUI::GetCurrentLayoutStringName ( )
         {
         return ( "Conventional layout" );
         }
-      else if ( layout == vtkMRMLLayoutNode::SlicerLayoutSideBySideCompareView )
+      else if ( layout == vtkMRMLLayoutNode::SlicerLayoutSideBySideLightboxView )
         {
-        return ( "Side-by-side Compare layout" );
+        return ( "Side-by-side lightbox layout" );
         }
       else if ( layout == vtkMRMLLayoutNode::SlicerLayoutCompareView)
         {
@@ -1064,6 +1064,8 @@ void vtkSlicerApplicationGUI::UpdateLayout ( )
 #endif
     this->RepackMainViewer (vtkMRMLLayoutNode::SlicerLayoutInitialView, NULL );
     this->SetCurrentLayout ( vtkMRMLLayoutNode::SlicerLayoutInitialView );
+    //TEST
+    this->ApplicationToolbar->ResumeViewRockOrSpin(mode);
     }
   else if ( target == vtkMRMLLayoutNode::SlicerLayoutConventionalView &&
       this->GetCurrentLayout()!= vtkMRMLLayoutNode::SlicerLayoutConventionalView )
@@ -1073,6 +1075,8 @@ void vtkSlicerApplicationGUI::UpdateLayout ( )
 #endif
     this->RepackMainViewer (vtkMRMLLayoutNode::SlicerLayoutConventionalView, NULL );
     this->SetCurrentLayout ( vtkMRMLLayoutNode::SlicerLayoutConventionalView );
+    //TEST
+    this->ApplicationToolbar->ResumeViewRockOrSpin(mode);
     }
   else if ( target == vtkMRMLLayoutNode::SlicerLayoutDual3DView &&
       this->GetCurrentLayout()!= vtkMRMLLayoutNode::SlicerLayoutDual3DView )
@@ -1082,6 +1086,8 @@ void vtkSlicerApplicationGUI::UpdateLayout ( )
 #endif
     this->RepackMainViewer (vtkMRMLLayoutNode::SlicerLayoutDual3DView, NULL );
     this->SetCurrentLayout ( vtkMRMLLayoutNode::SlicerLayoutDual3DView );
+    //TEST
+    this->ApplicationToolbar->ResumeViewRockOrSpin(mode);
     }
   else if ( target == vtkMRMLLayoutNode::SlicerLayoutOneUp3DView &&
             this->GetCurrentLayout()!= vtkMRMLLayoutNode::SlicerLayoutOneUp3DView )
@@ -1091,6 +1097,8 @@ void vtkSlicerApplicationGUI::UpdateLayout ( )
 #endif
     this->RepackMainViewer ( vtkMRMLLayoutNode::SlicerLayoutOneUp3DView, NULL);
     this->SetCurrentLayout ( vtkMRMLLayoutNode::SlicerLayoutOneUp3DView );
+    //TEST
+    this->ApplicationToolbar->ResumeViewRockOrSpin(mode);
     }
   else if ( target == vtkMRMLLayoutNode::SlicerLayoutFourUpView &&
             this->GetCurrentLayout()!= vtkMRMLLayoutNode::SlicerLayoutFourUpView)
@@ -1100,6 +1108,8 @@ void vtkSlicerApplicationGUI::UpdateLayout ( )
 #endif
     this->RepackMainViewer ( vtkMRMLLayoutNode::SlicerLayoutFourUpView, NULL );
     this->SetCurrentLayout ( vtkMRMLLayoutNode::SlicerLayoutFourUpView );
+    //TEST
+    this->ApplicationToolbar->ResumeViewRockOrSpin(mode);
     }
   else if ( target == vtkMRMLLayoutNode::SlicerLayoutTabbed3DView &&
             this->GetCurrentLayout()!= vtkMRMLLayoutNode::SlicerLayoutTabbed3DView )
@@ -1109,6 +1119,8 @@ void vtkSlicerApplicationGUI::UpdateLayout ( )
 #endif
     this->RepackMainViewer ( vtkMRMLLayoutNode::SlicerLayoutTabbed3DView, NULL );
     this->SetCurrentLayout ( vtkMRMLLayoutNode::SlicerLayoutTabbed3DView );
+    //TEST
+    this->ApplicationToolbar->ResumeViewRockOrSpin(mode);
     }
   else if ( target == vtkMRMLLayoutNode::SlicerLayoutTabbedSliceView &&
             this->GetCurrentLayout()!= vtkMRMLLayoutNode::SlicerLayoutTabbedSliceView )
@@ -1164,14 +1176,14 @@ void vtkSlicerApplicationGUI::UpdateLayout ( )
     this->RepackMainViewer ( vtkMRMLLayoutNode::SlicerLayoutOneUpRedSliceView, "Red");
     this->SetCurrentLayout ( vtkMRMLLayoutNode::SlicerLayoutOneUpRedSliceView );
     }
-  else if ( (target == vtkMRMLLayoutNode::SlicerLayoutSideBySideCompareView ) )
+  else if ( (target == vtkMRMLLayoutNode::SlicerLayoutSideBySideLightboxView ) )
     {
     // TO DO
 #ifndef TOOLBAR_DEBUG
     mode = this->ApplicationToolbar->StopViewRockOrSpin();
 #endif
-    this->RepackMainViewer ( vtkMRMLLayoutNode::SlicerLayoutSideBySideCompareView, NULL );
-    this->SetCurrentLayout ( vtkMRMLLayoutNode::SlicerLayoutSideBySideCompareView);
+    this->RepackMainViewer ( vtkMRMLLayoutNode::SlicerLayoutSideBySideLightboxView, NULL );
+    this->SetCurrentLayout ( vtkMRMLLayoutNode::SlicerLayoutSideBySideLightboxView);
     }
   else if ( (target == vtkMRMLLayoutNode::SlicerLayoutCompareView) )
     {
@@ -3061,8 +3073,8 @@ void vtkSlicerApplicationGUI::PackMainViewer ( int arrangmentType, const char *w
         case vtkMRMLLayoutNode::SlicerLayoutLightboxView:
           this->PackLightboxView ( );
           break;
-        case vtkMRMLLayoutNode::SlicerLayoutSideBySideCompareView:
-          this->PackSideBySideCompareView();
+        case vtkMRMLLayoutNode::SlicerLayoutSideBySideLightboxView:
+          this->PackSideBySideLightboxView();
           break;
         case vtkMRMLLayoutNode::SlicerLayoutCompareView:
           this->PackCompareView();
@@ -3119,8 +3131,8 @@ void vtkSlicerApplicationGUI::UnpackMainViewer ( )
         case vtkMRMLLayoutNode::SlicerLayoutLightboxView:
           this->UnpackLightboxView ( );
           break;
-        case vtkMRMLLayoutNode::SlicerLayoutSideBySideCompareView:
-          this->UnpackSideBySideCompareView();
+        case vtkMRMLLayoutNode::SlicerLayoutSideBySideLightboxView:
+          this->UnpackSideBySideLightboxView();
           break;
         case vtkMRMLLayoutNode::SlicerLayoutCompareView:
           this->UnpackCompareView();
@@ -3682,7 +3694,7 @@ void vtkSlicerApplicationGUI::PackTabbedSliceView ( )
 }
 
 //---------------------------------------------------------------------------
-void vtkSlicerApplicationGUI::PackSideBySideCompareView()
+void vtkSlicerApplicationGUI::PackSideBySideLightboxView()
 {
 
     if ( this->GetApplication() != NULL )
@@ -3826,9 +3838,9 @@ void vtkSlicerApplicationGUI::PackSideBySideCompareView()
     layout->DisableModifiedEventOn();
     layout->SetBottomPanelVisibility( 1 );
     int cur = layout->GetViewArrangement();
-    if ( cur != vtkMRMLLayoutNode::SlicerLayoutSideBySideCompareView )
+    if ( cur != vtkMRMLLayoutNode::SlicerLayoutSideBySideLightboxView )
       {
-      layout->SetViewArrangement( vtkMRMLLayoutNode::SlicerLayoutSideBySideCompareView );
+      layout->SetViewArrangement( vtkMRMLLayoutNode::SlicerLayoutSideBySideLightboxView );
       }
     layout->DisableModifiedEventOff();
     }
@@ -3836,7 +3848,7 @@ void vtkSlicerApplicationGUI::PackSideBySideCompareView()
 }
 
 //---------------------------------------------------------------------------
-void vtkSlicerApplicationGUI::UnpackSideBySideCompareView()
+void vtkSlicerApplicationGUI::UnpackSideBySideLightboxView()
 {
   // Unpack the 3D viewer widget
   // (we don't know if it is the active widget or not)
