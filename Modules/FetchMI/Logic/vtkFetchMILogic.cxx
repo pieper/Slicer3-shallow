@@ -3466,6 +3466,11 @@ void vtkFetchMILogic::RequestStorableNodeDownload ( const char *uri, const char 
     this->GetMRMLScene()->AddNodeNoNotify(sdisplayNode);
     scalarNode->SetAndObserveDisplayNodeID(sdisplayNode->GetID());
 
+    //--- TODO: check to see if uri contains 'localhost'
+    // or other strings that indicate a local database.
+    // if file is local, need only query for filename and
+    // then push thru local load pipeline. Faster.
+    // Until this is implemented, just go thru usual pipeline.
     //--- download to cache and load.
     storageNode->ReadData(scalarNode);
 
