@@ -125,6 +125,7 @@ itcl::body ColorBox::create { } {
       $w ColumnEditableOff $col($column)
       $w SetColumnWidth $col($column) $width
     }
+    $w SetColumnSortModeToInteger $col(Number)
 
     $this populateColors
 
