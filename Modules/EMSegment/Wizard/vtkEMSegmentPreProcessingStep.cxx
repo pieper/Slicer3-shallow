@@ -14,7 +14,7 @@
 #include "vtkKWCheckButtonWithLabel.h"
 #include "vtkKWEntryWithLabel.h"
 #include "vtkKWProgressDialog.h"
-
+#include "vtkSlicerSliceControllerWidget.h"
 //----------------------------------------------------------------------------
 vtkStandardNewMacro(vtkEMSegmentPreProcessingStep);
 vtkCxxRevisionMacro(vtkEMSegmentPreProcessingStep, "$Revision: 1.2 $");
@@ -128,19 +128,19 @@ vtkEMSegmentPreProcessingStep::Validate()
                }
           }
     }
-  this->SetTaskPreprocessingSetting();
-
-  vtkKWProgressDialog* progress = vtkKWProgressDialog::New();
-  progress->SetParent(this->GetGUI ()->GetApplicationGUI ()->GetMainSlicerWindow ());
-  progress->SetMasterWindow (this->GetGUI ()->GetApplicationGUI ()->GetMainSlicerWindow());
-  progress->Create();
-  progress->SetMessageText("Please wait until pre-processing has been finished.");
-  progress->Display();
-  int flag = atoi(this->Script("::EMSegmenterPreProcessingTcl::Run"));
-  progress->SetParent(NULL);
-  progress->Delete();
-
-  if (flag)
+    this->SetTaskPreprocessingSetting();
+    
+    vtkKWProgressDialog* progress = vtkKWProgressDialog::New();
+    progress->SetParent(this->GetGUI ()->GetApplicationGUI ()->GetMainSlicerWindow ());
+    progress->SetMasterWindow (this->GetGUI ()->GetApplicationGUI ()->GetMainSlicerWindow());
+    progress->Create();
+    progress->SetMessageText("Please wait until pre-processing has been finished.");
+    progress->Display();
+    int flag = atoi(this->Script("::EMSegmenterPreProcessingTcl::Run"));
+    progress->SetParent(NULL);
+    progress->Delete();
+    
+    if (flag)
     {
       cout << "Pre-processing did not execute correctly" << endl;
       wizard_workflow->PushInput(vtkKWWizardStep::GetValidationFailedInput());
@@ -152,12 +152,23 @@ vtkEMSegmentPreProcessingStep::Validate()
     mrmlManager->GetWorkingDataNode()->SetAlignedTargetNodeIsValid(1);
     mrmlManager->GetWorkingDataNode()->SetAlignedAtlasNodeIsValid(1);
 
+    vtkMRMLEMSTargetNode* targetNode = this->GetGUI()->GetMRMLManager()->GetWorkingDataNode()->GetInputTargetNode();
+    if (targetNode) 
+      {
+        vtkMRMLVolumeNode* output =  targetNode->GetNthVolumeNode(0);
+    vtkSlicerApplicationGUI *applicationGUI = this->GetGUI ()->GetApplicationGUI ();
+
+        applicationGUI->GetMainSliceGUI("Red")->GetSliceController()->GetBackgroundSelector()->SetSelected(output);
+        applicationGUI->GetMainSliceGUI("Yellow")->GetSliceController()->GetBackgroundSelector()->SetSelected(output);
+        applicationGUI->GetMainSliceGUI("Green")->GetSliceController()->GetBackgroundSelector()->SetSelected(output);
+      }
+  
     cout << "=============================================" << endl;
     cout << "Pre-processing completed successfully" << endl;
     cout << "=============================================" << endl;
 
-  // Everything went smoothly
-  this->Superclass::Validate();
+    // Everything went smoothly
+    this->Superclass::Validate();
 }
 
 //----------------------------------------------------------------------------
