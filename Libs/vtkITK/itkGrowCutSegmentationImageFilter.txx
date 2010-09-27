@@ -726,8 +726,8 @@ GrowCutSegmentationImageFilter<TInputImage, TOutputImage, TWeightPixelType>
   unsigned int iter = 0;
   bool converged = false;
   
-  time_t startTime;
-  time_t endTime;
+  //time_t startTime;
+  //time_t endTime;
   time_t start;
   time_t end;
 
