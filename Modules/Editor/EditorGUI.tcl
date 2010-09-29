@@ -624,7 +624,10 @@ proc EditorRestoreData {restoreCheckPointArray} {
     }
     $checkPoint(stash) Unstash
     [$node GetImageData] DeepCopy $checkPoint(imageData)
-    $checkPoint(stash) ThreadedStash
+    # now delete the stored checkpoint - it is the current image
+    # label map and will get stashed again if draw on or restored over
+    $checkPoint(stash) Delete
+    $checkPoint(imageData) Delete
   } else {
     EditorErrorDialog "Sorry - no node for $checkPoint(nodeID)"
   }
