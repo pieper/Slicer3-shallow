@@ -596,7 +596,9 @@ namespace eval EMSegmenterPreProcessingTcl {
 
         [$module GetLogic] LazyEvaluateModuleTarget $cmdNode
         [$module GetLogic] ApplyAndWait $cmdNode
+
         # Clean Up
+        $::slicer3::MRMLScene RemoveNode $cmdNode
         DeleteCommandLine $cmdNode
         $module Exit
 
@@ -871,6 +873,7 @@ namespace eval EMSegmenterPreProcessingTcl {
         [$module GetLogic] ApplyAndWait $cmdNode
 
         # Clean Up
+        $::slicer3::MRMLScene RemoveNode $cmdNode
         DeleteCommandLine $cmdNode
         $module Exit
 
