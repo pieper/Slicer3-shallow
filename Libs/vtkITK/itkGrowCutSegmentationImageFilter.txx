@@ -408,7 +408,7 @@ ComputeLabelVolumes(TOutputImage *outputImage, vcl_vector< unsigned > &volumes,
 
 
 template<class TInputImage, class TOutputImage, class TWeightPixelType>
-void GrowCutSegmentationImageFilter<TInputImage, TOutputImage, TWeightPixelType>::
+bool GrowCutSegmentationImageFilter<TInputImage, TOutputImage, TWeightPixelType>::
 InitializeStateImage( OutputImageType *stateImage)
 {
 
@@ -426,6 +426,12 @@ InitializeStateImage( OutputImageType *stateImage)
              labelImage->GetBufferedRegion());
   ImageRegionIterator< OutputImageType > state( stateImage, 
             stateImage->GetBufferedRegion());
+
+  for (unsigned i = 0; i < labelImage->GetImageDimension(); i++){
+    m_roiStart[i] = 0;
+    m_roiEnd[i] = 0;
+  }
+
 
   for (label.GoToBegin(), state.GoToBegin(); !label.IsAtEnd(); 
        ++label, ++state)
@@ -472,10 +478,17 @@ InitializeStateImage( OutputImageType *stateImage)
 
      std::cout<<" ROI before adding the object Radius "<<m_ObjectRadius<<std::endl;
      std::cout<< " ROI start ";
+
+     bool foundLabels = false;
      for (unsigned i = 0; i < labelImage->GetImageDimension(); i++)
      {
+       foundLabels = (m_roiEnd[i] - m_roiStart[i] != 0);
         std::cout<<m_roiStart[i]<<" ";
      }
+
+     if(!foundLabels)
+       return true;
+
      std::cout<<" ROI end ";
      for (unsigned i = 0; i < labelImage->GetImageDimension(); i++)
      {
@@ -516,6 +529,8 @@ InitializeStateImage( OutputImageType *stateImage)
       std::cout<<m_roiEnd[i]<<" ";
     }
     std::cout<<std::endl;
+
+    return false;
   
 }
 
@@ -627,6 +642,9 @@ GrowCutSegmentationImageFilter<TInputImage, TOutputImage, TWeightPixelType>
   typename WeightImageType::Pointer maxDistancesImage = WeightImageType::New();
   
   typename WeightImageType::Pointer maxSaturationImage = WeightImageType::New();
+
+
+  bool converged = false;
   
   // Initialize the state image
   if( !m_SetStateImage)
@@ -637,7 +655,7 @@ GrowCutSegmentationImageFilter<TInputImage, TOutputImage, TWeightPixelType>
       pixelStateImage->Allocate();
       pixelStateImage->FillBuffer(UNLABELED);      
       
-      this->InitializeStateImage(pixelStateImage);
+      converged = this->InitializeStateImage(pixelStateImage);
     }
   
 
@@ -724,7 +742,7 @@ GrowCutSegmentationImageFilter<TInputImage, TOutputImage, TWeightPixelType>
   // run until convergence
   
   unsigned int iter = 0;
-  bool converged = false;
+
   
   //time_t startTime;
   //time_t endTime;
@@ -1191,9 +1209,11 @@ GrowCutSegmentationImageFilter<TInputImage, TOutputImage, TWeightPixelType>
        stateIt.SetCenterPixel(SATURATED);
        //newstateIt.Set(SATURATED);
      }
-   else if(winnerLabel != m_UnknownLabel && 
-    (nlinks > 0 && countLocalSaturatedLinks == nlinks) || 
-    (stateIt.GetCenterPixel() != UNLABELED && !modified))
+   else if((winnerLabel != m_UnknownLabel) && 
+     ((nlinks > 0) && 
+            (countLocalSaturatedLinks == nlinks)) || 
+     ((stateIt.GetCenterPixel() != UNLABELED) && 
+      !modified))
      {
        stateIt.SetCenterPixel(LOCALLY_SATURATED);
        //newstateIt.Set(LOCALLY_SATURATED);
