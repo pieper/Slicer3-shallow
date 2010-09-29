@@ -55,7 +55,7 @@ vtkImageStash::~vtkImageStash()
 }
 
 //----------------------------------------------------------------------------
-void *vtkImageStash_ThreadFunction( void *genericData )
+static void *vtkImageStash_ThreadFunction( vtkMultiThreader::ThreadInfo *genericData )
 {
   ThreadInfoStruct *info = static_cast<ThreadInfoStruct*>(genericData);
   vtkImageStash *self = static_cast<vtkImageStash *>(info->UserData);
@@ -69,8 +69,8 @@ void vtkImageStash::ThreadedStash()
 {
   this->SetStashing(1);
   this->StashingThreadID = this->MultiThreader->SpawnThread(
-                                                  vtkImageStash_ThreadFunction, 
-                                                  static_cast<void *>(this));
+                                        (vtkThreadFunctionType) &vtkImageStash_ThreadFunction, 
+                                        static_cast<void *>(this));
 }
 
 
