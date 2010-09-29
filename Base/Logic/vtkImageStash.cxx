@@ -14,10 +14,7 @@
 =========================================================================*/
 #include "vtkImageStash.h"
 
-#include "vtkImageData.h"
 #include "vtkPointData.h"
-#include "vtkZLibDataCompressor.h"
-#include "vtkUnsignedCharArray.h"
 #include "vtkObjectFactory.h"
 #include "vtkSmartPointer.h"
 
@@ -29,19 +26,53 @@ vtkImageStash::vtkImageStash()
 {
   this->StashImage = NULL;
   this->StashedScalars = NULL;
+  this->MultiThreader = vtkMultiThreader::New();
   this->Compressor = vtkZLibDataCompressor::New();
+  this->CompressionLevel = 1; // corresponds to Z_BEST_SPEED
+  this->Stashing = 0;
+  this->StashingThreadID = 0;
 }
 
 //----------------------------------------------------------------------------
 vtkImageStash::~vtkImageStash()
 {
-  this->SetStashImage (NULL);
+  if (this->StashImage)
+    {
+    this->StashImage->Delete();
+    }
   if (this->StashedScalars)
     {
     this->StashedScalars->Delete();
     }
-  this->Compressor->Delete();
+  if (this->MultiThreader)
+    {
+    this->MultiThreader->Delete();
+    }
+  if (this->Compressor)
+    {
+    this->Compressor->Delete();
+    }
 }
+
+//----------------------------------------------------------------------------
+void *vtkImageStash_ThreadFunction( void *genericData )
+{
+  ThreadInfoStruct *info = static_cast<ThreadInfoStruct*>(genericData);
+  vtkImageStash *self = static_cast<vtkImageStash *>(info->UserData);
+  self->Stash();
+  self->SetStashing(0);
+  return NULL;
+}
+
+//----------------------------------------------------------------------------
+void vtkImageStash::ThreadedStash()
+{
+  this->SetStashing(1);
+  this->StashingThreadID = this->MultiThreader->SpawnThread(
+                                                  vtkImageStash_ThreadFunction, 
+                                                  static_cast<void *>(this));
+}
+
 
 //----------------------------------------------------------------------------
 void vtkImageStash::Stash()
@@ -50,30 +81,28 @@ void vtkImageStash::Stash()
   // put a compressed version of the scalars into the compressed 
   // buffer, and then set the scalar size to zero
   //
-  if (!this->StashImage)
+  if (!this->GetStashImage())
     {
-    vtkErrorMacro ("Cannot stash - no image data");
+    vtkErrorWithObjectMacro (this, "Cannot stash - no image data");
     return;
     }
 
-  vtkDataArray *scalars = this->StashImage->GetPointData()->GetScalars();  
+  vtkDataArray *scalars = this->GetStashImage()->GetPointData()->GetScalars();  
   if (!scalars)
     {
-    vtkErrorMacro ("Cannot stash - image has no scalars");
+    vtkErrorWithObjectMacro (this, "Cannot stash - image has no scalars");
     return;
     }
 
-  this->NumberOfTuples = scalars->GetNumberOfTuples();
-  vtkIdType numPrims = this->NumberOfTuples * scalars->GetNumberOfComponents();
+  this->SetNumberOfTuples(scalars->GetNumberOfTuples());
+  vtkIdType numPrims = this->GetNumberOfTuples() * scalars->GetNumberOfComponents();
   vtkIdType size = vtkDataArray::GetDataTypeSize(scalars->GetDataType());
   vtkIdType scalarSize = size * numPrims;
 
-  if (this->StashedScalars)
-    {
-    this->StashedScalars->Delete();
-    }
   unsigned char *p = static_cast<unsigned char *>(scalars->WriteVoidPointer(0, numPrims));
-  this->StashedScalars = this->Compressor->Compress(p, scalarSize);
+  this->GetCompressor()->SetCompressionLevel(this->GetCompressionLevel());
+  this->SetStashedScalars(this->GetCompressor()->Compress(p, scalarSize));
+  this->GetStashedScalars()->Delete(); // reference count already set by Compress
 
   // this will realloc a zero sized buffer
   scalars->SetNumberOfTuples(0);
@@ -93,6 +122,12 @@ void vtkImageStash::Unstash()
     return;
     }
 
+  if (this->GetStashing())
+    {
+    vtkErrorMacro ("Cannot unstash - stashing is still underway in a thread");
+    return;
+    }
+
   vtkDataArray *scalars = this->StashImage->GetPointData()->GetScalars();  
   if (!scalars)
     {
@@ -109,19 +144,19 @@ void vtkImageStash::Unstash()
   // we saved the original number of tuples before squeezing
   //   - the number of components and the datatype are unchanged from before
   //     so we know the right size for the output buffer
-  vtkIdType numPrims = this->NumberOfTuples * scalars->GetNumberOfComponents();
+  vtkIdType numPrims = this->GetNumberOfTuples() * scalars->GetNumberOfComponents();
   vtkIdType size = vtkDataArray::GetDataTypeSize(scalars->GetDataType());
   vtkIdType scalarSize = size * numPrims;
 
   // setting the number of tuples reallocates the right amount of data
   // so we can uncompress directly into the buffer
-  scalars->SetNumberOfTuples(this->NumberOfTuples);
+  scalars->SetNumberOfTuples(this->GetNumberOfTuples());
   vtkIdType stashedSize = this->StashedScalars->GetNumberOfTuples();
   unsigned char *scalar_p = 
       static_cast<unsigned char *>(scalars->WriteVoidPointer(0, numPrims));
   unsigned char *stash_p = 
       static_cast<unsigned char *>(this->StashedScalars->WriteVoidPointer(0, stashedSize));
-  this->Compressor->Uncompress(stash_p, stashedSize, scalar_p, scalarSize);
+  this->GetCompressor()->Uncompress(stash_p, stashedSize, scalar_p, scalarSize);
 }
 
 //----------------------------------------------------------------------------
@@ -130,9 +165,11 @@ void vtkImageStash::PrintSelf(ostream& os, vtkIndent indent)
   this->Superclass::PrintSelf(os,indent);
   
   os << indent << "StashImage: " << this->GetStashImage() << "\n";
-  os << indent << "Stashed Scalars: " << this->StashedScalars << "\n";
-  if ( this->StashedScalars) this->StashedScalars->PrintSelf(os,indent);
+  os << indent << "Stashing: " << this->GetStashing() << "\n";
+  os << indent << "Stashed Scalars: " << this->GetStashedScalars() << "\n";
+  if ( this->GetStashedScalars()) this->GetStashedScalars()->PrintSelf(os,indent.GetNextIndent());
+  os << indent << "CompressionLevel: " << this->GetCompressionLevel() << "\n";
   os << indent << "Compressor: \n";
-  this->Compressor->PrintSelf(os,indent);
+  this->GetCompressor()->PrintSelf(os,indent.GetNextIndent());
 }
 

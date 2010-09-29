@@ -31,3 +31,7 @@ ADD_TEST( vtkSlicerTransformLogicTest1 ${LAUNCH_EXE}
   ${KIT_TESTS} vtkSlicerTransformLogicTest1
   ${CMAKE_CURRENT_SOURCE_DIR}/affineTransform.txt
   )
+
+ADD_EXECUTABLE(ImageStashTest ImageStashTest.cxx)
+TARGET_LINK_LIBRARIES(ImageStashTest ${lib_name})
+ADD_TEST( ImageStashTest ${LAUNCH_EXE} ImageStashTest )

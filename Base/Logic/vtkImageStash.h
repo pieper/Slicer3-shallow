@@ -21,9 +21,9 @@
 #include "vtkSlicerBaseLogic.h"
 
 #include "vtkImageData.h"
-
-class vtkUnsignedCharArray;
-class vtkZLibDataCompressor;
+#include "vtkUnsignedCharArray.h"
+#include "vtkZLibDataCompressor.h"
+#include "vtkMultiThreader.h"
 
 class VTK_SLICER_BASE_LOGIC_EXPORT vtkImageStash : public vtkObject
 {
@@ -43,12 +43,47 @@ public:
   vtkGetObjectMacro(StashImage, vtkImageData);
 
   /// 
+  /// The stashed scalars:
+  /// this is the zlib compressed image scalar data
+  vtkSetObjectMacro(StashedScalars, vtkUnsignedCharArray);
+  vtkGetObjectMacro(StashedScalars, vtkUnsignedCharArray);
+
+  // Description:
+  // To keep track of original number of tuples in scalar data
+  vtkSetMacro(NumberOfTuples, vtkIdType);
+  vtkGetMacro(NumberOfTuples, vtkIdType);
+
+  /// 
+  /// The multi-threader used when TreadedStash is called
+  vtkSetObjectMacro(MultiThreader, vtkMultiThreader);
+  vtkGetObjectMacro(MultiThreader, vtkMultiThreader);
+  
+  /// 
   /// compress and strip the scalars
   void Stash();
 
   /// 
+  /// compress and strip the scalars in a separate thread
+  void ThreadedStash();
+
+  /// 
   /// decompress and restore the scalars
   void Unstash();
+
+  // Description:
+  // Get/Set the compression level.
+  vtkSetClampMacro(CompressionLevel, int, 0, 9);
+  vtkGetMacro(CompressionLevel, int);
+
+  // Description:
+  // Get/Set the compressor if needed
+  vtkSetObjectMacro(Compressor, vtkZLibDataCompressor);
+  vtkGetObjectMacro(Compressor, vtkZLibDataCompressor);
+
+  // Description:
+  // Check if compression thread is finished
+  vtkSetMacro(Stashing, int);
+  vtkGetMacro(Stashing, int);
  
 protected:
   vtkImageStash();
@@ -56,10 +91,14 @@ protected:
 
   vtkImageData *StashImage;
   vtkUnsignedCharArray *StashedScalars;
+  vtkMultiThreader *MultiThreader;
+  vtkIdType NumberOfTuples;
   vtkZLibDataCompressor *Compressor;
+  int CompressionLevel;
+  int Stashing;
 
 private:
-  vtkIdType NumberOfTuples;
+  int StashingThreadID;
 
   vtkImageStash(const vtkImageStash&);  /// Not implemented.
   void operator=(const vtkImageStash&);  /// Not implemented.
