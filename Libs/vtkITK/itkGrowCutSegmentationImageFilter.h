@@ -386,7 +386,7 @@ template<class TInputImage,
   GrowCutSegmentationImageFilter(const Self&); //purposely not implemented
   void operator=(const Self&); // purposely not implemented
 
-  void InitializeStateImage( OutputImageType *state );
+  bool InitializeStateImage( OutputImageType *state );
 
   void InitializeDistancesImage( TInputImage *input, WeightImageType *distance);
   
