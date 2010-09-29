@@ -284,6 +284,9 @@ namespace eval EMSegmenterPreProcessingTcl {
             set result "${result}$outputNode "
         }
 
+        # delete command line node from mrml scene
+        $::slicer3::MRMLScene RemoveNode $n4Node
+
         DeleteCommandLine $n4Node
         $n4Module Exit
 
