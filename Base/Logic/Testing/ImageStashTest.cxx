@@ -30,7 +30,7 @@ int main(int argc, char **argv)
 
   e->SetWholeExtent(0, 1024, 0, 1024, 0, 256);
   e->Update();
-  vtkIdType actualSize = e->GetOutput()->GetActualMemorySize();
+  unsigned long actualSize = e->GetOutput()->GetActualMemorySize();
 
   std::cout << "** first, test non-threaded stashing\n";
   for (int i = 0; i < 2; ++i)
@@ -61,6 +61,8 @@ int main(int argc, char **argv)
         << e->GetOutput()->GetActualMemorySize() << "\n";
     stash->SetStashImage(e->GetOutput());
     stash->ThreadedStash();
+    std::cout << "Expect an error here (trying to unstash while thread is running): \n" ;
+    stash->Unstash();
     while (stash->GetStashing())
       {
       std::cout << "Stash in process...\n";
