@@ -513,9 +513,11 @@ proc EditorCreateLabelVolume {this} {
 #
 proc EditorFreeVolumes {volumeList} {
   foreach volume $volumeList {
-    foreach {imageData nodeID} $volume {}
-    if { [info command $imageData] != "" } {
-      $imageData Delete
+    array set checkPoint $volume
+    foreach o "imageData stash" {
+      if { [info command $checkPoint($o)] != "" } {
+        $checkPoint($o) Delete
+      }
     }
   }
 }
@@ -539,6 +541,8 @@ proc EditorFreeCheckPointVolumes {} {
   }
 }
 
+# enable or disable button state depending on existence of 
+# volumes to restore
 proc EditorUpdateCheckPointButtons {} {
   if { [info exists ::Editor(previousCheckPointImages)] } {
     if { $::Editor(previousCheckPointImages) != "" } {
@@ -558,7 +562,6 @@ proc EditorUpdateCheckPointButtons {} {
 
 # called by editor effects
 proc EditorStoreCheckPoint {node} {
-
   if { !$::Editor(checkPointsEnabled) } {
     return
   }
@@ -584,31 +587,46 @@ proc EditorStoreCheckPointVolume {nodeID listID} {
 
   # trim oldest previousCheckPoint image if needed
   if { [llength $::Editor($listID)] >= $::Editor(numberOfCheckPoints) } {
-    set disposeImage [lindex $::Editor($listID) 0]
-    foreach {imageData nodeID} $disposeImage {}
-    $imageData Delete
+    array set disposeCheckPoint [lindex $::Editor($listID) 0]
+    $disposeCheckPoint(imageData) Delete
+    $disposeCheckPoint(stash) Delete
     set ::Editor($listID) [lrange $::Editor($listID) 1 end]
   }
 
   # add new 
+  set checkPoint(nodeID) $nodeID
   set node [$::slicer3::MRMLScene GetNodeByID $nodeID]
-  set imageData [vtkImageData New]
+  set checkPoint(imageData) [vtkImageData New]
+  set checkPoint(stash) [vtkImageStash New]
   if { $node != "" } {
-    $imageData DeepCopy [$node GetImageData]
+    $checkPoint(imageData) DeepCopy [$node GetImageData]
+    $checkPoint(stash) SetStashImage $checkPoint(imageData)
+    $checkPoint(stash) ThreadedStash
   } else {
     error "no node for $nodeID"
   }
-  set nodeID [$node GetID]
-  lappend ::Editor($listID) "$imageData $nodeID"
+  lappend ::Editor($listID) [array get checkPoint]
 }
 
-proc EditorRestoreData {imageData nodeID} {
+proc EditorRestoreData {restoreCheckPointArray} {
   # restore the volume data
-  set node [$::slicer3::MRMLScene GetNodeByID $nodeID]
+  array set checkPoint $restoreCheckPointArray
+  set node [$::slicer3::MRMLScene GetNodeByID $checkPoint(nodeID)]
   if { $node != "" } {
-    [$node GetImageData] DeepCopy $imageData
+    set tries 0
+    while { $tries < 10 && [$checkPoint(stash) GetStashing] } {
+      incr tries
+      after 500
+    }
+    if { [$checkPoint(stash) GetStashing] } {
+      EditorErrorDialog "Sorry - Cannot access stored checkpoint!"
+      return
+    }
+    $checkPoint(stash) Unstash
+    [$node GetImageData] DeepCopy $checkPoint(imageData)
+    $checkPoint(stash) ThreadedStash
   } else {
-    error "no node for $nodeID"
+    EditorErrorDialog "Sorry - no node for $checkPoint(nodeID)"
   }
   $node SetModifiedSinceRead 1
   $node Modified
@@ -621,16 +639,16 @@ proc EditorPerformPreviousCheckPoint {} {
   }
 
   # get the volume to restore
-  set restore [lindex $::Editor(previousCheckPointImages) end]
-  foreach {imageData nodeID} $restore {}
+  set restoreArray [lindex $::Editor(previousCheckPointImages) end]
+  array set restore $restoreArray
 
   # save the current state as a redo point
-  EditorStoreCheckPointVolume $nodeID nextCheckPointImages
+  EditorStoreCheckPointVolume $restore(nodeID) nextCheckPointImages
 
   # now pop the next item on the previousCheckPoint stack
   set ::Editor(previousCheckPointImages) [lrange $::Editor(previousCheckPointImages) 0 end-1]
 
-  EditorRestoreData $imageData $nodeID
+  EditorRestoreData $restoreArray
   EditorUpdateCheckPointButtons 
 }
 
@@ -641,15 +659,15 @@ proc EditorPerformNextCheckPoint {} {
   }
 
   # get the volume to restore
-  set restore [lindex $::Editor(nextCheckPointImages) end]
-  foreach {imageData nodeID} $restore {}
+  set restoreArray [lindex $::Editor(nextCheckPointImages) end]
+  array set restore $restoreArray
 
   # save the current state as an previousCheckPoint Point
-  EditorStoreCheckPointVolume $nodeID previousCheckPointImages
+  EditorStoreCheckPointVolume $restore(nodeID) previousCheckPointImages
 
   # now pop the next item on the redo stack
   set ::Editor(nextCheckPointImages) [lrange $::Editor(nextCheckPointImages) 0 end-1]
-  EditorRestoreData $imageData $nodeID
+  EditorRestoreData $restoreArray
   EditorUpdateCheckPointButtons 
 }
 

@@ -50,11 +50,6 @@ if { [itcl::find class Labeler] == "" } {
     public variable paintOver 1
     public variable polygonDebugViewer 0
 
-    # keep track of first application of the label since the 
-    # class was instantiated - this is used to decide when to 
-    # make a copy of the label map for the Editor's CheckPoint function
-    variable _appliedSinceConstructed 0
-
     # methods
     method processEvent {{caller ""} {event ""}} {}
     method makeMaskImage {polyData} {}
@@ -247,13 +242,9 @@ itcl::body Labeler::applyImageMask { maskIJKToRAS mask bounds } {
   # image
   #
   
-  if { $_appliedSinceConstructed == 0 } {
-    # first application, so save the old label volume
-    # - this means there will only be one checkpoint for each 'instance'
-    #   of the effect (i.e. multiple brush strokes all undone by one click)
-    EditorStoreCheckPoint $_layers(label,node)
-    set _appliedSinceConstructed 1
-  }
+  # store a backup copy of the label map for undo
+  # (this happens in it's own thread, so it is cheap)
+  EditorStoreCheckPoint $_layers(label,node)
 
   #
   # get the brush bounding box in ijk coordinates
