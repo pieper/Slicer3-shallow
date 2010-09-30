@@ -378,6 +378,22 @@ void vtkSlicerViewerWidget::AddAxisActors()
         this->AxisLabelActors[i]->SetVisibility(this->ViewNode->GetAxisLabelsVisible());
         }      
       }
+
+    // update colors of essential actors
+    if ( this->ViewNode != NULL )
+      {
+      double *color = this->ViewNode->GetBackgroundColor();
+      this->MainViewer->SetRendererBackgroundColor ( color );
+      // set axis label colors (prevent white on white)
+      if ( color[0] == 1.0 && color[1] == 1.0 && color[2] == 1.0 )
+        {
+        this->ColorAxisLabelActors (0.0, 0.0, 0.0 );
+        }
+      else
+        {
+        this->ColorAxisLabelActors (1.0, 1.0, 1.0 );
+        }
+      }
     }
 }
 
@@ -1498,6 +1514,7 @@ void vtkSlicerViewerWidget::UpdateFromMRML()
   this->UpdateModelsFromMRML();
 
   this->UpdateAxis();
+
   this->RequestRender ( );
 
   this->UpdateFromMRMLRequested = 0;
