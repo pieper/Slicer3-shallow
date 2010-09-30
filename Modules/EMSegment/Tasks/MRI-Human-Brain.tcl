@@ -227,13 +227,15 @@ namespace eval EMSegmenterPreProcessingTcl {
                 set n4Module $gui
             }
         }
+        # not in gui mode
         if { $n4Module == "" } {
-            PrintError "PerformIntensityCorrection: Command line module 'N4ITK MRI Bias correction' is missing"
-            return ""
+            return [N4ITKBiasFieldCorrectionCLI $subjectNode $subjectICCMaskNode]
         }
 
+        # in gui mode
         $n4Module Enter
 
+        # create a new node and add information to this node
         set n4Node [$::slicer3::MRMLScene CreateNodeByClass vtkMRMLCommandLineModuleNode]
         $::slicer3::MRMLScene AddNode $n4Node
         $n4Node SetModuleDescription "N4ITK MRI Bias correction"
@@ -245,7 +247,9 @@ namespace eval EMSegmenterPreProcessingTcl {
             $n4Node SetParameterAsString "maskImageName" ""
         }
 
+        # initialize
         set result ""
+
         # Run the algorithm on each subject image
         for { set i 0 } {$i < [$subjectNode GetNumberOfVolumes] } { incr i } {
             # Define input
@@ -264,7 +268,7 @@ namespace eval EMSegmenterPreProcessingTcl {
             }
 
             # Define output
-            set outputVolume [ vtkImageData New]
+            set outputVolume [vtkImageData New]
             set outputNode [CreateVolumeNode $inputNode "[$inputNode GetName]_N4corrected"]
             $outputNode SetAndObserveImageData $outputVolume
             $outputVolume Delete
@@ -273,11 +277,13 @@ namespace eval EMSegmenterPreProcessingTcl {
             $n4Node SetParameterAsString "inputImageName" [$inputNode GetID]
             $n4Node SetParameterAsString "outputImageName" [$outputNode GetID]
             # $n4Node SetParameterAsString "outputBiasFieldName" [$outputBiasVolume GetID]
+
+            # run algorithm
             [$n4Module GetLogic] LazyEvaluateModuleTarget $n4Node
             [$n4Module GetLogic] ApplyAndWait $n4Node
-            set outputVolume [$outputNode GetImageData]
 
             # Make sure that input and output are of the same type !
+            set outputVolume [$outputNode GetImageData]
             if {[$inputVolume GetScalarType] != [$outputVolume GetScalarType] } {
                 set cast [vtkImageCast New]
                 $cast SetInput $outputVolume
@@ -286,6 +292,8 @@ namespace eval EMSegmenterPreProcessingTcl {
                 $outputVolume DeepCopy [$cast GetOutput]
                 $cast Delete
             }
+
+            # still in for loop, create a list of outputNodes
             set result "${result}$outputNode "
         }
 
@@ -297,6 +305,94 @@ namespace eval EMSegmenterPreProcessingTcl {
 
         return "$result"
     }
+
+
+    proc N4ITKBiasFieldCorrectionCLI { subjectNode subjectICCMaskNode } {
+        variable SCENE
+        variable LOGIC
+        puts "TCLMRI: =========================================="
+        puts "TCLMRI: ==     N4ITKBiasFieldCorrectionCLI      =="
+        puts "TCLMRI: =========================================="
+
+        set PLUGINS_DIR "$::env(Slicer3_HOME)/lib/Slicer3/Plugins"
+        set CMD "${PLUGINS_DIR}/N4ITKBiasFieldCorrection "
+
+        # initialize
+        set result ""
+
+        # Run the algorithm on each subject image
+        for { set i 0 } {$i < [$subjectNode GetNumberOfVolumes] } { incr i } {
+
+            set inputNode [$subjectNode GetNthVolumeNode $i]
+            set inputVolume [$inputNode GetImageData]
+            if { $inputVolume == "" } {
+                PrintError "PerformIntensityCorrection: the ${i}th subject node has not input data defined!"
+                foreach NODE $result {
+                    DeleteNode $NODE
+                }
+                return ""
+            }
+
+            set tmpFileName [WriteDataToTemporaryDir $inputNode Volume ]
+            set RemoveFiles "\"$tmpFileName\""
+            if { $tmpFileName == "" } {
+                return 1
+            }
+            set CMD "$CMD --inputimage $tmpFileName"
+
+            # set tmpFileName [WriteDataToTemporaryDir $subjectICCMaskNode Volume ]
+            # set RemoveFiles "$RemoveFiles \"$tmpFileName\""
+            # if { $tmpFileName == "" } { 
+            # return 1
+            #     }
+            # set CMD "$CMD --maskimag $tmpFileName"
+
+            # create a new node for our output-list 
+            set outVolumeNode [CreateVolumeNode $inputNode "[$inputNode GetName]_N4corrected"]
+            set outputVolume [vtkImageData New]
+            $outVolumeNode SetAndObserveImageData $outputVolume
+            $outputVolume Delete
+
+            set outVolumeFileName [ CreateTemporaryFileName $outVolumeNode ]
+            puts "$outVolumeFileName"
+            if { $outVolumeFileName == "" } {
+                return 1
+            }
+            set CMD "$CMD --outputimage \"$outVolumeFileName\""
+            set RemoveFiles "$RemoveFiles \"$outVolumeFileName\""
+
+            # for test purposes(reduces execution time)
+            # set CMD "$CMD --iterations \"3,2,1\""
+
+            # set outbiasVolumeFileName [ CreateTemporaryFileName $outbiasVolumeFileName ]
+            # if { $outbiasVolumeFileName == "" } {
+            #     return 1
+            # }
+            # set CMD "$CMD --outputbiasfield $outbiasVolumeFileName"
+
+            # execute algorithm
+            puts "TCLMRI: Executing $CMD"
+            catch { eval exec $CMD } errmsg
+            puts "TCLMRI: $errmsg"
+
+            # Read results back, we have to read 2 results
+
+            ReadDataFromDisk $outVolumeNode $outVolumeFileName Volume
+            file delete -force $outVolumeFileName
+
+            # ReadDataFromDisk $outbiasVolumeNode $outbiasVolumeFileName Volume  
+            # file delete -force $outbiasVolumeFileName
+
+            # still in for loop, create a list of Volumes
+            set result "${result}$outVolumeNode "
+            puts "TCLMRI: List of volume nodes: $result"
+        }
+        # return a newSubjectVolumeNodeList
+        return "$result"
+    }
+
+
+
 
     # -------------------------------------
     # Compute intensity distribution through auto sampling
@@ -422,7 +518,7 @@ namespace eval EMSegmenterPreProcessingTcl {
                     for { set c 0 } { $c < 4 } { incr c } {
                         puts -nonewline "[[$fixedRASToMovingRASTransformAffine GetMatrix] GetElement $r $c]   "
                     }
-                    puts "  "
+                    puts " "
                 }
             }
         }
