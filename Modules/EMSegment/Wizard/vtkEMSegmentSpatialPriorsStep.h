@@ -3,6 +3,7 @@
 
 #include "vtkEMSegmentStep.h"
 
+class vtkKWLabel;
 class vtkKWFrameWithLabel;
 class vtkKWMenuButtonWithLabel;
 
@@ -25,6 +26,8 @@ public:
 protected:
   vtkEMSegmentSpatialPriorsStep();
   ~vtkEMSegmentSpatialPriorsStep();
+
+  vtkKWLabel               *NodeParametersLabel;
 
   vtkKWFrameWithLabel *ImageFrame;
   vtkKWFrameWithLabel *SpatialPriorsFrame;

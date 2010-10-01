@@ -65,6 +65,12 @@ vtkEMSegmentIntensityDistributionsStep::~vtkEMSegmentIntensityDistributionsStep(
     this->IntensityDistributionSpecificationMenuButton = NULL;
     }
 
+  if (this->NodeParametersLabel)
+    {
+    this->NodeParametersLabel->Delete();
+    this->NodeParametersLabel = NULL;
+    }
+
   if (this->IntensityDistributionMeanMatrix)
     {
     this->IntensityDistributionMeanMatrix->Delete();
@@ -154,6 +160,22 @@ void vtkEMSegmentIntensityDistributionsStep::ShowUserInterface()
     "pack %s -side top -anchor nw -fill both -expand y -padx 0 -pady 2", 
     this->IntensityDistributionNotebook->GetWidgetName());
 
+  // Create a label to display selected node
+
+  if (!this->NodeParametersLabel)
+    {
+    this->NodeParametersLabel = vtkKWLabel::New();
+    }
+  if (!this->NodeParametersLabel->IsCreated())
+    {
+    this->NodeParametersLabel->SetParent(intensity_page);
+    this->NodeParametersLabel->Create();
+
+    this->Script(
+      "pack %s -side top -anchor nw -padx 2 -pady 2",
+      this->NodeParametersLabel->GetWidgetName());
+    }
+
   // Create the distribution specification menu button
 
   if (!this->IntensityDistributionSpecificationMenuButton)
@@ -177,7 +199,7 @@ void vtkEMSegmentIntensityDistributionsStep::ShowUserInterface()
     }
 
   this->Script(
-    "pack %s -side top -anchor nw -padx 2 -pady 2", 
+    "pack %s -side top -anchor nw -padx 2 -pady 2",
     this->IntensityDistributionSpecificationMenuButton->GetWidgetName());
 
   // Create the distribution mean vector/matrix
@@ -335,6 +357,23 @@ vtkEMSegmentIntensityDistributionsStep::DisplaySelectedNodeIntensityDistribution
   int row, col;
   int nb_of_target_volumes = mrmlManager->GetTargetNumberOfSelectedVolumes();
   char buffer[256];
+
+  // Update the current tree node label
+
+  if (this->NodeParametersLabel)
+    {
+    if (has_valid_selection)
+      {
+      this->NodeParametersLabel->SetEnabled(enabled);
+      std::string nodetext("Class: " + std::string(tree->GetNodeText(sel_node.c_str())) );
+      this->NodeParametersLabel->SetText( nodetext.c_str() );
+      }
+    else
+      {
+      this->NodeParametersLabel->SetEnabled(0);
+      this->NodeParametersLabel->SetText("");
+      }
+    }
 
   // Update the distribution specification menu button
 

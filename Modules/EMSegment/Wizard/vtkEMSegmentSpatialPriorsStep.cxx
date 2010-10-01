@@ -47,6 +47,12 @@ vtkEMSegmentSpatialPriorsStep::~vtkEMSegmentSpatialPriorsStep()
     this->SpatialPriorsVolumeMenuButton = NULL;
     }
 
+  if (this->NodeParametersLabel)
+    {
+    this->NodeParametersLabel->Delete();
+    this->NodeParametersLabel = NULL;
+    }
+
   if (this->SpatialPriorsVolumeFrame)
     {
     this->SpatialPriorsVolumeFrame->Delete();
@@ -103,8 +109,23 @@ void vtkEMSegmentSpatialPriorsStep::ShowUserInterface()
     }
 
   this->Script(
-    "pack %s -side top -anchor nw -fill x -padx 0 -pady 2", 
+    "pack %s -side top -anchor nw -fill x -expand y -padx 2 -pady 2",
     this->SpatialPriorsVolumeFrame->GetWidgetName());
+
+  // Create a label to display selected node
+
+  if (!this->NodeParametersLabel)
+    {
+    this->NodeParametersLabel = vtkKWLabel::New();
+    }
+  if (!this->NodeParametersLabel->IsCreated())
+    {
+    this->NodeParametersLabel->SetParent(this->SpatialPriorsVolumeFrame->GetFrame());
+    this->NodeParametersLabel->Create();
+    this->Script(
+      "pack %s -side top -anchor nw -padx 2 -pady 2",
+      this->NodeParametersLabel->GetWidgetName());
+    }
 
   // Create the spatial prior volume selector
 
@@ -127,7 +148,7 @@ void vtkEMSegmentSpatialPriorsStep::ShowUserInterface()
     }
 
   this->Script(
-    "pack %s -side top -anchor nw -padx 2 -pady 2", 
+    "pack %s -side top -anchor nw -padx 2 -pady 2",
     this->SpatialPriorsVolumeMenuButton->GetWidgetName());
 
   this->DisplaySelectedNodeSpatialPriorsCallback();
@@ -156,7 +177,26 @@ void vtkEMSegmentSpatialPriorsStep::DisplaySelectedNodeSpatialPriorsCallback()
     sel_vol_id = tree->GetNodeUserDataAsInt(sel_node.c_str());
     has_valid_selection = mrmlManager->GetTreeNodeIsLeaf(sel_vol_id);
     }
+
+  int enabled = tree->GetEnabled();
   char buffer[256];
+
+  // Update the current tree node label
+
+  if (this->NodeParametersLabel)
+    {
+    if (has_valid_selection)
+      {
+      this->NodeParametersLabel->SetEnabled(enabled);
+      std::string nodetext("Class: " + std::string(tree->GetNodeText(sel_node.c_str())) );
+      this->NodeParametersLabel->SetText( nodetext.c_str() );
+      }
+    else
+      {
+      this->NodeParametersLabel->SetEnabled(0);
+      this->NodeParametersLabel->SetText("");
+      }
+    }
 
   // Update the spatial prior volume selector
 

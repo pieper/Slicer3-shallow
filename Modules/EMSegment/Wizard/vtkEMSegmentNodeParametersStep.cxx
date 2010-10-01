@@ -377,9 +377,6 @@ void vtkEMSegmentNodeParametersStep::ShowUserInterface()
     {
     this->NodeParametersLabel->SetParent(basic_page);
     this->NodeParametersLabel->Create();
-    //this->NodeParametersLabel->SetWidth(10);
-    this->NodeParametersLabel->SetForegroundColor(1.0, 1.0, 1.0);
-    this->NodeParametersLabel->SetBackgroundColor(0.2, 0.2, 0.4);
     this->Script("grid %s -column 0 -row 0 -sticky nw -padx 2 -pady 2", this->NodeParametersLabel->GetWidgetName());
     }
 
@@ -993,15 +990,13 @@ void vtkEMSegmentNodeParametersStep::DisplaySelectedNodeParametersCallback()
 
   // Update the current tree node label
 
-  vtkMRMLEMSGlobalParametersNode* globalNode = mrmlManager->GetGlobalParametersNode();
-
   if (this->NodeParametersLabel)
     {
     if (has_valid_selection)
       {
       this->NodeParametersLabel->SetEnabled(enabled);
-      this->NodeParametersLabel->SetText(globalNode->GetName());
-      this->NodeParametersLabel->SetText(tree->GetNodeText(sel_node.c_str()));
+      std::string nodetext("Class: " + std::string(tree->GetNodeText(sel_node.c_str())) );
+      this->NodeParametersLabel->SetText( nodetext.c_str() );
       }
     else
       {

@@ -3,6 +3,7 @@
 
 #include "vtkEMSegmentStep.h"
 
+class vtkKWLabel;
 class vtkKWFrameWithLabel;
 class vtkKWMatrixWidgetWithLabel;
 class vtkKWNotebook;
@@ -57,6 +58,7 @@ protected:
   vtkKWMultiColumnListWithScrollbarsWithLabel 
                              *IntensityDistributionManualSamplingList;
   vtkKWMenu                  *ContextMenu;
+  vtkKWLabel                 *NodeParametersLabel;
 
   virtual void AddIntensityDistributionSamplePoint(double ras[3]);
 
