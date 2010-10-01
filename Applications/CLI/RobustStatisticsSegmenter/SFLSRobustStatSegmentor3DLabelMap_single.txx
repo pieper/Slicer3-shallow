@@ -234,7 +234,9 @@ CSFLSRobustStatSegmentor3DLabelMap< TPixel >
 
   for (long ifeature = 0; ifeature < m_numberOfFeature; ++ifeature)
     {
-      TDoubleImagePointer fimg = TDoubleImage::New();
+      //TDoubleImagePointer fimg = TDoubleImage::New();
+
+      TFloatImagePointer fimg = TFloatImage::New();
       fimg->SetRegions(this->mp_img->GetLargestPossibleRegion() );
       fimg->Allocate();
       fimg->CopyInformation(this->mp_img);
