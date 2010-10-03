@@ -459,6 +459,18 @@ void vtkSlicerSliceGUI::PackGUI ( vtkKWFrame *f )
 }
 
 
+//---------------------------------------------------------------------------
+void vtkSlicerSliceGUI::PackGUIVertical ( vtkKWFrame *f )
+{
+  if ( f )
+    {
+    this->Script("pack %s -side left -expand y -fill both -padx 0 -pady 0 -in %s", SliceGUIFrame->GetWidgetName(), f->GetWidgetName() );
+    this->Script("pack %s -pady 0 -side top -expand false -fill x", SliceController->GetWidgetName() );
+    this->Script("pack %s -anchor c -side top -expand true -fill both", SliceViewer->GetRenderWidget()->GetWidgetName());
+    }
+}
+
+
 
 //---------------------------------------------------------------------------
 void vtkSlicerSliceGUI::UnpackGUI ()
@@ -480,6 +492,7 @@ void vtkSlicerSliceGUI::GridGUI ( vtkKWFrame *f, int row, int col )
     }
 }
 
+//---------------------------------------------------------------------------
 void vtkSlicerSliceGUI::GridSpanGUI(vtkKWFrame *f, int row, int col, int rowspan, int colspan)
 {
   if (f)
