@@ -28,6 +28,7 @@
 
 #include "vtkSlicerWindow.h"
 #include "vtkKWFrame.h"
+#include "vtkKWSplitFrame.h"
 #include "vtkSlicerModuleCollapsibleFrame.h"
 #include "vtkKWRenderWidget.h"
 #include "vtkKWLoadSaveDialog.h"
@@ -128,6 +129,7 @@ class VTK_SLICER_BASE_GUI_EXPORT vtkSlicerApplicationGUI : public vtkSlicerCompo
     /// A frame used in the MainViewFrame of SlicerMainWin
     vtkGetObjectMacro ( GridFrame1, vtkKWFrame );
     vtkGetObjectMacro ( GridFrame2, vtkKWFrame );
+    vtkGetObjectMacro ( WidescreenSplitFrame, vtkKWSplitFrame );
     
     /// 
     /// The following (ApplicationToolbar, ViewControlGUI, SlicesControlGUI,
@@ -234,6 +236,7 @@ class VTK_SLICER_BASE_GUI_EXPORT vtkSlicerApplicationGUI : public vtkSlicerCompo
     /// 
     /// These methods configure the Main Viewer's layout
     virtual void PackConventionalView ( );
+    virtual void PackConventionalWidescreenView ( );
     virtual void PackOneUp3DView ( );
     virtual void PackOneUpSliceView ( const char *whichSlice);
     virtual void PackFourUpView ( );
@@ -241,9 +244,11 @@ class VTK_SLICER_BASE_GUI_EXPORT vtkSlicerApplicationGUI : public vtkSlicerCompo
     virtual void PackTabbedSliceView ( );
     virtual void PackLightboxView ( );
     virtual void PackCompareView();
+    virtual void PackCompareWidescreenView();
     virtual void PackSideBySideLightboxView();
     virtual void PackDual3DView();
     virtual void UnpackConventionalView ( );
+    virtual void UnpackConventionalWidescreenView ( );
     virtual void UnpackOneUp3DView ( );
     virtual void UnpackOneUpSliceView ();
     virtual void UnpackFourUpView ( );
@@ -251,6 +256,7 @@ class VTK_SLICER_BASE_GUI_EXPORT vtkSlicerApplicationGUI : public vtkSlicerCompo
     virtual void UnpackTabbedSliceView ( );
     virtual void UnpackLightboxView ( );
     virtual void UnpackCompareView();
+    virtual void UnpackCompareWidescreenView();
     virtual void UnpackSideBySideLightboxView();
     virtual void UnpackDual3DView();
 
@@ -402,6 +408,7 @@ protected:
     /// Frame for Lightbox viewing (not yet implemented)
     vtkKWFrame *GridFrame1;
     vtkKWFrame *GridFrame2;
+    vtkKWSplitFrame *WidescreenSplitFrame;
 
     /// 
     /// Widgets for the File menu

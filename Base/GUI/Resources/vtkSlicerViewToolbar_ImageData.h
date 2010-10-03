@@ -211,7 +211,6 @@ static const unsigned char image_ToolbarSideBySideComparisonView[] =
   "bsUPc7xEysJEFZ6ob8wMY7SbYzMFBkO6Z2NPOZmRkpsR1NO6m2E+N3gggPAABTWZxx";
 
 
-
 /* 
  * Resource generated for file:
  *    ToolbarComparisonView.png (zlib, base64) (image file)
@@ -219,12 +218,46 @@ static const unsigned char image_ToolbarSideBySideComparisonView[] =
 static const unsigned int  image_ToolbarCompareView_width          = 21;
 static const unsigned int  image_ToolbarCompareView_height         = 21;
 static const unsigned int  image_ToolbarCompareView_pixel_size     = 3;
-static const unsigned long image_ToolbarCompareView_length         = 92;
+static const unsigned long image_ToolbarCompareView_length         = 220;
 static const unsigned long image_ToolbarCompareView_decoded_length = 1323;
 
 static const unsigned char image_ToolbarCompareView[] = 
-  "eNpjYmJgogz96GUiDzFRbDUQrSMXENT+/OkVSrQTaTvEFlLJYeD30VRH/5BnYKAo1cG1U2"
-  "g7eX6niu0EER4AAOp3Z10=";
+  "eNpjYmJgwoEYGRmAAEjiQkAAVHbdwAAXAio4efqlsbHVqTOvTp99DURA7slTL4Ai5y+8h2"
+  "hfhxtAtJ87/9bIyBKOTEysQYacfkmSdogWIKKr9lMvjp94CtcCRHCjiLT96LHHwLCCI0ND"
+  "C+K1A0PYxNTm/IV3SAgi8h4SrZQAoO0/epnIQ0y4kxzxaB25YDBopxAN0ZAnmGjpoJ0gwg"
+  "MAz0wVdg==";
+
+/* 
+ * Resource generated for file:
+ *    ToolbarComparisonWidescreenView.png (zlib, base64) (image file)
+ */
+static const unsigned int  image_ToolbarCompareWidescreenView_width          = 21;
+static const unsigned int  image_ToolbarCompareWidescreenView_height         = 21;
+static const unsigned int  image_ToolbarCompareWidescreenView_pixel_size     = 3;
+static const unsigned long image_ToolbarCompareWidescreenView_length         = 284;
+static const unsigned long image_ToolbarCompareWidescreenView_decoded_length = 1323;
+
+static const unsigned char image_ToolbarCompareWidescreenView[] = 
+  "eNq9lE0OgjAQhaH3YQHUxL8rehVvIRSqwsIbKCIadcvSl0yCSpG2aJy8dNHOm4/ONDDmsC"
+  "65rmMSyKw9TxWO6gXrF9kBUkVH/aKcZVfgqLWjZrbsZbFT7c1mk9ns/IpOBV/Xf9IH3x0z"
+  "Gkyn2X0KLZ3eTCKrp9IT1iy/G9JhD8PpNruSYlGsoj0fzc3p6focBBMS5zNUy/KbOV1uLj"
+  "DCEsUHfEDLrqX327V09Ap2kZSxOKKULR3dxpVJqOP7Y9vOv81OVladB0vV969O+7eBHsaU"
+  "Xr4=";
+
+/* 
+ * Resource generated for file:
+ *    ToolbarConventionalWidescreenView.png (zlib, base64) (image file)
+ */
+static const unsigned int  image_ToolbarConventionalWidescreenView_width          = 21;
+static const unsigned int  image_ToolbarConventionalWidescreenView_height         = 21;
+static const unsigned int  image_ToolbarConventionalWidescreenView_pixel_size     = 3;
+static const unsigned long image_ToolbarConventionalWidescreenView_length         = 188;
+static const unsigned long image_ToolbarConventionalWidescreenView_decoded_length = 1323;
+
+static const unsigned char image_ToolbarConventionalWidescreenView[] = 
+  "eNrVk0sOwBAQQHEmVnqwulQv0vgdo7XrCTqJRBSZCivyIjLmMQhKCZ3j1Beg7W1dQGCMHN"
+  "8WdeNCZEy3fyKuaxug8uHiYYoLicGl6dCbm6Yp0AtyPfWFm3rIVGrPKfT6FPkiePF5ZjFe"
+  "SB8+++/NN+l/9/rhIOj9I8SGAznN4iE482VW12d4AY1gohU=";
 
 
 

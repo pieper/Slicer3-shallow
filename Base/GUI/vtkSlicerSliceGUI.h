@@ -77,10 +77,11 @@ class VTK_SLICER_BASE_GUI_EXPORT vtkSlicerSliceGUI : public vtkSlicerComponentGU
     /// 
     /// Show and hide the GUI, pack in frame given by f
     virtual void PackGUI ( vtkKWFrame *f );
+    virtual void PackGUIVertical ( vtkKWFrame *f );
     virtual void UnpackGUI ( );
     virtual void GridGUI ( vtkKWFrame *f, int row, int col);
     virtual void UngridGUI ( );
-        virtual void GridSpanGUI( vtkKWFrame *f, int row, int col, int rowspan, int colspan);
+    virtual void GridSpanGUI( vtkKWFrame *f, int row, int col, int rowspan, int colspan);
 
     /// 
     /// Add/Remove Observers on UIPanel widgets and SliceGUIs.

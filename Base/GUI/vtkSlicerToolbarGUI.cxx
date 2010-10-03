@@ -752,6 +752,10 @@ void vtkSlicerToolbarGUI::ProcessGUIEvents ( vtkObject *caller,
             {
             layout->SetViewArrangement (vtkMRMLLayoutNode::SlicerLayoutCompareView );
             }
+          else if (!strcmp ( whichLayout, "Compare widescreen layout"))
+            {
+            layout->SetViewArrangement (vtkMRMLLayoutNode::SlicerLayoutCompareWidescreenView );
+            }
           }
         else
           {
@@ -813,6 +817,14 @@ void vtkSlicerToolbarGUI::ProcessGUIEvents ( vtkObject *caller,
             layout->SetViewArrangement (vtkMRMLLayoutNode::SlicerLayoutConventionalView);
             }
           }
+        else if ( !strcmp ( whichLayout, "Conventional widescreen layout"))
+          {
+          if ( layout->GetViewArrangement() != vtkMRMLLayoutNode::SlicerLayoutConventionalWidescreenView )
+            {
+            appGUI->GetMRMLScene()->SaveStateForUndo ( layout );
+            layout->SetViewArrangement (vtkMRMLLayoutNode::SlicerLayoutConventionalWidescreenView);
+            }
+          }
         else if (!strcmp( whichLayout, "Dual 3D layout" ))
           {
           if ( layout->GetViewArrangement() != vtkMRMLLayoutNode::SlicerLayoutDual3DView )
@@ -858,6 +870,10 @@ void vtkSlicerToolbarGUI::ProcessGUIEvents ( vtkObject *caller,
           PopUpCompareViewCustomLayoutFrame();
           }
         else if (!strcmp ( whichLayout, "Compare layout"))
+          {
+          PopUpCompareViewCustomLayoutFrame();
+          }
+        else if (!strcmp ( whichLayout, "Compare widescreen layout"))
           {
           PopUpCompareViewCustomLayoutFrame();
           }
@@ -977,6 +993,9 @@ if ( this->ChooseLayoutIconMenuButton->GetMenu() != NULL )
    case vtkMRMLLayoutNode::SlicerLayoutConventionalView:
      this->ChooseLayoutIconMenuButton->SetValue ( "Conventional layout" );
      break;
+   case vtkMRMLLayoutNode::SlicerLayoutConventionalWidescreenView:
+     this->ChooseLayoutIconMenuButton->SetValue ( "Conventional widescreen layout" );
+     break;
    case vtkMRMLLayoutNode::SlicerLayoutFourUpView:
      this->ChooseLayoutIconMenuButton->SetValue ( "Four-up layout" );
      break;
@@ -1003,6 +1022,9 @@ if ( this->ChooseLayoutIconMenuButton->GetMenu() != NULL )
      break;
    case vtkMRMLLayoutNode::SlicerLayoutCompareView:
      this->ChooseLayoutIconMenuButton->SetValue ( "Compare layout" );
+     break;
+   case vtkMRMLLayoutNode::SlicerLayoutCompareWidescreenView:
+     this->ChooseLayoutIconMenuButton->SetValue ( "Compare widescreen layout" );
      break;
    case vtkMRMLLayoutNode::SlicerLayoutSideBySideLightboxView:
      this->ChooseLayoutIconMenuButton->SetValue ( "Side-by-side lightbox layout");
@@ -1482,7 +1504,14 @@ void vtkSlicerToolbarGUI::BuildGUI ( )
   vtkKWTkUtilities::UpdatePhotoFromIcon ( this->GetApplication(), imageName.c_str(), this->SlicerToolbarIcons->GetConventionalViewIcon(), 0 );
   this->ChooseLayoutIconMenuButton->GetMenu()->SetItemImage ( index, imageName.c_str());
   this->ChooseLayoutIconMenuButton->GetMenu()->SetItemCompoundModeToLeft ( index );
-//  this->ChooseLayoutIconMenuButton->GetMenu()->SetItemVariableValueAsInt ("Conventional layout", vtkMRMLLayoutNode::SlicerLayoutConventionalView );
+
+  this->ChooseLayoutIconMenuButton->GetMenu()->AddRadioButton ( "Conventional widescreen layout" );
+  index = this->ChooseLayoutIconMenuButton->GetMenu()->GetIndexOfItem ( "Conventional widescreen layout");
+  imageName.clear();
+  imageName = "SlicerConventionalWidescreenLayoutImage";
+  vtkKWTkUtilities::UpdatePhotoFromIcon ( this->GetApplication(), imageName.c_str(), this->SlicerToolbarIcons->GetConventionalWidescreenViewIcon(), 0 );
+  this->ChooseLayoutIconMenuButton->GetMenu()->SetItemImage ( index, imageName.c_str());
+  this->ChooseLayoutIconMenuButton->GetMenu()->SetItemCompoundModeToLeft ( index );
 
   this->ChooseLayoutIconMenuButton->GetMenu()->AddRadioButton ( "Four-up layout");
   index = this->ChooseLayoutIconMenuButton->GetMenu()->GetIndexOfItem ( "Four-up layout");
@@ -1565,6 +1594,16 @@ void vtkSlicerToolbarGUI::BuildGUI ( )
   this->ChooseLayoutIconMenuButton->GetMenu()->SetItemImage ( index, imageName.c_str() );
   this->ChooseLayoutIconMenuButton->GetMenu()->SetItemCompoundModeToLeft ( index );
 
+/*
+  this->ChooseLayoutIconMenuButton->GetMenu()->AddRadioButton ("Compare widescreen layout");
+  index = this->ChooseLayoutIconMenuButton->GetMenu()->GetIndexOfItem ("Compare widescreen layout");
+  imageName.clear();
+  imageName = "SlicerCompareViewWidescreenLayoutImage";
+  vtkKWTkUtilities::UpdatePhotoFromIcon ( this->GetApplication(), imageName.c_str(), this->SlicerToolbarIcons->GetCompareViewIcon(), 0);
+  this->ChooseLayoutIconMenuButton->GetMenu()->SetItemImage ( index, imageName.c_str() );
+  this->ChooseLayoutIconMenuButton->GetMenu()->SetItemCompoundModeToLeft ( index );
+*/
+  
   this->ChooseLayoutIconMenuButton->GetMenu()->AddRadioButton ("Side-by-side lightbox layout");
   index = this->ChooseLayoutIconMenuButton->GetMenu()->GetIndexOfItem ("Side-by-side lightbox layout");
   imageName.clear();
@@ -1800,6 +1839,7 @@ void vtkSlicerToolbarGUI::BuildGUI ( )
 
 }
 
+//--------------------------------------------------------------------------
 void vtkSlicerToolbarGUI::PopUpCompareViewCustomLayoutFrame( )
 {
   if ( !this->ChooseLayoutIconMenuButton || !this->ChooseLayoutIconMenuButton->IsCreated())
@@ -1835,6 +1875,7 @@ void vtkSlicerToolbarGUI::PopUpCompareViewCustomLayoutFrame( )
   this->CompareViewBoxTopLevel->Raise();
 }
 
+//--------------------------------------------------------------------------
 void vtkSlicerToolbarGUI::HideCompareViewCustomLayoutFrame()
 {
     if ( !this->CompareViewBoxTopLevel )

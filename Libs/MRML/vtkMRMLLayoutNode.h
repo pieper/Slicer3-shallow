@@ -88,6 +88,7 @@ public:
       SlicerLayoutInitialView = 0,
       SlicerLayoutDefaultView,
       SlicerLayoutConventionalView,
+      SlicerLayoutConventionalWidescreenView,
       SlicerLayoutFourUpView,
       SlicerLayoutOneUp3DView,
       SlicerLayoutOneUpSliceView,
@@ -98,9 +99,9 @@ public:
       SlicerLayoutTabbedSliceView,
       SlicerLayoutLightboxView,
       SlicerLayoutCompareView,
+      SlicerLayoutCompareWidescreenView,
       SlicerLayoutSingleLightboxView,
       SlicerLayoutSideBySideLightboxView,
-      SlicerLayout3DPlusLightboxView,
       SlicerLayoutTriple3DEndoscopyView,
       SlicerLayoutNone,
       SlicerLayoutDual3DView
