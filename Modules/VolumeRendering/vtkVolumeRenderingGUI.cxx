@@ -3,11 +3,14 @@
 #include <ostream>
 
 #include "vtkBMPReader.h"
+#include "vtkPNGReader.h"
 #include "vtkBMPWriter.h"
 #include "vtkCellArray.h"
 #include "vtkCylinderSource.h"
+#include "vtkDirectory.h"
 #include "vtkFloatArray.h"
 #include "vtkImageData.h"
+#include "vtkImageReader.h"
 #include "vtkImageGradientMagnitude.h"
 #include "vtkImageMapper.h"
 #include "vtkIndent.h"
@@ -17,6 +20,7 @@
 #include "vtkKWEvent.h"
 #include "vtkKWHistogramSet.h"
 #include "vtkKWMessageDialog.h"
+#include "vtkKWMenu.h"
 #include "vtkKWPiecewiseFunctionEditor.h"
 #include "vtkKWProgressGauge.h"
 #include "vtkKWTkUtilities.h"
@@ -1014,9 +1018,11 @@ void vtkVolumeRenderingGUI::UpdateGUI()
   //  presets
   this->NS_VolumePropertyPresets->SetMRMLScene(this->Presets);
   this->NS_VolumePropertyPresets->UpdateMenu();
+  this->PopulatePresetIcons(this->NS_VolumePropertyPresets->GetWidget()->GetWidget()->GetMenu());
 
   this->NS_VolumePropertyPresetsFg->SetMRMLScene(this->Presets);
   this->NS_VolumePropertyPresetsFg->UpdateMenu();
+  this->PopulatePresetIcons(this->NS_VolumePropertyPresetsFg->GetWidget()->GetWidget()->GetMenu());
 
   //then set menu selected node
   vtkMRMLVolumeRenderingParametersNode* vspNode = this->GetCurrentParametersNode();
@@ -1675,6 +1681,50 @@ void vtkVolumeRenderingGUI::LoadPresets()
 
   this->Presets->SetURL(presetFileName.c_str());
   this->Presets->Connect();
+}
+
+void vtkVolumeRenderingGUI::PopulatePresetIcons(vtkKWMenu *menu)
+{
+  // look in the directory for icons related to named presets
+  // - check for png files
+  // - check menu for item that match png file base name
+  // - read the png and create a kw icon
+  // - assign the icon for the menu item
+  vtkDirectory *iconDirectory = vtkDirectory::New();
+  vtkPNGReader *reader = vtkPNGReader::New();
+
+  vtksys_stl::string iconDirName(
+    this->GetLogic()->GetModuleShareDirectory());
+  iconDirName += "/ImageData/";
+
+  iconDirectory->Open(iconDirName.c_str());
+
+  // create icons for .png files in directory
+  vtkIdType numFiles = iconDirectory->GetNumberOfFiles();
+  for (vtkIdType i = 0; i < numFiles; i++)
+    {
+    vtksys_stl::string fileName(iconDirectory->GetFile(i));
+    if ( fileName.size() > 4 && !fileName.compare(fileName.size()-4, 4, ".png") )
+      {
+      int itemCount = menu->GetNumberOfItems();
+      for (int itemIndex = 0; itemIndex < itemCount; itemIndex++)
+        {
+        const char *itemLabel = menu->GetItemLabel(itemIndex);
+        if ( itemLabel && !strncmp(fileName.c_str(), itemLabel, strlen(itemLabel)) )
+          {
+          reader->SetFileName( vtksys_stl::string(iconDirName + fileName).c_str() );
+          reader->Update();
+          vtkKWIcon *icon = vtkKWIcon::New();
+          this->ApplicationGUI->SetIconImage(icon, reader->GetOutput());
+          menu->SetItemImageToIcon( itemIndex, icon );
+          menu->SetItemCompoundModeToLeft( itemIndex );
+          icon->Delete();
+          }
+        }
+      }
+    }
+  reader->Delete();
+  iconDirectory->Delete();
 }
 
 vtkMRMLVolumePropertyNode* vtkVolumeRenderingGUI::GetVolumePropertyNode()

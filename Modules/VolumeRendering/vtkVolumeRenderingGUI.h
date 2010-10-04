@@ -30,6 +30,7 @@ Version:   $Revision: 1.3 $
 
 #include <string>
 
+class vtkKWMenu;
 class vtkKWCheckButtonWithLabel;
 class vtkSlicerVolumeRenderingHelper;
 class vtkSlicerVolumePropertyWidget;
@@ -195,6 +196,7 @@ protected:
     void UpdatePipelineByROI();
 
     void LoadPresets();
+    void PopulatePresetIcons(vtkKWMenu *menu);
 
     int ValidateParametersNode(vtkMRMLVolumeRenderingParametersNode* vspNode);
 
