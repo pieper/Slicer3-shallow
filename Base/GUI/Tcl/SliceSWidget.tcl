@@ -696,17 +696,21 @@ itcl::body SliceSWidget::processEvent { {caller ""} {event ""} } {
       }
       # modify each slice node
       #puts "Current node $_sliceNode Current gui $sliceGUI Current SliceWidget $this"
-      $_sliceNode SetSliceSpacingModeToAutomatic
-      foreach gui $sliceGUIs {
-          set snode [$gui GetSliceNode]
-          
-          # prescribe spacing for all guis
-          eval $snode SetPrescribedSliceSpacing $thisSliceSpacing
-          $snode SetSliceSpacingModeToPrescribed
+      if { $sliceGUIs != $sliceGUI } {
+        # only adjust the spacing mode if there is something 
+        # linked to us
+        $_sliceNode SetSliceSpacingModeToAutomatic
+        foreach gui $sliceGUIs {
+            set snode [$gui GetSliceNode]
+            
+            # prescribe spacing for all guis
+            eval $snode SetPrescribedSliceSpacing $thisSliceSpacing
+            $snode SetSliceSpacingModeToPrescribed
 
-          # then tell them to reslice
-          set that [$this getSliceSWidgetForGUI $gui]
-          $that resizeSliceNode
+            # then tell them to reslice
+            set that [$this getSliceSWidgetForGUI $gui]
+            $that resizeSliceNode
+        }
       }
       # enable modifieds, don't invoke the pending events, 
       # request a render on each
