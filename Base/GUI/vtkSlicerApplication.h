@@ -53,6 +53,10 @@ class VTK_SLICER_BASE_GUI_EXPORT vtkSlicerApplication : public vtkKWApplication
     static vtkSlicerApplication* GetInstance();
 
     /// 
+    /// Get the singleton - only used for setting the temporary directory
+    static vtkSlicerApplication* GetInstance(const char* tmp_dir, const char* config_dir);
+
+    ///
     /// Do one tcl event and enter the event loop, allowing the application
     /// interface to actually run.
     /// - override the virtual method from vtkKWApplication to add event broker
@@ -471,6 +475,7 @@ class VTK_SLICER_BASE_GUI_EXPORT vtkSlicerApplication : public vtkKWApplication
 
  protected:
   vtkSlicerApplication ( );
+  vtkSlicerApplication (const char* tmp_dir, const char* config_dir);
   virtual ~vtkSlicerApplication ( );
 
   /// 
@@ -542,6 +547,7 @@ class VTK_SLICER_BASE_GUI_EXPORT vtkSlicerApplication : public vtkKWApplication
   int RemoteCacheFreeBufferSize;
 
   int UseWelcomeModuleAtStartup;
+  bool TemporaryDirectorySpecified;
 
   /// 
   /// print out local vars

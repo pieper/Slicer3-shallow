@@ -742,14 +742,25 @@ int Slicer3_main(int& argc, char *argv[])
   Scriptedmodule_Init(interp);
 #endif
 
+  vtkSlicerApplication *slicerApp = NULL;
+  if ( ConfigurationDirectory == "" && TemporaryDirectory == "" )
+    {
+    // first call to GetInstance will create the Application
+    //
+    // make a substitute tcl proc for the 'exit' built in that
+    // goes through the vtkKWApplication methodology for exiting
+    // cleanly
+    //
+    slicerApp = vtkSlicerApplication::GetInstance ( );
+    }
+  else
+    {
+    const char* config_dir = ConfigurationDirectory.c_str();
+    const char* tmp_dir = TemporaryDirectory.c_str();
+    slicerApp = vtkSlicerApplication::GetInstance (tmp_dir, config_dir);
+    }
 
-  // first call to GetInstance will create the Application
-  //
-  // make a substitute tcl proc for the 'exit' built in that
-  // goes through the vtkKWApplication methodology for exiting
-  // cleanly
-  //
-  vtkSlicerApplication *slicerApp = vtkSlicerApplication::GetInstance ( );
+
 
   slicerApp->SetBinDir(slicerBinDir.c_str());
 

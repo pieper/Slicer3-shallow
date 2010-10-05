@@ -124,6 +124,20 @@
       </string>
 
       <string>
+      <name>ConfigurationDirectory</name>
+      <longflag>--config_dir</longflag>
+      <description>Directory of the configuration file</description>
+      <label>Configuration Directory</label>
+      </string>
+
+      <string>
+      <name>TemporaryDirectory</name>
+      <longflag>--tmp_dir</longflag>
+      <description>Directory of temporary files</description>
+      <label>Temporary Directory</label>
+      </string>
+
+      <string>
       <name>LoadFreeSurferVolume</name>
       <longflag>--load_freesurfer_volume</longflag>
       <flag>-y</flag>

@@ -215,6 +215,7 @@ public:
 //---------------------------------------------------------------------------
 vtkSlicerApplication::vtkSlicerApplication ( ) {
 
+    this->TemporaryDirectorySpecified = false;
     this->ApplicationGUI = NULL;
     this->Internal = new vtkInternal;
 
@@ -352,6 +353,159 @@ vtkSlicerApplication::vtkSlicerApplication ( ) {
 }
 
 //---------------------------------------------------------------------------
+vtkSlicerApplication::vtkSlicerApplication (const char* tmp_dir, const char* config_dir) {
+
+    this->TemporaryDirectorySpecified = false;
+    this->ApplicationGUI = NULL;
+    this->Internal = new vtkInternal;
+
+    // note: these are fixed size arrays, not pointers,
+    // so initializing them to null string is correct
+    strcpy(this->ConfirmDelete, "");
+    strcpy(this->ModulePaths, "");
+    strcpy(this->PotentialModulePaths, "");
+    strcpy(this->ColorFilePaths, "");
+    strcpy(this->PotentialColorFilePaths, "");
+    strcpy(this->ExtensionsInstallPath, "");
+    strcpy(this->ExtensionsInstallPathDefault, "");
+    strcpy(this->HomeModule, "");
+    strcpy(this->IgnoreModuleNames, "");
+    strcpy(this->RegistryHolder, "");
+
+    strcpy(this->Platform, "");
+    strcpy(this->BinDir, "");
+    strcpy(this->BuildDate, "");
+    strcpy(this->SvnUrl, "");
+    strcpy(this->SvnRevision, "");
+
+    this->LoadCommandLineModules = 1;
+    this->LoadModules = 1;
+    this->IgnoreModules = vtkStringArray::New();
+    this->LoadableModules = vtkStringArray::New();
+    this->NameSeparator = ";";
+    this->EnableDaemon = 0;
+
+    this->DefaultGeometry = vtkSlicerGUILayout::New ( );
+    // defaults
+    strcpy (this->ApplicationFontSize, "small" );
+    strcpy (this->ApplicationFontFamily, "Arial" );
+    this->ApplicationWindowWidth = 0;
+    this->ApplicationWindowHeight = 0;
+    this->ApplicationLayoutType = vtkMRMLLayoutNode::SlicerLayoutConventionalView;
+    this->ApplicationLayoutCompareViewRows = 1;
+    this->ApplicationLayoutCompareViewColumns = 1;
+    this->ApplicationLayoutLightboxRows = 1;
+    this->ApplicationLayoutLightboxColumns = 1;
+
+    this->ApplicationSlicesFrameHeight = this->DefaultGeometry->GetDefaultSliceGUIFrameHeight();
+
+    // Remote data handling settings
+    strcpy (this->RemoteCacheDirectory, "");
+    this->EnableAsynchronousIO = 0;
+    this->EnableForceRedownload = 0;
+//    this->EnableRemoteCacheOverwriting = 1;
+    this->RemoteCacheLimit = 200;
+    this->RemoteCacheFreeBufferSize = 10;
+
+    this->UseWelcomeModuleAtStartup = 1;
+
+    // configure the application before creating
+    // TODO: set name automatically from VERSION_PATCH or info in Version.txt
+    this->SetName ( "3D Slicer Version 3.6.2-beta" );
+
+#ifdef _WIN32
+    vtkKWWin32RegistryHelper *regHelper =
+        vtkKWWin32RegistryHelper::SafeDownCast( this->GetRegistryHelper() );
+    regHelper->SetOrganization("NA-MIC");
+#endif
+
+    if ( config_dir != "" )
+      {
+      this->GetRegistryHelper()->SetConfigurationDirectory(config_dir);
+      }
+
+#ifndef _WIN32
+    if ( tmp_dir != "" )
+      {
+      this->SetTemporaryDirectory(tmp_dir);
+      this->TemporaryDirectorySpecified = true;
+      }
+#endif
+
+    this->RestoreApplicationSettingsFromRegistry( );
+
+
+    this->SetHelpDialogStartingPage ( "http://www.slicer.org" );
+
+    this->ModuleGUICollection = vtkSlicerGUICollection::New ( );
+    vtkKWFrameWithLabel::SetDefaultLabelFontWeightToNormal( );
+    this->SlicerTheme = vtkSlicerTheme::New ( );
+    this->ApplicationGUI = NULL;
+
+    this->DisplayMessageQueueActive = false;
+    this->DisplayMessageQueueActiveLock = itk::MutexLock::New();
+    this->DisplayMessageQueueLock = itk::MutexLock::New();
+
+    this->InternalDisplayMessageQueue = new DisplayMessageQueue;
+
+    this->DisplayMessageQueueActiveLock->Lock();
+    this->DisplayMessageQueueActive = true;
+    this->DisplayMessageQueueActiveLock->Unlock();
+
+    vtkKWTkUtilities::CreateTimerHandler(
+      this, 100, this, "ProcessDisplayMessage");
+
+    itk::SlicerOutputWindow::SetInstance( itk::SlicerOutputWindow::New() );
+
+    // Use the splash screen by default - needs to be overridden before
+    // the splash is first used
+    this->UseSplashScreen = 1;
+
+    // Disable stereo render capability by default
+    this->SetStereoEnabled(0);
+
+#ifdef Slicer3_USE_PYTHON
+    this->PythonModule = NULL;
+    this->PythonDictionary = NULL;
+#endif
+
+    this->ColorSwatchesAdded = 0;
+
+#ifdef Slicer3_USE_QT
+  // Since Qt 4.5, argc must be valid for the whole life of the
+  // application
+  static char *argv = NULL;
+  static int argc = 0;
+  this->Internal->qApplication = new qSlicerApplication(argc, &argv);
+  Q_CHECK_PTR(this->Internal->qApplication);
+
+  this->Internal->qApplication->setCoreCommandOptions(
+    new qSlicerCommandOptions(this->Internal->qApplication->settings()));
+
+  // Set window flags used to display top level widgets
+#ifdef Q_WS_MAC
+  this->Internal->qApplication->setDefaultWindowFlags(
+    Qt::WindowStaysOnTopHint | Qt::Tool);
+#elif defined(Q_WS_WIN)
+  this->Internal->qApplication->setDefaultWindowFlags(
+    Qt::WindowStaysOnTopHint | Qt::Tool | Qt::FramelessWindowHint | Qt::WindowTitleHint);
+#else
+  this->Internal->qApplication->setDefaultWindowFlags(
+    Qt::WindowStaysOnTopHint | Qt::FramelessWindowHint);
+#endif
+
+  this->Internal->ModulePanel =
+    new qSlicerModulePanel(0, qSlicerApplication::application()->defaultWindowFlags());
+
+ #ifdef Slicer3_USE_PYTHONQT
+  PythonQt::init(PythonQt::DoNotInitializePython);
+  PythonQt_QtAll::init();
+ #endif
+#endif
+
+}
+
+//---------------------------------------------------------------------------
 vtkSlicerApplication::~vtkSlicerApplication ( ) {
 
 #ifdef Slicer3_USE_QT
@@ -417,6 +571,25 @@ vtkSlicerApplication* vtkSlicerApplication::GetInstance()
     if(!vtkSlicerApplication::Instance)
       {
       vtkSlicerApplication::Instance = new vtkSlicerApplication;
+      }
+    }
+  // return the instance
+  return vtkSlicerApplication::Instance;
+}
+
+//----------------------------------------------------------------------------
+// Return the single instance of the vtkSlicerApplication
+vtkSlicerApplication* vtkSlicerApplication::GetInstance(const char* tmp_dir, const char* config_dir)
+{
+  if(!vtkSlicerApplication::Instance)
+    {
+    // Try the factory first
+//TODO    vtkSlicerApplication::Instance = (vtkSlicerApplication*)
+//TODO      vtkObjectFactory::CreateInstance("vtkSlicerApplication");
+    // if the factory did not provide one, then create it here
+    if(!vtkSlicerApplication::Instance)
+      {
+      vtkSlicerApplication::Instance = new vtkSlicerApplication(tmp_dir, config_dir);
       }
     }
   // return the instance
@@ -799,7 +972,10 @@ void vtkSlicerApplication::RestoreApplicationSettingsFromRegistry()
   GetTempPath(vtkKWRegistryHelper::RegistryKeyValueSizeMax,
               this->TemporaryDirectory);
 #else
-  strcpy(this->TemporaryDirectory, "~");
+  if ( !this->TemporaryDirectorySpecified )
+    {
+    strcpy(this->TemporaryDirectory, "~");
+    }
 #endif
 
 
