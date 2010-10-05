@@ -512,6 +512,8 @@ itcl::body Labeler::rotateSliceToImage { } {
   $this queryLayers 0 0
 
   $_sliceNode RotateToVolumePlane $_layers(background,node)
+  # make sure the slice plane does not lie on an index boundary (to avoid rounding issues)
+  [$sliceGUI GetLogic] SnapSliceOffsetToIJK
   $_sliceNode UpdateMatrices
 }
 
