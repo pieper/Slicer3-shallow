@@ -41,10 +41,35 @@ proc SliceViewerShutdown { sliceGUI } {
   }
 }
 
+proc __Slicer_bgerror {m} { 
+  set msg "Slicer has encountered an unhandled background error:\n\n  $m\n\nYou may have run out of memory.  Please save your work."
+  set dialog [vtkKWMessageDialog New]
+  $dialog SetParent [$::slicer3::ApplicationGUI GetMainSlicerWindow]
+  $dialog SetMasterWindow [$::slicer3::ApplicationGUI GetMainSlicerWindow]
+  $dialog SetStyleToMessage
+  $dialog SetText $msg
+  $dialog Create
+  $dialog Invoke
+  $dialog Delete
+}
+
+
 proc SliceViewerHandleEvent {sliceGUI event} {
   # initialize on first call 
+  # -- set up our custom bgerror command (it doesn't seem possible to do this
+  #    during the Slicer3.cxx startup, so we do it here if needed)
   # -- allows clean shutdown because each vtkSlicerSliceGUI can shutdown in destructor
   # -- this is very light weight, so no problem calling every time
+
+  # hack: peek at the string version of the proc to see if kwwidgets
+  # has replaced the system version of bgerror yet - once it has done
+  # so, we want to take over with our own version
+  if { [string match " global Application*" [info body ::bgerror]] } {
+    if { [info command ::__bgerror_kwwidgets] == "" } {
+      rename ::bgerror ::__bgerror_kwwidgets
+      rename ::__Slicer_bgerror ::bgerror
+    }
+  }
 
   SliceViewerInitialize $sliceGUI
 }
