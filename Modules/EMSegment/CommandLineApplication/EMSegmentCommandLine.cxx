@@ -1035,8 +1035,12 @@ int main(int argc, char** argv)
        }
        cout << "Slicer home is " << slicerHome << endl;
 
+       vtkSlicerApplication *app;
+       app = vtkSlicerApplication::GetInstance();
+       app->PromptBeforeExitOff();
+       std::string appTcl;
+       appTcl = vtksys::SystemTools::DuplicateString(vtkKWTkUtilities::GetTclNameFromPointer(interp, app));;
 
-       tgVtkDefineMacro(app,vtkSlicerApplication);
        app->Script ("namespace eval slicer3 set Application %s", appTcl.c_str());
 
        tgVtkDefineMacro(appLogic,vtkSlicerApplicationLogic);
@@ -1125,6 +1129,8 @@ int main(int argc, char** argv)
 
      appLogic->Delete();
      appLogic = NULL;  
+
+     app->Exit();
      app->Delete();
      app = NULL;
 
@@ -1149,7 +1155,7 @@ int main(int argc, char** argv)
   catch (std::runtime_error& e)
     {
       std::cerr << e.what() << std::endl;
-      std::cerr << "Errors detetected.  Segmentation failed." << std::endl;
+      std::cerr << "Errors detected.  Segmentation failed." << std::endl;
       segmentationSucceeded = false;
     }
   catch (...)
