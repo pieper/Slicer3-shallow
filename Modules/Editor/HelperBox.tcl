@@ -176,6 +176,8 @@ itcl::body HelperBox::select { } {
   }
   [$o(mergeName) GetWidget] SetText $mergeText
   $this updateStructures
+  # remove all active effects (so that when selected again slice rotation and snap to IJK will happen if needed
+  ::EffectSWidget::RemoveAll
 }
 
 itcl::body HelperBox::setVolumes { masterVolume mergeVolume } {
