@@ -47,7 +47,7 @@ vtkEMSegmentIntensityDistributionsStep::vtkEMSegmentIntensityDistributionsStep()
   this->ContextMenu  = NULL;
 
   this->ShowGraphButton = NULL;
-
+  this->NodeParametersLabel = NULL;
 }
 
 //----------------------------------------------------------------------------

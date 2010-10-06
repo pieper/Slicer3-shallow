@@ -31,6 +31,7 @@ vtkEMSegmentSpatialPriorsStep::vtkEMSegmentSpatialPriorsStep()
   this->SpatialPriorsVolumeFrame      = NULL;
   this->SpatialPriorsVolumeMenuButton = NULL;
 
+  this->NodeParametersLabel = NULL;
 }
 
 //----------------------------------------------------------------------------
