@@ -419,13 +419,19 @@ vtkSlicerApplication::vtkSlicerApplication (const char* tmp_dir, const char* con
     regHelper->SetOrganization("NA-MIC");
 #endif
 
-    if ( config_dir != "" )
+    if ( strcmp(config_dir, "") != 0)
       {
+      //--- make sure directory is present
+      if (!vtksys::SystemTools::FileExists(config_dir))
+        {
+        vtksys::SystemTools::MakeDirectory(config_dir);
+        }
+
       this->GetRegistryHelper()->SetConfigurationDirectory(config_dir);
       }
 
 #ifndef _WIN32
-    if ( tmp_dir != "" )
+    if ( strcmp(tmp_dir, "") != 0 )
       {
       this->SetTemporaryDirectory(tmp_dir);
       this->TemporaryDirectorySpecified = true;
