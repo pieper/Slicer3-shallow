@@ -1045,7 +1045,7 @@ proc launch_ImportModulePaths {} {
         vwait ::END
     }
 
-    # we should have the module paths now
+    # we should have the module paths now in ::globallines
 
     # parse the svn revision of the version file
     set dp [open "$::env(Slicer3_HOME)/lib/Slicer3/Slicer3Version.txt" r]
@@ -1053,32 +1053,44 @@ proc launch_ImportModulePaths {} {
     close $dp
 
     set exp {svnrevision ([0-9]+)}
+    if { [regexp -line $exp $data matched svnrevision] != 1 } {
+      puts "Warning: Could not extract svn revision for from Slicer3Version.txt file"
+      return
+    }
 
-    foreach {lines} [regexp -line $exp $data matched svnrevision] {
-        if {$lines==1} {
-            # find only one line
-            # substitute @SVN@ in $result with the found svnrevision
-            set newpath [string map [list \@SVN\@ $svnrevision] $::globallines]
+    # 
+    # find just the line that has the actual path in it the one that contains @SVN@
+    # - ignore other lines that might be error messages or diagnotics
+    #
+    set newpath ""
+    foreach line $::globallines {
+      if { [string match "*@SVN@*" $line] } {
+          # substitute in svnrevision
+          set newpath [string map [list \@SVN\@ $svnrevision] $line]
+          # strip cruft from front of path
+          set newpath [string range $newpath [string first "/" $newpath] end]
         }
     }
-    # set the dependencies
-    if {$::env(BUILD) == $::SOLARIS ||
-        $::env(BUILD) == $::LINUX_64 || 
-        $::env(BUILD) == $::LINUX} {
-      set ::env(LD_LIBRARY_PATH) ":$::env(LD_LIBRARY_PATH)"
-      set ::env(LD_LIBRARY_PATH) "$newpath$::env(LD_LIBRARY_PATH)"
-      set ::env(PATH) "$::env(PATH):$newpath"
-    } elseif {$::env(BUILD) ==  $::DARWIN || $::env(BUILD) == $::DARWIN_X86} { 
-      set ::env(DYLD_LIBRARY_PATH) ":$::env(DYLD_LIBRARY_PATH)"
-      set ::env(DYLD_LIBRARY_PATH) "$newpath$::env(DYLD_LIBRARY_PATH)"
-      set ::env(PATH) "$::env(PATH):$newpath"
-    } elseif {$::env(BUILD) == $::WINDOWS} {
-      set newpath [string map [list : \;] $newpath] ; # really needed?
-      set ::env(Path) $newpath\;$::env(Path)
+
+    if { $newpath != "" } {
+      puts "Adding module path: $newpath"
+      # found a path?  then set the dependencies
+      if {$::env(BUILD) == $::SOLARIS ||
+          $::env(BUILD) == $::LINUX_64 || 
+          $::env(BUILD) == $::LINUX} {
+        set ::env(LD_LIBRARY_PATH) ":$::env(LD_LIBRARY_PATH)"
+        set ::env(LD_LIBRARY_PATH) "$newpath$::env(LD_LIBRARY_PATH)"
+        set ::env(PATH) "$::env(PATH):$newpath"
+      } elseif {$::env(BUILD) ==  $::DARWIN || $::env(BUILD) == $::DARWIN_X86} { 
+        set ::env(DYLD_LIBRARY_PATH) ":$::env(DYLD_LIBRARY_PATH)"
+        set ::env(DYLD_LIBRARY_PATH) "$newpath$::env(DYLD_LIBRARY_PATH)"
+        set ::env(PATH) "$::env(PATH):$newpath"
+      } elseif {$::env(BUILD) == $::WINDOWS} {
+        set newpath [string map [list : \;] $newpath] ; # really needed?
+        set ::env(Path) $newpath\;$::env(Path)
+      }
     }
-
 }
-
 
 ######
 #######  The actual steps for launching:
