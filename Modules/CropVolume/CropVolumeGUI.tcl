@@ -795,7 +795,8 @@ proc CropVolumeApply {this} {
       if { [expr [$outVolumeNode GetLabelMap]] } {
         $cnode SetReferenceLabelVolumeID [$outVolumeNode GetID]
       } else {
-        $cnode SetReferenceForegroundVolumeID [$outVolumeNode GetID]
+        $cnode SetReferenceForegroundVolumeID ""
+        $cnode SetReferenceBackgroundVolumeID [$outVolumeNode GetID]
       }
   }
 
