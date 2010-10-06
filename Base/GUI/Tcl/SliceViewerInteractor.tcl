@@ -64,8 +64,8 @@ proc SliceViewerHandleEvent {sliceGUI event} {
   # hack: peek at the string version of the proc to see if kwwidgets
   # has replaced the system version of bgerror yet - once it has done
   # so, we want to take over with our own version
-  if { [string match " global Application*" [info body ::bgerror]] } {
-    if { [info command ::__bgerror_kwwidgets] == "" } {
+  if { [info command ::__bgerror_kwwidgets] == "" } {
+    if { [info command ::bgerror] != "" && [string match " global Application*" [info body ::bgerror]] } {
       rename ::bgerror ::__bgerror_kwwidgets
       rename ::__Slicer_bgerror ::bgerror
     }

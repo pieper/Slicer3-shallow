@@ -29,6 +29,9 @@ namespace eval SWidget {
         if { [catch "eval $instance $args" res] } {
           catch "puts $res"
           catch "puts $::errorInfo"
+          if { [string match "*bad alloc*" $res] } {
+            ::bgerror $res
+          }
         }
       }
     }
