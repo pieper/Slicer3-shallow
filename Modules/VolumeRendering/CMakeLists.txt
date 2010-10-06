@@ -135,4 +135,8 @@ foreach(file ${IMAGEFILES})
     ${CMAKE_BINARY_DIR}/${Slicer3_INSTALL_MODULES_SHARE_DIR}/${PROJECT_NAME}/${file}
     COPYONLY
     )
+  install(
+    FILES ${file}
+    DESTINATION ${Slicer3_INSTALL_MODULES_SHARE_DIR}/${PROJECT_NAME}/ImageData
+    )
 endforeach(file)
