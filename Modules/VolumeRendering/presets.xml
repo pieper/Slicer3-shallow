@@ -45,10 +45,6 @@
  
 
 <VolumeProperty
-  id="vtkMRMLVolumePropertyNode14"  name="CT-Cropped-Volume-Soft-Tissue"  hideFromEditors="false"  selectable="true"  selected="false"  userTags="" interpolation="1" shade="0" diffuse="1" ambient="0.2" specular="0" specularPower="1" scalarOpacity="10 -2048 0 -167.01 0 -160 1 240 1 3661 1" gradientOpacity="4 0 1 255 1" colorTransfer="20 -2048 0 0 0 -167.01 0 0 0 -160 0.0556356 0.0556356 0.0556356 240 1 1 1 3661 1 1 1"></VolumeProperty>
-
-
-<VolumeProperty
  id="PRESETvtkMRMLVolumePropertyNode7" name="CT-Fat" hideFromEditors="false" selectable="true"  isLabelmap="0" interpolation="1" shade="0" diffuse="1" ambient="0.2" specular="0" specularPower="1" references="0" scalarOpacity="14 -1000 0 -100 0 -99 0.15 -60 0.15 -59 0 101.2 0 952 0" gradientOpacity="6 0 1 985.12 1 988 1" colorTransfer="36 -1000 0.3 0.3 1 -497.5 0.3 1 0.3 -99 0 0 1 -76.946 0 1 0 -65.481 0.835431 0.888889 0.0165387 83.89 1 0 0 463.28 1 0 0 659.15 1 0.912535 0.0374849 2952 1 0.300267 0.299886"></VolumeProperty> 
 
 <VolumeProperty
