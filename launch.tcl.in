@@ -1059,14 +1059,16 @@ proc launch_ImportModulePaths {} {
     }
 
     # 
-    # find just the line that has the actual path in it the one that contains @SVN@
+    # find just the line that has the actual path in it the one that contains \@SVN\@
     # - ignore other lines that might be error messages or diagnotics
     #
     set newpath ""
     foreach line $::globallines {
-      if { [string match "*@SVN@*" $line] } {
+      set svntag "@SVN"
+      set svntag "$svntag@"
+      if { [string match "*$svntag*" $line] } {
           # substitute in svnrevision
-          set newpath [string map [list \@SVN\@ $svnrevision] $line]
+          set newpath [string map [list $svntag $svnrevision] $line]
           # strip cruft from front of path
           set newpath [string range $newpath [string first "/" $newpath] end]
         }
