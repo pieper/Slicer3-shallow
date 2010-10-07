@@ -39,6 +39,7 @@ proc Usage { {msg ""} } {
     set msg "$msg\n                   : default: version-patch is the current date"
     set msg "$msg\n   --tag : same as version-patch"
     set msg "$msg\n   --pack : run cpack after building (default: off)"
+    set msg "$msg\n   --pack-dir : where to copy the package after build"
     set msg "$msg\n   --upload : set the upload string for the binary, used if pack is true"
     set msg "$msg\n            : snapshot (default), nightly, release"
     set msg "$msg\n   --doxy : just do an svn update on Slicer3 and run doxygen"
@@ -64,6 +65,7 @@ set ::GETBUILDTEST(release) ""
 set ::GETBUILDTEST(test-type) "Experimental"
 set ::GETBUILDTEST(version-patch) ""
 set ::GETBUILDTEST(pack) "false"
+set ::GETBUILDTEST(pack-dir) ""
 set ::GETBUILDTEST(upload) "false"
 set ::GETBUILDTEST(uploadFlag) "nightly"
 set ::GETBUILDTEST(doxy) "false"
@@ -147,6 +149,14 @@ for {set i 0} {$i < $argc} {incr i} {
         }
         "--pack" {
                 set ::GETBUILDTEST(pack) "true"            
+        }
+        "--pack-dir" {
+            incr i
+            if { $i == $argc } {
+                Usage "Missing pack-dir argument"
+            } else {
+                set ::GETBUILDTEST(pack-dir) [lindex $argv $i]
+            }
         }
         "--upload" {
             set ::GETBUILDTEST(upload) "true"
@@ -647,6 +657,16 @@ if {$::GETBUILDTEST(upload) == "true"} {
     }
 }
 
+#
+# if a pack-dir is specified, copy the file to there also
+#
+if { $::GETBUILDTEST(pack) && $::GETBUILDTEST(pack-dir) != "" } {
+  set fileName "$::GETBUILDTEST(binary-filename)$::GETBUILDTEST(cpack-extension)"
+  set package "$::Slicer3_BUILD/$fileName"
+  set destination $::GETBUILDTEST(pack-dir)/$fileName
+  puts "Copying $package to $destination"
+  file copy -force $package $destination
+}
 
 #
 # build slicer extensions if requested on the command line
