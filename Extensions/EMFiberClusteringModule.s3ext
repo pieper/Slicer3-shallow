@@ -1,6 +1,6 @@
 
 scm       svn
-svnpath   https://www.nitrc.org/svn/quantitativedti/QuantitativeDiffusionTools/branches/EMClustering-3-6
+svnpath   https://www.nitrc.org/svn/quantitativedti/QuantitativeDiffusionTools/trunk/EMClustering
 cmakeproject Clustering
 svnusername slicerbot 
 svnpassword slicer
