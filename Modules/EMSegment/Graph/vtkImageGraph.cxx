@@ -34,7 +34,6 @@ GraphList::GraphList() {
 
 //------------------------------------------------------------------------------
 GraphEntryList::GraphEntryList() {
-  GraphList::GraphList();
   this->GraphEntry     = NULL; 
   this->Next           = NULL; 
   this->IgnoreGraphMinGraphMax = false;
@@ -42,7 +41,6 @@ GraphEntryList::GraphEntryList() {
 
 //------------------------------------------------------------------------------
 GraphEntryList::~GraphEntryList() {
-   this->GraphList::~GraphList();
    this->GraphEntry = NULL; 
    if (this->Next != NULL) delete this->Next;
 } 
