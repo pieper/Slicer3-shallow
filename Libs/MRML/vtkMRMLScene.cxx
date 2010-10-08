@@ -721,14 +721,24 @@ int vtkMRMLScene::Import()
     {
     vtkMRMLNode *node;
     int nnodes = scene->GetNumberOfItems();
+
+    for (n=0; n<nnodes; n++) 
+      {
+      node = (vtkMRMLNode *)scene->GetItemAsObject(n);
+      this->AddReservedID(node->GetID());
+      }
+
     for (n=0; n<nnodes; n++) 
       {
       node = (vtkMRMLNode *)scene->GetItemAsObject(n);
       this->AddNodeNoNotify(node);
       }
 
+
     // fix node refrences that may be not unique in the imported scene.
     this->UpdateNodeReferences(scene);
+
+    this->RemoveReservedIDs();
 
     this->InvokeEvent(this->NewSceneEvent, NULL);
 
@@ -1689,7 +1699,11 @@ int vtkMRMLScene::GetUniqueIDIndexByClassFromIndex(const char* className, int hi
     ss >> candidateName;
     if ( this->GetNodeByID( candidateName.c_str() ) == NULL )
       {
-      break;
+      // check reserved ID's
+      if (this->ReservedIDs.find(candidateName) == this->ReservedIDs.end())
+        {
+        break;
+        }
       }
     }
   return index;
@@ -1759,6 +1773,18 @@ const char* vtkMRMLScene::GetUniqueNameByString(const char* className)
   UniqueIDByClass[className] = id + 1;
   UniqueIDs.push_back(name);
   return UniqueIDs[UniqueIDs.size()-1].c_str();
+}
+
+void vtkMRMLScene::AddReservedID(const char *id)
+{
+  if (id == NULL) 
+    {
+    return;
+    }
+  else 
+    {
+    this->ReservedIDs[std::string(id)] = 0;
+    }
 }
 
 //------------------------------------------------------------------------------

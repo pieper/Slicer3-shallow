@@ -330,6 +330,12 @@ public:
 
   void RemoveUnusedNodeReferences();
 
+  void AddReservedID(const char *id);
+
+  void RemoveReservedIDs() {
+    this->ReservedIDs.clear();
+  };
+
   ///  
   /// get the new id of the node that is different from one in the mrml file
   /// or NULL if id has not changed
@@ -504,6 +510,7 @@ protected:
   
   //vtksys::hash_map<const char*, vtkMRMLNode*> NodeIDs;
   std::map<std::string, vtkMRMLNode*> NodeIDs;
+  std::map<std::string, int> ReservedIDs;
 
   std::string ErrorMessage;
   //ETX
