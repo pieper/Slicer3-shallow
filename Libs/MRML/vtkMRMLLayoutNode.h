@@ -65,6 +65,17 @@ public:
   vtkSetClampMacro ( NumberOfCompareViewLightboxColumns, int, 1, 50 );  
 
   /// 
+  /// configure each Widescreen layout
+  vtkGetMacro ( WidescreenLeftConventionalPanelFraction, float);
+  vtkSetClampMacro ( WidescreenLeftConventionalPanelFraction, float, 0.0, 1.0);
+  vtkGetMacro ( WidescreenRightConventionalPanelFraction, float);
+  vtkSetClampMacro ( WidescreenRightConventionalPanelFraction, float, 0.0, 1.0);
+  vtkGetMacro ( WidescreenLeftComparePanelFraction, float);
+  vtkSetClampMacro ( WidescreenLeftComparePanelFraction, float, 0.0, 1.0);
+  vtkGetMacro ( WidescreenRightComparePanelFraction, float);
+  vtkSetClampMacro ( WidescreenRightComparePanelFraction, float, 0.0, 1.0);
+  
+  /// 
   /// Set/Get the size of the main and secondary panels (size of Frame1
   /// in each panel)
   vtkGetMacro( MainPanelSize, int);
@@ -124,6 +135,12 @@ protected:
   int NumberOfCompareViewColumns;
   int NumberOfCompareViewLightboxRows;
   int NumberOfCompareViewLightboxColumns;
+
+  // Fraction of the parent each panel spans.
+  float WidescreenLeftConventionalPanelFraction;
+  float WidescreenRightConventionalPanelFraction;
+  float WidescreenLeftComparePanelFraction;
+  float WidescreenRightComparePanelFraction;
 
   char *SelectedModule;
 

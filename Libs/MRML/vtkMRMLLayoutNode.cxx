@@ -50,6 +50,14 @@ vtkMRMLLayoutNode::vtkMRMLLayoutNode()
   this->NumberOfCompareViewColumns = 1;
   this->NumberOfCompareViewLightboxRows = 1;
   this->NumberOfCompareViewLightboxColumns = 1;
+  //--- logic in appgui will set these values if they
+  //--- are initialized to zero. Otherwise, saved state
+  //--- values will rule the day.
+  this->WidescreenLeftConventionalPanelFraction = 0.0;
+  this->WidescreenRightConventionalPanelFraction = 0.0;
+  this->WidescreenLeftComparePanelFraction = 0.0;
+  this->WidescreenRightConventionalPanelFraction = 0.0;
+  
   this->MainPanelSize = 400;
   this->SecondaryPanelSize = 400;
   this->SelectedModule = NULL;
@@ -89,6 +97,11 @@ void vtkMRMLLayoutNode::WriteXML(ostream& of, int nIndent)
   of << indent << " numberOfLightboxColumns=\"" << this->NumberOfCompareViewLightboxColumns << "\"";
   of << indent << " mainPanelSize=\"" << this->MainPanelSize << "\"";
   of << indent << " secondaryPanelSize=\"" << this->SecondaryPanelSize << "\"";
+  of << indent << " widescreenLeftConventionalPanelFraction=\"" << this->WidescreenLeftConventionalPanelFraction<< "\"";
+  of << indent << " widescreenRightConventionalPanelFraction=\"" << this->WidescreenRightConventionalPanelFraction << "\"";
+  of << indent << " widescreenLeftComparePanelFraction=\"" << this->WidescreenLeftComparePanelFraction << "\"";
+  of << indent << " widescreenRightComparePanelFraction=\"" << this->WidescreenRightComparePanelFraction << "\"";
+
   if (this->SelectedModule != NULL)
     {
     of << indent << " selectedModule=\"" << (this->SelectedModule != NULL ? this->SelectedModule : "") << "\"";
@@ -120,6 +133,30 @@ void vtkMRMLLayoutNode::ReadXMLAttributes(const char** atts)
         this->ViewArrangement = vtkMRMLLayoutNode::SlicerLayoutInitialView;
         }
       }
+    else if ( !strcmp (attName, "widescreenLeftConventionalPanelFraction"))
+      {
+      std::stringstream ss;
+      ss << attValue;
+      ss >> this->WidescreenLeftConventionalPanelFraction;
+      }
+    else if ( !strcmp (attName, "widescreenRightConventionalPanelFraction"))
+      {
+      std::stringstream ss;
+      ss << attValue;
+      ss >> this->WidescreenRightConventionalPanelFraction;
+      }    
+    else if ( !strcmp (attName, "widescreenLeftComparePanelFraction"))
+      {
+      std::stringstream ss;
+      ss << attValue;
+      ss >> this->WidescreenLeftComparePanelFraction;
+      }
+    else if ( !strcmp (attName, "widescreenRightComparePanelFraction"))
+      {
+      std::stringstream ss;
+      ss << attValue;
+      ss >> this->WidescreenRightComparePanelFraction;
+      }    
     else if (!strcmp (attName, "guiPanelVisibility"))
       {
       std::stringstream ss;
@@ -223,7 +260,10 @@ void vtkMRMLLayoutNode::Copy(vtkMRMLNode *anode)
   this->SetNumberOfCompareViewColumns ( node->GetNumberOfCompareViewColumns() );
   this->SetNumberOfCompareViewLightboxRows ( node->GetNumberOfCompareViewLightboxRows() );
   this->SetNumberOfCompareViewLightboxColumns ( node->GetNumberOfCompareViewLightboxColumns() );
-
+  this->SetWidescreenLeftConventionalPanelFraction ( node->GetWidescreenLeftConventionalPanelFraction() );
+  this->SetWidescreenRightConventionalPanelFraction ( node->GetWidescreenRightConventionalPanelFraction() );
+  this->SetWidescreenLeftComparePanelFraction ( node->GetWidescreenLeftComparePanelFraction() );
+  this->SetWidescreenRightComparePanelFraction ( node->GetWidescreenRightComparePanelFraction() );
   this->SetMainPanelSize( node->GetMainPanelSize() );
   this->SetSecondaryPanelSize( node->GetSecondaryPanelSize() );
   this->SetSelectedModule( node->GetSelectedModule() );
@@ -248,6 +288,10 @@ void vtkMRMLLayoutNode::PrintSelf(ostream& os, vtkIndent indent)
   os << indent << "NumberOfCompareViewColumns: " << this->NumberOfCompareViewColumns << "\n";
   os << indent << "NumberOfCompareViewLightboxRows: " << this->NumberOfCompareViewLightboxRows << "\n";
   os << indent << "NumberOfCompareViewLightboxColumns: " << this->NumberOfCompareViewLightboxColumns << "\n";
+  os << indent << "WidescreenLeftConventionalPanelFraction: " << this->WidescreenLeftConventionalPanelFraction << "\n";
+  os << indent << "WidescreenRightConventionalPanelFraction: " << this->WidescreenRightConventionalPanelFraction << "\n";
+  os << indent << "WidescreenLeftComparePanelFraction: " << this->WidescreenLeftComparePanelFraction << "\n";
+  os << indent << "WidescreenRightComparePanelFraction: " << this->WidescreenRightComparePanelFraction << "\n";    
   os << indent << "Main panel size: " << this->MainPanelSize << "\n";
   os << indent << "Secondary panel size: " << this->SecondaryPanelSize << "\n";
   if ( this->SelectedModule )

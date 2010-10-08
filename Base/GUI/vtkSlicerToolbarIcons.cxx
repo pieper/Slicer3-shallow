@@ -404,11 +404,11 @@ void vtkSlicerToolbarIcons::AssignImageDataToIcons ( )
                                           image_ToolbarChooseView_pixel_size,
                                           image_ToolbarChooseView_length, 0);
 
-    this->CompareViewIcon->SetImage (image_ToolbarCompareView,
-                                        image_ToolbarCompareView_width,
-                                        image_ToolbarCompareView_height,
-                                        image_ToolbarCompareView_pixel_size,
-                                        image_ToolbarCompareView_length, 0);
+    this->CompareViewIcon->SetImage (image_ToolbarComparisonView,
+                                        image_ToolbarComparisonView_width,
+                                        image_ToolbarComparisonView_height,
+                                        image_ToolbarComparisonView_pixel_size,
+                                        image_ToolbarComparisonView_length, 0);
 
     this->CompareWidescreenViewIcon->SetImage (image_ToolbarCompareWidescreenView,
                                         image_ToolbarCompareWidescreenView_width,

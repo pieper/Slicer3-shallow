@@ -210,22 +210,22 @@ static const unsigned char image_ToolbarSideBySideComparisonView[] =
   "eNpjYmJgogz96GXChQjKUo7WIYHnT68gcwnKIitYv379OlRAUJaKtmMCgrJoCp4+voxHO6"
   "bsUPc7xEysJEFZ6ob8wMY7SbYzMFBkO6Z2NPOZmRkpsR1NO6m2E+N3gggPAABTWZxx";
 
-
 /* 
  * Resource generated for file:
  *    ToolbarComparisonView.png (zlib, base64) (image file)
  */
-static const unsigned int  image_ToolbarCompareView_width          = 21;
-static const unsigned int  image_ToolbarCompareView_height         = 21;
-static const unsigned int  image_ToolbarCompareView_pixel_size     = 3;
-static const unsigned long image_ToolbarCompareView_length         = 220;
-static const unsigned long image_ToolbarCompareView_decoded_length = 1323;
+static const unsigned int  image_ToolbarComparisonView_width          = 21;
+static const unsigned int  image_ToolbarComparisonView_height         = 21;
+static const unsigned int  image_ToolbarComparisonView_pixel_size     = 3;
+static const unsigned long image_ToolbarComparisonView_length         = 256;
+static const unsigned long image_ToolbarComparisonView_decoded_length = 1323;
 
-static const unsigned char image_ToolbarCompareView[] = 
+static const unsigned char image_ToolbarComparisonView[] = 
   "eNpjYmJgwoEYGRmAAEjiQkAAVHbdwAAXAio4efqlsbHVqTOvTp99DURA7slTL4Ai5y+8h2"
-  "hfhxtAtJ87/9bIyBKOTEysQYacfkmSdogWIKKr9lMvjp94CtcCRHCjiLT96LHHwLCCI0ND"
-  "C+K1A0PYxNTm/IV3SAgi8h4SrZQAoO0/epnIQ0y4kxzxaB25YDBopxAN0ZAnmGjpoJ0gwg"
-  "MAz0wVdg==";
+  "hfhwSeP72CzIVoP3f+rZGRJRyZmFiDDDn9ElM7GkDWDtECRFi1Q+xFJknSjtP2Uy+On3gK"
+  "1wJEcKOI9PvRY4+BYQVHhoYWxNsODGETU5vzF94hIYjIe0i0UgKAtv/oZSIPMeFOcsSjde"
+  "QCuHbMSCeGpIrtFKIhGvLwREteyBNM88TYThDhAQAxLCLw";
+
 
 /* 
  * Resource generated for file:

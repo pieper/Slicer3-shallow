@@ -1594,15 +1594,13 @@ void vtkSlicerToolbarGUI::BuildGUI ( )
   this->ChooseLayoutIconMenuButton->GetMenu()->SetItemImage ( index, imageName.c_str() );
   this->ChooseLayoutIconMenuButton->GetMenu()->SetItemCompoundModeToLeft ( index );
 
-/*
   this->ChooseLayoutIconMenuButton->GetMenu()->AddRadioButton ("Compare widescreen layout");
   index = this->ChooseLayoutIconMenuButton->GetMenu()->GetIndexOfItem ("Compare widescreen layout");
   imageName.clear();
   imageName = "SlicerCompareViewWidescreenLayoutImage";
-  vtkKWTkUtilities::UpdatePhotoFromIcon ( this->GetApplication(), imageName.c_str(), this->SlicerToolbarIcons->GetCompareViewIcon(), 0);
+  vtkKWTkUtilities::UpdatePhotoFromIcon ( this->GetApplication(), imageName.c_str(), this->SlicerToolbarIcons->GetCompareWidescreenViewIcon(), 0);
   this->ChooseLayoutIconMenuButton->GetMenu()->SetItemImage ( index, imageName.c_str() );
   this->ChooseLayoutIconMenuButton->GetMenu()->SetItemCompoundModeToLeft ( index );
-*/
   
   this->ChooseLayoutIconMenuButton->GetMenu()->AddRadioButton ("Side-by-side lightbox layout");
   index = this->ChooseLayoutIconMenuButton->GetMenu()->GetIndexOfItem ("Side-by-side lightbox layout");
@@ -1859,7 +1857,6 @@ void vtkSlicerToolbarGUI::PopUpCompareViewCustomLayoutFrame( )
 
   // Get the position of the mouse, the position and size of the push button,
   // the size of the scale.
-
   int x, y, px, py, ph;
   vtkSlicerApplication *app = vtkSlicerApplication::SafeDownCast ( this->GetApplication());
   
