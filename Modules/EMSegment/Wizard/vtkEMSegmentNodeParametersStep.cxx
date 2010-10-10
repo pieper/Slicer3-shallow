@@ -78,7 +78,10 @@ vtkEMSegmentNodeParametersStep::vtkEMSegmentNodeParametersStep()
   this->NodeParametersClassOverviewWeightAuto.clear();
   this->ClassOverviewWeightAutomaticRecalculateFlag = 0;
 
-  this->NodeParametersLabel = NULL;
+  this->NodeParametersLabelTabBasic = NULL;
+  this->NodeParametersLabelTabStoppingConditions = NULL;
+  this->NodeParametersLabelTabPrint = NULL;
+  this->NodeParametersLabelTabAdvanced = NULL;
 }
 
 //----------------------------------------------------------------------------
@@ -90,10 +93,28 @@ vtkEMSegmentNodeParametersStep::~vtkEMSegmentNodeParametersStep()
     this->NodeParametersNotebook = NULL;
     }
 
-  if (this->NodeParametersLabel)
+  if (this->NodeParametersLabelTabBasic)
     {
-    this->NodeParametersLabel->Delete();
-    this->NodeParametersLabel = NULL;
+    this->NodeParametersLabelTabBasic->Delete();
+    this->NodeParametersLabelTabBasic = NULL;
+    }
+
+  if (this->NodeParametersLabelTabStoppingConditions)
+    {
+    this->NodeParametersLabelTabStoppingConditions->Delete();
+    this->NodeParametersLabelTabStoppingConditions = NULL;
+    }
+
+  if (this->NodeParametersLabelTabPrint)
+    {
+    this->NodeParametersLabelTabPrint->Delete();
+    this->NodeParametersLabelTabPrint = NULL;
+    }
+
+  if (this->NodeParametersLabelTabAdvanced)
+    {
+    this->NodeParametersLabelTabAdvanced->Delete();
+    this->NodeParametersLabelTabAdvanced = NULL;
     }
 
   if (this->NodeParametersGlobalPriorScale)
@@ -123,7 +144,6 @@ vtkEMSegmentNodeParametersStep::~vtkEMSegmentNodeParametersStep()
       this->NodeParametersInputChannelWeightFrame->Delete();
       this->NodeParametersInputChannelWeightFrame = NULL;
     }
-
 
   if (this->NodeParametersAlphaScale)
     {
@@ -367,17 +387,17 @@ void vtkEMSegmentNodeParametersStep::ShowUserInterface()
     "pack %s -side top -anchor nw -fill both -expand y -padx 2 -pady 2", 
     this->NodeParametersNotebook->GetWidgetName());
 
-  // Create a label to display selected node
+  // Create label to display selected node for each tab
 
-  if (!this->NodeParametersLabel)
+  if (!this->NodeParametersLabelTabBasic)
     {
-    this->NodeParametersLabel = vtkKWLabel::New();
+    this->NodeParametersLabelTabBasic = vtkKWLabel::New();
     }
-  if (!this->NodeParametersLabel->IsCreated())
+  if (!this->NodeParametersLabelTabBasic->IsCreated())
     {
-    this->NodeParametersLabel->SetParent(basic_page);
-    this->NodeParametersLabel->Create();
-    this->Script("grid %s -column 0 -row 0 -sticky nw -padx 2 -pady 2", this->NodeParametersLabel->GetWidgetName());
+    this->NodeParametersLabelTabBasic->SetParent(basic_page);
+    this->NodeParametersLabelTabBasic->Create();
+    this->Script("grid %s -column 0 -row 0 -sticky nw -padx 2 -pady 2", this->NodeParametersLabelTabBasic->GetWidgetName());
     }
 
   // Create the class probability scale
@@ -459,8 +479,21 @@ void vtkEMSegmentNodeParametersStep::ShowUserInterface()
   this->Script("grid columnconfigure %s 1 -weight 1", 
                basic_page->GetWidgetName());
 
-  // Create the EM menu button
 
+  // Stopping Conditions page
+
+  if (!this->NodeParametersLabelTabStoppingConditions)
+    {
+    this->NodeParametersLabelTabStoppingConditions = vtkKWLabel::New();
+    }
+  if (!this->NodeParametersLabelTabStoppingConditions->IsCreated())
+    {
+    this->NodeParametersLabelTabStoppingConditions->SetParent(stop_cond_page);
+    this->NodeParametersLabelTabStoppingConditions->Create();
+    this->Script("grid %s -column 0 -row 0 -sticky nw -padx 2 -pady 2", this->NodeParametersLabelTabStoppingConditions->GetWidgetName());
+    }
+
+  // Create the EM menu button
   if (!this->StoppingConditionsEMMenuButton)
     {
     this->StoppingConditionsEMMenuButton = vtkKWMenuButtonWithLabel::New();
@@ -475,7 +508,7 @@ void vtkEMSegmentNodeParametersStep::ShowUserInterface()
       EMSEG_MENU_BUTTON_WIDTH);
     }
 
-  this->Script("grid %s -column 0 -row 0 -sticky nw -padx 2 -pady 2", 
+  this->Script("grid %s -column 0 -row 1 -sticky nw -padx 2 -pady 2",
                this->StoppingConditionsEMMenuButton->GetWidgetName());
   
   // Create the EM iterations entry
@@ -496,7 +529,7 @@ void vtkEMSegmentNodeParametersStep::ShowUserInterface()
     entry->SetCommandTriggerToAnyChange();
     }
 
-  this->Script("grid %s -column 1 -row 0 -sticky nw -padx 2 -pady 2",
+  this->Script("grid %s -column 1 -row 1 -sticky nw -padx 2 -pady 2",
                this->StoppingConditionsEMIterationsEntry->GetWidgetName());
 
   // Create the EM value entry
@@ -517,7 +550,7 @@ void vtkEMSegmentNodeParametersStep::ShowUserInterface()
     entry->SetCommandTriggerToAnyChange();
     }
 
-  this->Script("grid %s -column 1 -row 0 -sticky nw -padx 2 -pady 2",
+  this->Script("grid %s -column 2 -row 1 -sticky nw -padx 2 -pady 2",
                this->StoppingConditionsEMValueEntry->GetWidgetName());
 
   // Create the MFA menubutton
@@ -536,7 +569,7 @@ void vtkEMSegmentNodeParametersStep::ShowUserInterface()
       EMSEG_MENU_BUTTON_WIDTH);
     }
 
-  this->Script("grid %s -column 0 -row 1 -sticky nw -padx 2 -pady 2", 
+  this->Script("grid %s -column 0 -row 2 -sticky nw -padx 2 -pady 2",
                this->StoppingConditionsMFAMenuButton->GetWidgetName());
 
   // Create the MFA iterations entry
@@ -558,7 +591,7 @@ void vtkEMSegmentNodeParametersStep::ShowUserInterface()
     entry->SetCommandTriggerToAnyChange();
     }
 
-  this->Script("grid %s -column 1 -row 1 -sticky nw -padx 2 -pady 2",
+  this->Script("grid %s -column 1 -row 2 -sticky nw -padx 2 -pady 2",
                this->StoppingConditionsMFAIterationsEntry->GetWidgetName());
 
   // Create the MFA value entry
@@ -579,7 +612,7 @@ void vtkEMSegmentNodeParametersStep::ShowUserInterface()
     entry->SetCommandTriggerToAnyChange();
     }
 
-  this->Script("grid %s -column 1 -row 1 -sticky nw -padx 2 -pady 2",
+  this->Script("grid %s -column 2 -row 2 -sticky nw -padx 2 -pady 2",
                this->StoppingConditionsMFAValueEntry->GetWidgetName());
   
   // Create the Bias calculation max iterations entry
@@ -602,14 +635,32 @@ void vtkEMSegmentNodeParametersStep::ShowUserInterface()
     entry->SetCommandTriggerToAnyChange();
     }
 
-  this->Script("grid %s -column 1 -row 2 -sticky nw -padx 2 -pady 2",
+  this->Script("grid %s -column 1 -row 3 -sticky nw -padx 2 -pady 2",
                this->StoppingConditionsBiasIterationsEntry->GetWidgetName());
 
-  this->Script("grid columnconfigure %s 0 -weight 1", 
+  this->Script("grid columnconfigure %s 0 -weight 1",
                stop_cond_page->GetWidgetName());
-  this->Script("grid columnconfigure %s 1 -weight 1", 
+  this->Script("grid columnconfigure %s 1 -weight 1",
+               stop_cond_page->GetWidgetName());
+  this->Script("grid columnconfigure %s 2 -weight 1",
                stop_cond_page->GetWidgetName());
   
+
+
+
+  // print page
+
+  if (!this->NodeParametersLabelTabPrint)
+    {
+    this->NodeParametersLabelTabPrint = vtkKWLabel::New();
+    }
+  if (!this->NodeParametersLabelTabPrint->IsCreated())
+    {
+    this->NodeParametersLabelTabPrint->SetParent(print_page);
+    this->NodeParametersLabelTabPrint->Create();
+    this->Script("pack %s -side top -anchor nw -padx 2 -pady 2", this->NodeParametersLabelTabPrint->GetWidgetName());
+    }
+
   // Create the print basic frame
 
   if (!this->PrintBasicFrame)
@@ -625,6 +676,7 @@ void vtkEMSegmentNodeParametersStep::ShowUserInterface()
   this->Script(
     "pack %s -side left -anchor nw -padx 5 -pady {20 2}", 
     this->PrintBasicFrame->GetWidgetName());
+
 
   // Create the print weight checkbutton
 
@@ -675,8 +727,7 @@ void vtkEMSegmentNodeParametersStep::ShowUserInterface()
     this->NodeParametersPrintFrequencyScale->SetEntryWidth(4);
     this->NodeParametersPrintFrequencyScale->GetEntry()->
       SetRestrictValueToInteger();
-    this->NodeParametersPrintFrequencyScale->SetLabelText(
-      "Frequency:");
+    this->NodeParametersPrintFrequencyScale->SetLabelText("Frequency:");
     this->NodeParametersPrintFrequencyScale->GetLabel()->
       SetWidth(EMSEG_WIDGETS_LABEL_WIDTH-10);
     this->NodeParametersPrintFrequencyScale->SetRange(0, 
@@ -818,6 +869,17 @@ void vtkEMSegmentNodeParametersStep::ShowUserInterface()
                this->NodeParametersPrintMFAWeightsConvergenceCheckButton->GetWidgetName());
 
   // Create the frame
+
+  if (!this->NodeParametersLabelTabAdvanced)
+    {
+    this->NodeParametersLabelTabAdvanced = vtkKWLabel::New();
+    }
+  if (!this->NodeParametersLabelTabAdvanced->IsCreated())
+    {
+    this->NodeParametersLabelTabAdvanced->SetParent(advanced_page);
+    this->NodeParametersLabelTabAdvanced->Create();
+    this->Script("pack %s -side top -anchor nw -padx 2 -pady 1", this->NodeParametersLabelTabAdvanced->GetWidgetName());
+    }
 
   if (!this->NodeParametersPCAFrame)
     {
@@ -988,23 +1050,67 @@ void vtkEMSegmentNodeParametersStep::DisplaySelectedNodeParametersCallback()
   int enabled = tree->GetEnabled();
   char buffer[256];
 
-  // Update the current tree node label
+  // Update the current tree node label for each tab
 
-  if (this->NodeParametersLabel)
+  if (this->NodeParametersLabelTabBasic)
     {
     if (has_valid_selection)
       {
-      this->NodeParametersLabel->SetEnabled(enabled);
+      this->NodeParametersLabelTabBasic->SetEnabled(enabled);
       std::string nodetext("Class: " + std::string(tree->GetNodeText(sel_node.c_str())) );
-      this->NodeParametersLabel->SetText( nodetext.c_str() );
+      this->NodeParametersLabelTabBasic->SetText( nodetext.c_str() );
       }
     else
       {
-      this->NodeParametersLabel->SetEnabled(0);
-      this->NodeParametersLabel->SetText("");
+      this->NodeParametersLabelTabBasic->SetEnabled(0);
+      this->NodeParametersLabelTabBasic->SetText("");
       }
     }
 
+  if (this->NodeParametersLabelTabStoppingConditions)
+    {
+    if (has_valid_selection)
+      {
+      this->NodeParametersLabelTabStoppingConditions->SetEnabled(enabled);
+      std::string nodetext("Class: " + std::string(tree->GetNodeText(sel_node.c_str())) );
+      this->NodeParametersLabelTabStoppingConditions->SetText( nodetext.c_str() );
+      }
+    else
+      {
+      this->NodeParametersLabelTabStoppingConditions->SetEnabled(0);
+      this->NodeParametersLabelTabStoppingConditions->SetText("");
+      }
+    }
+
+  if (this->NodeParametersLabelTabPrint)
+    {
+    if (has_valid_selection)
+      {
+      this->NodeParametersLabelTabPrint->SetEnabled(enabled);
+      std::string nodetext("Class: " + std::string(tree->GetNodeText(sel_node.c_str())) );
+      this->NodeParametersLabelTabPrint->SetText( nodetext.c_str() );
+      }
+    else
+      {
+      this->NodeParametersLabelTabPrint->SetEnabled(0);
+      this->NodeParametersLabelTabPrint->SetText("");
+      }
+    }
+
+  if (this->NodeParametersLabelTabAdvanced)
+    {
+    if (has_valid_selection)
+      {
+      this->NodeParametersLabelTabAdvanced->SetEnabled(enabled);
+      std::string nodetext("Class: " + std::string(tree->GetNodeText(sel_node.c_str())) );
+      this->NodeParametersLabelTabAdvanced->SetText( nodetext.c_str() );
+      }
+    else
+      {
+      this->NodeParametersLabelTabAdvanced->SetEnabled(0);
+      this->NodeParametersLabelTabAdvanced->SetText("");
+      }
+    }
 
   // Update the class probability scale
 

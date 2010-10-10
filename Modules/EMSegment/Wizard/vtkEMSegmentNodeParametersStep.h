@@ -106,7 +106,10 @@ protected:
   vtkKWFrameWithLabel                *NodeParametersInputChannelWeightFrame;
   vtkKWFrameWithLabel                *NodeParametersClassOverviewWeightGlobalFrame;
 
-  vtkKWLabel                         *NodeParametersLabel;
+  vtkKWLabel                         *NodeParametersLabelTabBasic;
+  vtkKWLabel                         *NodeParametersLabelTabStoppingConditions;
+  vtkKWLabel                         *NodeParametersLabelTabPrint;
+  vtkKWLabel                         *NodeParametersLabelTabAdvanced;
 
   //BTX
   vtkstd::vector<vtkKWScaleWithEntry*>  NodeParametersInputChannelWeight;

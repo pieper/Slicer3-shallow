@@ -48,6 +48,7 @@ vtkEMSegmentIntensityDistributionsStep::vtkEMSegmentIntensityDistributionsStep()
 
   this->ShowGraphButton = NULL;
   this->NodeParametersLabel = NULL;
+  this->NodeParametersLabel2 = NULL;
 }
 
 //----------------------------------------------------------------------------
@@ -69,6 +70,11 @@ vtkEMSegmentIntensityDistributionsStep::~vtkEMSegmentIntensityDistributionsStep(
     {
     this->NodeParametersLabel->Delete();
     this->NodeParametersLabel = NULL;
+    }
+  if (this->NodeParametersLabel2)
+    {
+    this->NodeParametersLabel2->Delete();
+    this->NodeParametersLabel2 = NULL;
     }
 
   if (this->IntensityDistributionMeanMatrix)
@@ -261,6 +267,23 @@ void vtkEMSegmentIntensityDistributionsStep::ShowUserInterface()
   this->Script("pack %s -side top -expand n -fill x -padx 2 -pady 2",
                this->IntensityDistributionCovarianceMatrix->GetWidgetName());
   
+
+  // Create a label to display selected node
+
+  if (!this->NodeParametersLabel2)
+    {
+    this->NodeParametersLabel2 = vtkKWLabel::New();
+    }
+  if (!this->NodeParametersLabel2->IsCreated())
+    {
+    this->NodeParametersLabel2->SetParent(manual_sampling_page);
+    this->NodeParametersLabel2->Create();
+
+    this->Script(
+      "pack %s -side top -anchor nw -padx 2 -pady 2",
+      this->NodeParametersLabel2->GetWidgetName());
+    }
+
   // Create the manual sampling frame
 
   if (!this->IntensityDistributionManualSamplingList)
@@ -290,14 +313,14 @@ void vtkEMSegmentIntensityDistributionsStep::ShowUserInterface()
     }
 
   this->Script(
-    "pack %s -side top -anchor nw -fill both -expand y -padx 0 -pady 2", 
+    "pack %s -side top -fill both -expand y -padx 0 -pady 2",
     this->IntensityDistributionManualSamplingList->GetWidgetName());
 
   // Update the UI with the proper value, if there is a selection
 
   this->DisplaySelectedNodeIntensityDistributionsCallback();
 
-if (!this->ShowGraphButton ) 
+  if (!this->ShowGraphButton )
     {
       this->ShowGraphButton = vtkKWPushButton::New ();
     } 
@@ -310,6 +333,7 @@ if (!this->ShowGraphButton )
       this->ShowGraphButton->SetCommand(this, "PlotDistributionCallback");
     }
   this->Script("pack %s -side top -padx 0 -pady 2", this->ShowGraphButton->GetWidgetName());
+
 
 }
 
@@ -360,6 +384,7 @@ vtkEMSegmentIntensityDistributionsStep::DisplaySelectedNodeIntensityDistribution
 
   // Update the current tree node label
 
+  // intensity_page
   if (this->NodeParametersLabel)
     {
     if (has_valid_selection)
@@ -372,6 +397,22 @@ vtkEMSegmentIntensityDistributionsStep::DisplaySelectedNodeIntensityDistribution
       {
       this->NodeParametersLabel->SetEnabled(0);
       this->NodeParametersLabel->SetText("");
+      }
+    }
+
+  // on manual_sampling_page
+  if (this->NodeParametersLabel2)
+    {
+    if (has_valid_selection)
+      {
+      this->NodeParametersLabel2->SetEnabled(enabled);
+      std::string nodetext("Class: " + std::string(tree->GetNodeText(sel_node.c_str())) );
+      this->NodeParametersLabel2->SetText( nodetext.c_str() );
+      }
+    else
+      {
+      this->NodeParametersLabel2->SetEnabled(0);
+      this->NodeParametersLabel2->SetText("");
       }
     }
 

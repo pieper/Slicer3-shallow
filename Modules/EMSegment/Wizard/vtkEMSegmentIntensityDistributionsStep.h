@@ -59,6 +59,7 @@ protected:
                              *IntensityDistributionManualSamplingList;
   vtkKWMenu                  *ContextMenu;
   vtkKWLabel                 *NodeParametersLabel;
+  vtkKWLabel                 *NodeParametersLabel2;
 
   virtual void AddIntensityDistributionSamplePoint(double ras[3]);
 
