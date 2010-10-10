@@ -179,6 +179,7 @@ proc loadArray {fileName arrayName} {
 foreach v { ::isSolaris ::isWindows ::isDarwin ::isLinux } { set $v 0 }
 switch $tcl_platform(os) {
     "SunOS" { set ::isSolaris 1 }
+    "GNU/kFreeBSD" { set isLinux 1 }
     "Linux" { set ::isLinux 1 }
     "Darwin" { set ::isDarwin 1 }
     default { set ::isWindows 1 }
