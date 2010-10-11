@@ -335,13 +335,14 @@ namespace eval EMSegmenterPreProcessingTcl {
         set fixedImageData $outputVolumeData($fixedTargetImageIndex)
 
         # ----------------------------------------------------------------
-        # perfom rigid registration
+        # inform the user what happens next
         if {[$mrmlManager GetEnableTargetToTargetRegistration] } {
             puts "TCL: ===> Register Target To Target "
         } else {
             puts "TCL: ===> Skipping Registration of Target To Target "
         }
 
+        # perfom "rigid registration" or "resample only"
         for { set i 0 } {$i < [$alignedTarget GetNumberOfVolumes] } { incr i } {
             if { $i == $fixedTargetImageIndex } {
                 continue;
@@ -385,7 +386,7 @@ namespace eval EMSegmenterPreProcessingTcl {
                 # Here comes new rigid registration later
             } else {
                 # Just creates output with same dimension as fixed volume
-                $LOGIC StartPreprocessingResampleToTarget $movingVolumeNode $fixedVolumeNode $outVolumeNode
+                $LOGIC StartPreprocessingResampleAndCastToTarget $movingVolumeNode $fixedVolumeNode $outVolumeNode
             }
         }
         # ----------------------------------------------------------------
@@ -397,7 +398,7 @@ namespace eval EMSegmenterPreProcessingTcl {
 
     #------------------------------------------------------
     # from StartPreprocessingTargetToTargetRegistration
-    # if alignFlag = 0 then it simply writes over the results
+    #------------------------------------------------------
     proc SkipAtlasRegistration { } {
         variable workingDN
         variable mrmlManager
@@ -409,8 +410,14 @@ namespace eval EMSegmenterPreProcessingTcl {
         puts "TCL: == Skip Atlas Registration"
         puts "TCL: =========================================="
 
+        # This function makes sure that the "output atlas" is identically to the "input atlas".
+        # Each volume of the "output atlas" will then be resampled to the resolution of the "fixed target volume"
+        # The "output atlas will be having the same ScalarType as the "fixed target volume'". There is no additionally cast necessary.
+
+        set fixedTargetChannel 0
+
         # ----------------------------------------------------------------
-        # Setup (General)
+        #  makes sure that the "output atlas" is identically to the "input atlas"
         # ----------------------------------------------------------------
         if { $outputAtlasNode == "" } {
             puts "TCL: Atlas was empty"
@@ -422,10 +429,12 @@ namespace eval EMSegmenterPreProcessingTcl {
             $mrmlManager SynchronizeAtlasNode $inputAtlasNode $outputAtlasNode AlignedAtlas
         }
 
-        set fixedTargetChannel 0
+        # ----------------------------------------------------------------
+        # set the fixed target volume
+        # ----------------------------------------------------------------
         set fixedTargetVolumeNode [$subjectNode GetNthVolumeNode $fixedTargetChannel]
         if { [$fixedTargetVolumeNode GetImageData] == "" } {
-            PrintError "RegisterAtlas: Fixed image is null, skipping registration"
+            PrintError "SkipAtlasRegistration: Fixed image is null, skipping resampling"
             return 1;
         }
 
@@ -436,9 +445,10 @@ namespace eval EMSegmenterPreProcessingTcl {
         for { set i 0 } {$i < [$outputAtlasNode GetNumberOfVolumes] } { incr i } {
             set movingVolumeNode [$inputAtlasNode GetNthVolumeNode $i]
             set outputVolumeNode [$outputAtlasNode GetNthVolumeNode $i]
-            $LOGIC StartPreprocessingResampleToTarget $movingVolumeNode $fixedTargetVolumeNode $outputVolumeNode
+            $LOGIC StartPreprocessingResampleAndCastToTarget $movingVolumeNode $fixedTargetVolumeNode $outputVolumeNode
         }
-        puts "TCL: EMSEG: Atlas-to-target registration complete."
+
+        puts "TCL: EMSEG: Atlas-to-target resampling complete."
         $workingDN SetAlignedAtlasNodeIsValid 1
         return 0
     }
