@@ -142,7 +142,11 @@ vtkEMSegmentPreProcessingStep::Validate()
     
     if (flag)
     {
-      cout << "Pre-processing did not execute correctly" << endl;
+      vtkKWMessageDialog::PopupMessage(this->GetApplication(), NULL,
+        "Error", "Pre-processing did not execute correctly",
+        vtkKWMessageDialog::WarningIcon | vtkKWMessageDialog::InvokeAtPointer
+      );
+      cerr << "Pre-processing did not execute correctly" << endl;
       wizard_workflow->PushInput(vtkKWWizardStep::GetValidationFailedInput());
       wizard_workflow->ProcessInputs();
       return;
@@ -156,7 +160,7 @@ vtkEMSegmentPreProcessingStep::Validate()
     if (targetNode) 
       {
         vtkMRMLVolumeNode* output =  targetNode->GetNthVolumeNode(0);
-    vtkSlicerApplicationGUI *applicationGUI = this->GetGUI ()->GetApplicationGUI ();
+        vtkSlicerApplicationGUI *applicationGUI = this->GetGUI ()->GetApplicationGUI ();
 
         applicationGUI->GetMainSliceGUI("Red")->GetSliceController()->GetBackgroundSelector()->SetSelected(output);
         applicationGUI->GetMainSliceGUI("Yellow")->GetSliceController()->GetBackgroundSelector()->SetSelected(output);
