@@ -800,9 +800,19 @@ void vtkEMSegmentRunSegmentationStep::StartSegmentationCallback()
   progress->Create();
   progress->SetMessageText("Please wait until segmentation has been finished.");
   progress->Display();
-  logic->StartSegmentationWithoutPreprocessing();
+  int returnCode = logic->StartSegmentationWithoutPreprocessing();
   progress->SetParent(NULL);
   progress->Delete();
+
+  if (returnCode != EXIT_SUCCESS)
+    {
+    vtkKWMessageDialog::PopupMessage(this->GetApplication(), NULL,
+      "Error", "Segmentation did not execute correctly",
+      vtkKWMessageDialog::WarningIcon | vtkKWMessageDialog::InvokeAtPointer
+    );
+    cerr << "Pre-processing did not execute correctly" << endl;
+    return;
+  }
 
   // display Results 
   vtkSlicerApplicationGUI *applicationGUI  = this->GetGUI()->GetApplicationGUI();
