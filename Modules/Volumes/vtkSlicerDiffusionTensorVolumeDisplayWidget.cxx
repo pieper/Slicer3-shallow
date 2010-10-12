@@ -408,10 +408,14 @@ if (this->UpdatingMRML || this->UpdatingWidget)
   if (volumeNode == curVolumeNode && 
       volumeNode != NULL && event == vtkCommand::ModifiedEvent)
     {
-    this->WindowLevelThresholdEditor->SetImageData(volumeNode->GetImageData());
+    vtkMRMLDiffusionTensorVolumeDisplayNode *displayNode = vtkMRMLDiffusionTensorVolumeDisplayNode::SafeDownCast(this->GetVolumeDisplayNode());
+    this->DTIMathematics->SetInput(volumeNode->GetImageData());
+    this->DTIMathematics->SetOperation(displayNode->GetScalarInvariant());
+    this->DTIMathematics->Update();
+
+    this->WindowLevelThresholdEditor->SetImageData(DTIMathematics->GetOutput());
     this->GlyphDisplayWidget->SetDiffusionTensorVolumeNode(volumeNode);
     //--- check the interpolation which may have been modified from the SliceGUI
-    vtkMRMLDiffusionTensorVolumeDisplayNode *displayNode = vtkMRMLDiffusionTensorVolumeDisplayNode::SafeDownCast(this->GetVolumeDisplayNode());
     if (displayNode && this->InterpolateButton )
       {
       if (displayNode->GetInterpolate() != this->InterpolateButton->GetSelectedState() )
