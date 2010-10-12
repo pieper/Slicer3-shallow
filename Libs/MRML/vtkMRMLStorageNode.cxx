@@ -33,6 +33,7 @@ Version:   $Revision: 1.1.1.1 $
 vtkMRMLStorageNode::vtkMRMLStorageNode()
 {
   this->FileName = NULL;
+  this->TempFileName = NULL;
   this->URI = NULL;
   this->URIHandler = NULL;
   this->UseCompression = 1;
@@ -53,6 +54,11 @@ vtkMRMLStorageNode::~vtkMRMLStorageNode()
     {
     delete [] this->FileName;
     this->FileName = NULL;
+    }
+   if (this->TempFileName) 
+    {
+    delete [] this->TempFileName;
+    this->TempFileName = NULL;
     }
   if (this->URI)
     {
@@ -94,7 +100,25 @@ void vtkMRMLStorageNode::WriteXML(ostream& of, int nIndent)
       }
     
     of << indent << " fileName=\"" << vtkMRMLNode::URLEncodeString(name.c_str()) << "\"";
-    
+
+    if (this->GetScene() && this->IsFilePathRelative(this->FileName))
+      {
+      // now that we've written out the relative path, go back to keeping an
+      // absolute one here so that any future saves in different scene root
+      // directories will be able to compute the correct relative path.
+      
+      const char * absFilePath = this->GetAbsoluteFilePath(this->FileName);
+      if (absFilePath)
+        {
+        vtkDebugMacro("WriteXML: going back to absolute path for file name " << this->FileName << ", using " << absFilePath);
+        this->SetFileName(absFilePath);
+        }
+      else
+        {
+        vtkWarningMacro("WriteXML: unable to convert relative file path to absolute, still using " << this->FileName);
+        }
+
+      }
     // if there is a file list, add the archetype to it. add file will check
     // that it's not already there. currently needed for reading in multi
     // volume files with the vtk itk io factory 10/17/08. - NOT TESTED YET
@@ -111,8 +135,23 @@ void vtkMRMLStorageNode::WriteXML(ostream& of, int nIndent)
     if (this->GetScene() && !this->IsFilePathRelative(this->GetNthFileName(i)))
       {
       name = itksys::SystemTools::RelativePath(this->GetScene()->GetRootDirectory(), this->GetNthFileName(i));
+      vtkDebugMacro("WriteXML: made a relative path for file list member " << i << ": " << name);
       }
     of << indent << " fileListMember" << i << "=\"" << vtkMRMLNode::URLEncodeString(name.c_str()) << "\"";
+    if (this->GetScene() && this->IsFilePathRelative(this->GetNthFileName(i)))
+      {
+      // go back to absolute
+      const char *absFilePath = this->GetAbsoluteFilePath(this->GetNthFileName(i));
+       if (absFilePath)
+        {
+        vtkDebugMacro("WriteXML: going back to absolute path for file name " << this->GetNthFileName(i) << ", using " << absFilePath);
+        this->ResetNthFileName(i, absFilePath);
+        }
+      else
+        {
+        vtkWarningMacro("WriteXML: unable to convert relative file path to absolute, still using " << this->GetNthFileName(i));
+        }
+      }
     }
 
   if (this->URI != NULL)
@@ -312,6 +351,8 @@ void vtkMRMLStorageNode::PrintSelf(ostream& os, vtkIndent indent)
   os << indent << "WriteFileFormat: " <<
     (this->WriteFileFormat ? this->WriteFileFormat : "(none)") << "\n";
 
+  os << indent << "TempFileName: " <<
+    (this->TempFileName ? this->TempFileName : "(none)") << "\n";
 }
 
 //----------------------------------------------------------------------------
@@ -556,6 +597,12 @@ std::string vtkMRMLStorageNode::GetFullNameFromNthFileName(int n)
     fileName = this->GetNthFileName(n);
     }
 
+  if (fileName == NULL)
+    {
+    vtkDebugMacro("GetFullNameFromNthFileName: n = " << n << " have a null filename, returning empty string");
+    return fullName;
+    }
+  
   vtkDebugMacro("GetFullNameFromNthFileName: n = " << n << ", using file name '" << fileName << "'");
   
   if (this->Scene != NULL &&
@@ -586,7 +633,7 @@ std::string vtkMRMLStorageNode::GetFullNameFromNthFileName(int n)
       }
     else
       {
-      vtkDebugMacro("GetFullNameFromNthFileName: scene root dir = " << (this->Scene->GetRootDirectory() != NULL ? this->Scene->GetRootDirectory() : "null") << ", fileName = " << fileName << ", relative = " << (this->IsFilePathRelative(fileName) ? "yes" : "no"));
+      vtkDebugMacro("GetFullNameFromNthFileName: scene root dir = " << (this->Scene->GetRootDirectory() != NULL ? this->Scene->GetRootDirectory() : "null") << ", relative = " << (this->IsFilePathRelative(fileName) ? "yes" : "no"));
       }
     fullName = std::string(fileName);
     }
@@ -680,7 +727,7 @@ void vtkMRMLStorageNode::ResetFileNameList( )
 //----------------------------------------------------------------------------
 const char * vtkMRMLStorageNode::GetNthFileName(int n) const
 {
-  if (this->GetNumberOfFileNames() < n)
+  if ((this->GetNumberOfFileNames()-1) < n)
     {
     return NULL;
     }
@@ -763,6 +810,11 @@ void vtkMRMLStorageNode::SetDataDirectory(const char *dataDirName)
     vtkErrorMacro("SetDataDirectory: input directory name is null, returning.");
     return;
     }
+  if (this->GetFileName() == NULL)
+    {
+    vtkWarningMacro("SetDataDirectory: file name is null, no reason to reset data directory.");
+    return;
+    }
   // reset the filename
   vtksys_stl::string filePath = vtksys::SystemTools::GetFilenamePath(this->GetFileName());
   vtksys_stl::vector<vtksys_stl::string> pathComponents;
@@ -823,7 +875,11 @@ void vtkMRMLStorageNode::InitializeSupportedWriteFileTypes()
 //------------------------------------------------------------------------------
 int vtkMRMLStorageNode::IsFilePathRelative(const char * filepath)
 {
-
+  if (filepath == NULL)
+    {
+    vtkErrorMacro("IsFilePathRelative: input file path is null! Returning 0");
+    return 0;
+    }
   if ( this->Scene )
     {
     return this->Scene->IsFilePathRelative(filepath);
@@ -843,3 +899,35 @@ int vtkMRMLStorageNode::IsFilePathRelative(const char * filepath)
     }
 }
 
+//------------------------------------------------------------------------------
+const char *vtkMRMLStorageNode::GetAbsoluteFilePath(const char *inputPath)
+{
+  if (inputPath == NULL)
+    {
+    vtkErrorMacro("GetAbsoluteFilePath: input path is null.");
+    return NULL;
+    }
+  if (!this->IsFilePathRelative(inputPath))
+    {
+    // the path is already absolute, return it
+    return inputPath;
+    }
+  if (!this->GetScene())
+    {
+    vtkErrorMacro("GetAbsoluteFilePath: have a relative path " << inputPath << " but no scene to find it from!");
+    return NULL;
+    }
+
+  std::string path = this->GetScene()->GetRootDirectory();
+  if (path[path.size()-1] != '/')
+    {
+    path = path + std::string("/");
+    }
+  // now add the input relative path to the end
+  path += inputPath;
+  // collapse it
+  std::string collapsedFullPath = vtksys::SystemTools::CollapseFullPath(path.c_str());
+  vtkDebugMacro("GetAbsoluteFilePath: for relative path " << inputPath << ", collapsed full path = " << collapsedFullPath.c_str());
+  this->SetTempFileName(collapsedFullPath.c_str());
+  return this->GetTempFileName();
+}
