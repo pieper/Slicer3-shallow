@@ -1,0 +1,6 @@
+scm           svn
+svnpath       http://svn.slicer.org/Slicer3/trunk/Modules/EMSegment/CMTK-Extension
+svnusername   anonymous
+svnpassword   anonymous
+#name          CMTK4Slicer
+#cmakeproject  CMTK4Slicer
