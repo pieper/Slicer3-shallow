@@ -99,7 +99,6 @@ public:
       SlicerLayoutInitialView = 0,
       SlicerLayoutDefaultView,
       SlicerLayoutConventionalView,
-      SlicerLayoutConventionalWidescreenView,
       SlicerLayoutFourUpView,
       SlicerLayoutOneUp3DView,
       SlicerLayoutOneUpSliceView,
@@ -110,12 +109,13 @@ public:
       SlicerLayoutTabbedSliceView,
       SlicerLayoutLightboxView,
       SlicerLayoutCompareView,
+      SlicerLayoutSideBySideLightboxView,
+      SlicerLayoutNone,
+      SlicerLayoutDual3DView,
+      SlicerLayoutConventionalWidescreenView,
       SlicerLayoutCompareWidescreenView,
       SlicerLayoutSingleLightboxView,
-      SlicerLayoutSideBySideLightboxView,
-      SlicerLayoutTriple3DEndoscopyView,
-      SlicerLayoutNone,
-      SlicerLayoutDual3DView
+      SlicerLayoutTriple3DEndoscopyView,      
     };
   //ETX
 
