@@ -2569,3 +2569,25 @@ void vtkEMSegmentLogic::UpdateIntensityDistributionAuto(vtkKWApplication* app, v
     }
 }
 
+//----------------------------------------------------------------------------
+void  vtkEMSegmentLogic::AutoCorrectSpatialPriorWeight(vtkIdType nodeID)
+{ 
+   unsigned int numChildren = this->MRMLManager->GetTreeNodeNumberOfChildren(nodeID);
+   for (unsigned int i = 0; i < numChildren; ++i)
+    {
+    vtkIdType childID = this->MRMLManager->GetTreeNodeChildNodeID(nodeID, i);
+    bool isLeaf = this->MRMLManager->GetTreeNodeIsLeaf(childID);
+    if (isLeaf)
+      {
+    if ((this->MRMLManager->GetTreeNodeSpatialPriorWeight(childID) > 0.0) && (!this->MRMLManager->GetAlignedSpatialPriorFromTreeNodeID(childID)))
+      {
+        vtkWarningMacro("Class with ID " <<  childID << " is set to 0 bc no atlas assigned to class!" );
+        this->MRMLManager->SetTreeNodeSpatialPriorWeight(childID,0.0);
+      }
+      }
+    else
+      {
+    this->AutoCorrectSpatialPriorWeight(childID);
+      }
+   }
+}

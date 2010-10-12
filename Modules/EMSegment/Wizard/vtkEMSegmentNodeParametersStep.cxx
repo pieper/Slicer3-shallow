@@ -29,6 +29,7 @@
 
 #include "vtkMRMLEMSWorkingDataNode.h"
 #include "vtkMRMLEMSTargetNode.h"
+#include "vtkEMSegmentLogic.h"
 
 //----------------------------------------------------------------------------
 vtkStandardNewMacro(vtkEMSegmentNodeParametersStep);
@@ -1136,7 +1137,6 @@ void vtkEMSegmentNodeParametersStep::DisplaySelectedNodeParametersCallback()
     }
 
   // Update the spatial prior weight scale
-
   if (this->NodeParametersSpatialPriorWeightScale)
     {
     if (has_valid_selection)
@@ -1204,7 +1204,7 @@ void vtkEMSegmentNodeParametersStep::DisplaySelectedNodeParametersCallback()
       }
     if (has_valid_selection && !sel_is_leaf_node)
       {
-      this->Script("grid %s", this->NodeParametersAlphaScale->GetWidgetName());
+      this->Script("grid %s  -column 0 -row 3 -sticky nw -padx 2 -pady 2", this->NodeParametersAlphaScale->GetWidgetName());
       }
     else
       {
@@ -2180,7 +2180,12 @@ void vtkEMSegmentNodeParametersStep::Validate()
         PushInput(vtkKWWizardStep::GetValidationFailedInput());
       wizard_workflow->ProcessInputs();
       }
-    }
+    // go through tree and make sure that the atlas weight of all classes is set to zero who have no atlas assigned  
+    this->GetGUI()->GetLogic()->AutoCorrectSpatialPriorWeight(mrmlManager->GetTreeRootNodeID());
+
+     
+  }
+
   this->Superclass::Validate();
 }
 
@@ -2338,7 +2343,7 @@ void vtkEMSegmentNodeParametersStep::DefineInputChannelWeightOverviewWindow(int 
       this->NodeParametersInputChannelWeightFrame->Create();
       this->NodeParametersInputChannelWeightFrame->SetLabelText("Input Channel Weights");
     }
-  this->Script("grid %s -column 1 -row 0 -rowspan 3 -sticky news -padx 2 -pady 2", this->NodeParametersInputChannelWeightFrame->GetWidgetName());
+  this->Script("grid %s -column 1 -row 1 -rowspan 3 -sticky news -padx 2 -pady 2", this->NodeParametersInputChannelWeightFrame->GetWidgetName());
 
   if (oldSize > newSize)
     {

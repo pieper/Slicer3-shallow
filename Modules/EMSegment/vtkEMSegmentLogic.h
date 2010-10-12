@@ -150,7 +150,7 @@ public:
   void PrintText(char *TEXT);
 
   void DefineValidSegmentationBoundary(); 
-
+  void AutoCorrectSpatialPriorWeight(vtkIdType nodeID);
 
 private:
   vtkEMSegmentLogic();
