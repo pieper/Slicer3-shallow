@@ -234,6 +234,11 @@ vtkIdType
 vtkEMSegmentMRMLManager::
 GetTreeNodeParentNodeID(vtkIdType childNodeID)
 {
+  if (childNodeID == -1)
+    {
+    return NULL;
+    }
+
   vtkMRMLEMSTreeNode* childNode = this->GetTreeNode(childNodeID);
   if (childNode == NULL)
     {
@@ -2144,7 +2149,7 @@ DoTargetAndAtlasDataTypesMatch()
   vtkMRMLEMSTargetNode* targetNode = 
     this->GetWorkingDataNode()->GetInputTargetNode();
   vtkMRMLEMSAtlasNode* atlasNode = 
-    this->GetWorkingDataNode()->GetInputAtlasNode();  
+    this->GetWorkingDataNode()->GetInputAtlasNode();
 
   if (targetNode == NULL || atlasNode == NULL)
     {
@@ -3260,6 +3265,12 @@ vtkEMSegmentMRMLManager::
 GetTreeNode(vtkIdType nodeID)
 {
   vtkMRMLEMSTreeNode* node = NULL;
+
+  if (nodeID == -1)
+    {
+    return NULL;
+    }
+
   const char* mrmlID = this->MapVTKNodeIDToMRMLNodeID(nodeID);
   if (mrmlID == NULL || strlen(mrmlID) == 0)
     {
