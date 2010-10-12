@@ -992,7 +992,7 @@ void vtkNRRDReader::ExecuteData(vtkDataObject *output)
 
        const char *key = 0;
        int E;
-       cout<<"Kind: Masked Sym Matrix"<<endl;
+       //cout<<"Kind: Masked Sym Matrix"<<endl;
        // Call tendExpand(nout,nin,scale,threshold)
        // Set up threshold to -1 to avoid this 
        Nrrd *ntmp = nrrdNew();
