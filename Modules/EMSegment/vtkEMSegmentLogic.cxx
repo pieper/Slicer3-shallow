@@ -1202,12 +1202,11 @@ void vtkEMSegmentLogic::StartPreprocessingResampleAndCastToTarget(vtkMRMLVolumeN
       cast->SetInput(outputVolumeNode->GetImageData());
       cast->SetOutputScalarType(fixedVolumeNode->GetImageData()->GetScalarType());
       cast->Update();
-      outputVolumeNode->GetImageData()->ShallowCopy(cast->GetOutput());
-      
+      outputVolumeNode->GetImageData()->DeepCopy(cast->GetOutput());
       cast->Delete();
     }
-  
-  std::cerr << "DONE" << std::endl;
+
+  std::cout << "Resampling and casting output volume \"" << outputVolumeNode->GetName() << "\" to reference target \"" << fixedVolumeNode->GetName() <<  "\" DONE" << std::endl;
 }
 
 //----------------------------------------------------------------------------
