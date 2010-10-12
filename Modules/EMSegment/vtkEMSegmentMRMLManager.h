@@ -336,7 +336,7 @@ public:
   virtual void        MoveTargetSelectedVolume(vtkIdType volumeID,
                                                int toIndex);
 
-  virtual bool        DoTargetAndAtlasDataTypesMatch();
+  virtual bool        DoTargetAndAtlasDataTypesMatch( vtkMRMLEMSTargetNode* targetNode, vtkMRMLEMSAtlasNode* atlasNode ); 
 
   //
   // target volume normalization

@@ -2144,13 +2144,8 @@ MoveTargetSelectedVolume(vtkIdType volumeID, int toIndex)
 //----------------------------------------------------------------------------
 bool
 vtkEMSegmentMRMLManager::
-DoTargetAndAtlasDataTypesMatch()
+DoTargetAndAtlasDataTypesMatch(vtkMRMLEMSTargetNode* targetNode, vtkMRMLEMSAtlasNode* atlasNode)
 {
-  vtkMRMLEMSTargetNode* targetNode = 
-    this->GetWorkingDataNode()->GetInputTargetNode();
-  vtkMRMLEMSAtlasNode* atlasNode = 
-    this->GetWorkingDataNode()->GetInputAtlasNode();
-
   if (targetNode == NULL || atlasNode == NULL)
     {
     std::cerr << "Target or atlas node is null!" << std::endl;

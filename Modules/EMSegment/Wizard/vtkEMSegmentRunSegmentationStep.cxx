@@ -373,7 +373,7 @@ void vtkEMSegmentRunSegmentationStep::ShowUserInterface()
   this->RunSegmentationGenerateSurfaceCheckButton->SetEnabled(
     mrmlManager->HasGlobalParametersNode() ? enabled : 0);
 
-  // Create the directory button
+  // Create the working directory button
 
   if (!this->RunSegmentationDirectoryButton)
     {
@@ -760,13 +760,20 @@ void vtkEMSegmentRunSegmentationStep::StartSegmentationCallback()
     return;
     }
   
-  // make sure that data types are the same
-  if (!mrmlManager->DoTargetAndAtlasDataTypesMatch())
+  // make sure that data types are the same,
+  // it is ok if the 'input target node' and the 'atlas node' are using different types,
+  // but the 'aligned atlas node'(after register/resample/cast) has to be of the same type as the 'input target node'
+  vtkMRMLEMSTargetNode* targetNode =
+    mrmlManager->GetWorkingDataNode()->GetInputTargetNode();
+  vtkMRMLEMSAtlasNode* alignedAtlasNode =
+    mrmlManager->GetWorkingDataNode()->GetAlignedAtlasNode();
+
+  if (!mrmlManager->DoTargetAndAtlasDataTypesMatch(targetNode, alignedAtlasNode))
     {
     // popup an error message
     std::string errorMessage = 
       "Scalar type mismatch for input images; all image scalar types must be "
-      "the same (including input channels and atlas images).";
+      "the same (including input channels and aligned/resampled/casted atlas images).";
 
     vtkKWMessageDialog::PopupMessage(this->GetApplication(),
                                      NULL,
