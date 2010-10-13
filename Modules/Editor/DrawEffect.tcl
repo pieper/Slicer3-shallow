@@ -164,10 +164,11 @@ itcl::body DrawEffect::processEvent { {caller ""} {event ""} } {
       }
       "KeyPressEvent" { 
         set key [$_interactor GetKeySym]
-        if { [lsearch "a x" $key] != -1 } {
+        if { [lsearch "a x Return" $key] != -1 } {
           $sliceGUI SetCurrentGUIEvent "" ;# reset event so we don't respond again
           $sliceGUI SetGUICommandAbortFlag 1
           switch [$_interactor GetKeySym] {
+            "Return" -
             "a" {
               $this apply
               set _actionState ""
