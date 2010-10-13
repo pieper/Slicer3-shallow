@@ -992,7 +992,7 @@ void vtkSlicerWelcomeGUI::BuildWelcomeAndAboutPanel( vtkKWFrame *parent )
   disclaimer->GetWidget()->QuickFormattingOn();
   disclaimer->GetWidget()->SetForegroundColor ( 0.4, 0.4, 0.4 );
   disclaimer->GetWidget()->SetHeight ( 5 );
-  const char *info = "**3D Slicer** is distributed under a BSD-style license; for details about the contribution and software license agreement, please see <a>http://www.slicer.org/cgi-bin/License/SlicerLicenseForm.pl</a>. The software has been designed for research purposes only and has not been reviewed or approved by the Food and Drug Administration, or by any other agency. ";
+  const char *info = "**3D Slicer** is distributed under a BSD-style license; for details about the contribution and software license agreement, please see <a>http://www.slicer.org/pages/LicenseText</a>. The software has been designed for research purposes only and has not been reviewed or approved by the Food and Drug Administration, or by any other agency. ";
   disclaimer->SetText ( info );
   //Important that Read only after SetText otherwise it doesn't work
   disclaimer->GetWidget()->ReadOnlyOn();
