@@ -36,7 +36,7 @@ LMMSEVectorImageFilter<TInputImage, TOutputImage>::LMMSEVectorImageFilter()
   m_NeighboursInd = NeighboursIndType(0,0);
   m_MinimumNumberOfUsedVoxelsFiltering = 1;
   m_UseAbsoluteValue = false;
-  m_KeepValue = false;
+  m_KeepValue = true;
 }
   
 template< class TInputImage, class TOutputImage >
@@ -46,8 +46,8 @@ void LMMSEVectorImageFilter< TInputImage, TOutputImage >
   if(m_Neighbours>m_NDWI)
     m_Neighbours = m_NDWI;
   // Find the closest neighbours to each gradient direction
-  if( m_NDWI!=m_DWI.GetSize() || m_NBaselines!=m_Baselines.GetSize() || (m_NDWI<1 && m_NBaselines<1) || m_GradientList.size()!=m_NDWI || m_Neighbours<1 || m_Neighbours>m_NDWI )
-    itkExceptionMacro( << "Bad iniialisation of the filter!!! Check parameters, please" );
+  if( m_NDWI!=m_DWI.GetSize() || m_NBaselines!=m_Baselines.GetSize() || m_NDWI<1 || m_NBaselines<1 || m_GradientList.size()!=m_NDWI || m_Neighbours<1 || m_Neighbours>m_NDWI )
+    itkExceptionMacro( << "Bad initialisation of the filter! Please, make sure at least obe baseline image is present" );
   m_NeighboursInd = NeighboursIndType( m_NDWI, m_Neighbours );
     
   // Vectors to compute the distance from each gradient direction to each other gradient direction; we need to sort to find the closest 
@@ -305,15 +305,10 @@ void LMMSEVectorImageFilter< TInputImage, TOutputImage>
         // Compute the square root of the output, and check if the result is physically consisitent:
         for( unsigned int iJ=0; iJ<m_NBaselines+m_NDWI; ++iJ ){                                                                                                                                                                     if( dFiltered[iJ] > 0 )                                                                                                                                                                                       
             dFiltered[iJ] = sqrt( dFiltered[iJ] );                                                                                                                           
-          else{                                                                                                                                                                                                     
-            if ( m_UseAbsoluteValue )                                                                                                                                                                          
-              dFiltered[iJ] = sqrt( -dFiltered[iJ] );                                                                                                                                                          
-            else if( m_KeepValue )                                                                                                                                                                                   
-              dFiltered[iJ] = dMagnitude[iJ];                                                                                                                                                                  
-            else                                                                                                                                                                                                     
-              dFiltered[iJ] = 0;                                                                                                                                                                               
-          }                                                                                                                                                                                                                
-        } 
+          else{                                                                                                                           
+            if ( m_UseAbsoluteValue ){ dFiltered[iJ] = sqrt( -dFiltered[iJ] ); }
+            else if( m_KeepValue ){ dFiltered[iJ] = dMagnitude[iJ]; }
+            else{ dFiltered[iJ] = 0; }                                                                                                                                                }                                                                                                                                                                         } 
       }
       else{       // In this case, the second order moment is too small; this is likely to occur in the background
         for( unsigned int iJ=0; iJ<m_NBaselines+m_NDWI; ++iJ ){                                                                                                                                                      
