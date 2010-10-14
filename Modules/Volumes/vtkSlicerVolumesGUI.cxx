@@ -1197,7 +1197,6 @@ void vtkSlicerVolumesGUI::BuildGUI ( )
   this->DisplayFrame->SetParent ( page );
   this->DisplayFrame->Create ( );
   this->DisplayFrame->SetLabelText ("Display");
-  this->DisplayFrame->CollapseFrame ( );
   app->Script ( "pack %s -side top -anchor nw -fill x -padx 2 -pady 2 -in %s",
                 this->DisplayFrame->GetWidgetName(), page->GetWidgetName());
 
