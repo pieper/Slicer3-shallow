@@ -15,6 +15,7 @@
 #include "vtkKWEntryWithLabel.h"
 #include "vtkKWProgressDialog.h"
 #include "vtkSlicerSliceControllerWidget.h"
+#include "vtkMRMLEMSTargetNode.h"
 //----------------------------------------------------------------------------
 vtkStandardNewMacro(vtkEMSegmentPreProcessingStep);
 vtkCxxRevisionMacro(vtkEMSegmentPreProcessingStep, "$Revision: 1.2 $");

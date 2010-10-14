@@ -29,7 +29,6 @@ public:
   //
   // actions
   //
-  virtual void      SaveTemplateNow();
   virtual bool      SaveIntermediateResults();
 
   // Old Pipeline

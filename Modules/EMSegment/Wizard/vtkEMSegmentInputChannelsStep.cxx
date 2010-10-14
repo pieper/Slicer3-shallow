@@ -17,6 +17,8 @@
 #include "vtkMRMLEMSTargetNode.h"
 #include "vtkMRMLEMSNode.h"
 #include "vtkEMSegmentPreProcessingStep.h"
+#include "vtkMRMLEMSGlobalParametersNode.h"
+#include "vtkMRMLEMSWorkingDataNode.h"
 //----------------------------------------------------------------------------
 vtkStandardNewMacro(vtkEMSegmentInputChannelsStep);
 vtkCxxRevisionMacro(vtkEMSegmentInputChannelsStep, "$Revision: 1.1 $");

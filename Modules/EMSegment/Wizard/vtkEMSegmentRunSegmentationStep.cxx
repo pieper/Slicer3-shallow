@@ -57,10 +57,12 @@ vtkEMSegmentRunSegmentationStep::vtkEMSegmentRunSegmentationStep()
   this->RunSegmentationDirectoryFrame              = NULL;
   //  this->RunSegmentationOutputFrame                 = NULL;
   //this->RunSegmentationOutVolumeSelector           = NULL;
+  this->RunSegmentationSaveTemplateFrame = NULL;
   this->RunSegmentationSaveTemplateButton          = NULL;
   this->RunSegmentationDirectorySubFrame           = NULL;
+this->RunSegmentationDirectoryLabel              = NULL;
   this->RunSegmentationDirectoryButton             = NULL;
-  this->RunSegmentationSaveAfterSegmentationCheckButton = NULL;
+  this->RunSegmentationSaveTemplateLabel = NULL;
   this->RunSegmentationSaveIntermediateCheckButton = NULL;
   this->RunSegmentationGenerateSurfaceCheckButton  = NULL;
   this->RunSegmentationROIFrame                    = NULL;
@@ -85,12 +87,26 @@ vtkEMSegmentRunSegmentationStep::~vtkEMSegmentRunSegmentationStep()
     this->RunSegmentationSaveIntermediateCheckButton->Delete();
     this->RunSegmentationSaveIntermediateCheckButton = NULL;
     }
-
-  if (this->RunSegmentationSaveAfterSegmentationCheckButton)
+  if (this->RunSegmentationSaveTemplateFrame)
     {
-    this->RunSegmentationSaveAfterSegmentationCheckButton->Delete();
-    this->RunSegmentationSaveAfterSegmentationCheckButton = NULL;
+    this->RunSegmentationSaveTemplateFrame->Delete();
+    this->RunSegmentationSaveTemplateFrame = NULL;
     }
+
+
+  if (this->RunSegmentationSaveTemplateLabel)
+    {
+    this->RunSegmentationSaveTemplateLabel->Delete();
+    this->RunSegmentationSaveTemplateLabel = NULL;
+    }
+
+  if (this->RunSegmentationDirectoryLabel)
+    {
+     this->RunSegmentationDirectoryLabel->Delete();
+     this->RunSegmentationDirectoryLabel = NULL;
+    }
+
+
 
   if (this->RunSegmentationDirectoryButton)
     {
@@ -183,6 +199,13 @@ void vtkEMSegmentRunSegmentationStep::ShowUserInterface()
   int enabled = parent->GetEnabled();
   wizard_widget->GetCancelButton()->SetEnabled(enabled);
 
+  
+
+  // Create the boundary frame
+
+  this->ShowROIGUI(parent); 
+
+
   // Create the save frame
 
   if (!this->RunSegmentationSaveFrame)
@@ -195,41 +218,36 @@ void vtkEMSegmentRunSegmentationStep::ShowUserInterface()
     this->RunSegmentationSaveFrame->Create();
     this->RunSegmentationSaveFrame->SetLabelText("Save");
     }
-  // disable this frame for now, it is not currently useful
-  //   this->Script(
-  //     "pack %s -side top -anchor nw -fill x -padx 0 -pady 2", 
-  //     this->RunSegmentationSaveFrame->GetWidgetName());
+   this->Script("pack %s -side top -anchor nw -fill x -padx 0 -pady 2", this->RunSegmentationSaveFrame->GetWidgetName());
   
+
+ if (!this->RunSegmentationSaveTemplateFrame)
+    {
+    this->RunSegmentationSaveTemplateFrame = vtkKWFrame::New();
+    }
+  if (!this->RunSegmentationSaveTemplateFrame->IsCreated())
+    {
+      this->RunSegmentationSaveTemplateFrame->SetParent(this->RunSegmentationSaveFrame->GetFrame());
+    this->RunSegmentationSaveTemplateFrame->Create();
+    }
+   this->Script("pack %s -side top -anchor nw -fill x -padx 0 -pady 2", this->RunSegmentationSaveTemplateFrame->GetWidgetName());
+
+
   // Create the "save after segmentation" checkbutton
 
-  if (!this->RunSegmentationSaveAfterSegmentationCheckButton)
+  if (!this->RunSegmentationSaveTemplateLabel)
     {
-    this->RunSegmentationSaveAfterSegmentationCheckButton = 
-      vtkKWCheckButtonWithLabel::New();
+    this->RunSegmentationSaveTemplateLabel = vtkKWLabel::New();
     }
 
-  if (!this->RunSegmentationSaveAfterSegmentationCheckButton->IsCreated())
+  if (!this->RunSegmentationSaveTemplateLabel->IsCreated())
     {
-    this->RunSegmentationSaveAfterSegmentationCheckButton->SetParent(
-      this->RunSegmentationSaveFrame->GetFrame());
-    this->RunSegmentationSaveAfterSegmentationCheckButton->Create();
-    this->RunSegmentationSaveAfterSegmentationCheckButton->GetLabel()->
-      SetWidth(EMSEG_WIDGETS_LABEL_WIDTH - 6);
-    this->RunSegmentationSaveAfterSegmentationCheckButton->GetLabel()->
-      SetText("Save After Segmentation:");
-    this->RunSegmentationSaveAfterSegmentationCheckButton->
-      GetWidget()->SetCommand(this, "SaveAfterSegmentationCallback");
+    this->RunSegmentationSaveTemplateLabel->SetParent(this->RunSegmentationSaveTemplateFrame);
+    this->RunSegmentationSaveTemplateLabel->Create();
+    this->RunSegmentationSaveTemplateLabel->SetWidth(EMSEG_WIDGETS_LABEL_WIDTH);
+    this->RunSegmentationSaveTemplateLabel->SetText("Create Template File:");
     }
-  this->RunSegmentationSaveAfterSegmentationCheckButton->
-    GetWidget()->
-    SetSelectedState(mrmlManager->GetSaveTemplateAfterSegmentation());
-
-  this->Script(
-    "pack %s -side left -anchor nw -padx 2 -pady 2", 
-    this->RunSegmentationSaveAfterSegmentationCheckButton->GetWidgetName());
-
-  this->RunSegmentationSaveAfterSegmentationCheckButton->SetEnabled(
-    mrmlManager->HasGlobalParametersNode() ? enabled : 0);
+  this->RunSegmentationSaveTemplateLabel->SetEnabled( mrmlManager->HasGlobalParametersNode() ? enabled : 0);
 
   // Create the save template button
 
@@ -240,8 +258,7 @@ void vtkEMSegmentRunSegmentationStep::ShowUserInterface()
     }
   if (!this->RunSegmentationSaveTemplateButton->IsCreated())
     {
-    this->RunSegmentationSaveTemplateButton->SetParent(
-      this->RunSegmentationSaveFrame->GetFrame());
+      this->RunSegmentationSaveTemplateButton->SetParent(this->RunSegmentationSaveTemplateFrame);
     this->RunSegmentationSaveTemplateButton->Create();
     this->RunSegmentationSaveTemplateButton->SetImageToPredefinedIcon(
       vtkKWIcon::IconFloppy);
@@ -266,75 +283,36 @@ void vtkEMSegmentRunSegmentationStep::ShowUserInterface()
     }
   else
     {
-    this->RunSegmentationSaveTemplateButton->SetText("Save Template File");
+    this->RunSegmentationSaveTemplateButton->SetText("Create");
     this->RunSegmentationSaveTemplateButton->GetLoadSaveDialog()->
       RetrieveLastPathFromRegistry("OpenPath");
     }
   this->RunSegmentationSaveTemplateButton->SetEnabled(
     mrmlManager->HasGlobalParametersNode() ? enabled : 0);
 
-  this->Script(
-    "pack %s -side left -anchor nw -fill x -padx 2 -pady 2", 
-    this->RunSegmentationSaveTemplateButton->GetWidgetName());
+  this->Script( "pack %s %s -side left -anchor w -padx 2 -pady 2", this->RunSegmentationSaveTemplateLabel->GetWidgetName() , this->RunSegmentationSaveTemplateButton->GetWidgetName());
 
-  // Create the working directory frame
 
-  if (!this->RunSegmentationDirectoryFrame)
-    {
-    this->RunSegmentationDirectoryFrame = vtkKWFrameWithLabel::New();
-    }
-  if (!this->RunSegmentationDirectoryFrame->IsCreated())
-    {
-    this->RunSegmentationDirectoryFrame->SetParent(parent);
-    this->RunSegmentationDirectoryFrame->Create();
-    this->RunSegmentationDirectoryFrame->SetLabelText("Working Directory");
-    }
-
- if (this->GetGUI()->IsSegmentationModeAdvanced())
-   { 
-    this->Script("pack %s -side top -anchor nw -fill x -padx 0 -pady 2", this->RunSegmentationDirectoryFrame->GetWidgetName());
-   }
-
-  // Create the frame for the directory sub frame
-
-  if (!this->RunSegmentationDirectorySubFrame)
-    {
-    this->RunSegmentationDirectorySubFrame = vtkKWFrame::New();
-    }
-  if (!this->RunSegmentationDirectorySubFrame->IsCreated())
-    {
-    this->RunSegmentationDirectorySubFrame->SetParent(
-      this->RunSegmentationDirectoryFrame->GetFrame());
-    this->RunSegmentationDirectorySubFrame->Create();
-    }
-
-  this->Script(
-    "pack %s -side left -anchor nw -fill x -padx 0 -pady 0", 
-    this->RunSegmentationDirectorySubFrame->GetWidgetName());
-
-  // Create the save intermediate results button
-
-  if (!this->RunSegmentationSaveIntermediateCheckButton)
+  // Intermediate results 
+ if (!this->RunSegmentationSaveIntermediateCheckButton)
     {
     this->RunSegmentationSaveIntermediateCheckButton = 
       vtkKWCheckButtonWithLabel::New();
     }
   if (!this->RunSegmentationSaveIntermediateCheckButton->IsCreated())
     {
-    this->RunSegmentationSaveIntermediateCheckButton->SetParent(
-      this->RunSegmentationDirectorySubFrame);
+      this->RunSegmentationSaveIntermediateCheckButton->SetParent( this->RunSegmentationSaveFrame->GetFrame());
     this->RunSegmentationSaveIntermediateCheckButton->Create();
     this->RunSegmentationSaveIntermediateCheckButton->GetLabel()->
-      SetWidth(EMSEG_WIDGETS_LABEL_WIDTH - 6);
+      SetWidth(EMSEG_WIDGETS_LABEL_WIDTH);
     this->RunSegmentationSaveIntermediateCheckButton->GetLabel()->
-      SetText("Save Intermediate Results:");
+      SetText("Save Intermediate Results: ");
     this->RunSegmentationSaveIntermediateCheckButton->
       GetWidget()->SetCommand(this, "SaveIntermediateCallback");
     }
 
   this->Script(
-    "pack %s -side top -anchor nw -padx 2 -pady 2", 
-    this->RunSegmentationSaveIntermediateCheckButton->GetWidgetName());
+    "pack %s -side top -anchor nw -padx 2 -pady 2", this->RunSegmentationSaveIntermediateCheckButton->GetWidgetName());
 
   this->RunSegmentationSaveIntermediateCheckButton->
     GetWidget()->SetSelectedState(
@@ -342,38 +320,35 @@ void vtkEMSegmentRunSegmentationStep::ShowUserInterface()
   this->RunSegmentationSaveIntermediateCheckButton->SetEnabled(
     mrmlManager->HasGlobalParametersNode() ? enabled : 0);
 
-  // Create the generate surface model button
-
-  if (!this->RunSegmentationGenerateSurfaceCheckButton)
-    {
-    this->RunSegmentationGenerateSurfaceCheckButton = 
-      vtkKWCheckButtonWithLabel::New();
-    }
-  if (!this->RunSegmentationGenerateSurfaceCheckButton->IsCreated())
-    {
-    this->RunSegmentationGenerateSurfaceCheckButton->SetParent(
-      this->RunSegmentationDirectorySubFrame);
-    this->RunSegmentationGenerateSurfaceCheckButton->Create();
-    this->RunSegmentationGenerateSurfaceCheckButton->GetLabel()->
-      SetWidth(EMSEG_WIDGETS_LABEL_WIDTH - 6);
-    this->RunSegmentationGenerateSurfaceCheckButton->
-      SetLabelText("Generate Surface Model:");
-    this->RunSegmentationGenerateSurfaceCheckButton->
-      GetWidget()->SetCommand(this, "GenerateSurfaceModelsCallback");
-    }
-
-  // disable for now, not used and confusing
-  //   this->Script(
-  //     "pack %s -side top -anchor nw -padx 2 -pady 2", 
-  //     this->RunSegmentationGenerateSurfaceCheckButton->GetWidgetName());
-  
-  this->RunSegmentationGenerateSurfaceCheckButton->
-    GetWidget()->SetSelectedState(
-      mrmlManager->GetSaveSurfaceModels());
-  this->RunSegmentationGenerateSurfaceCheckButton->SetEnabled(
-    mrmlManager->HasGlobalParametersNode() ? enabled : 0);
 
   // Create the working directory button
+
+  if (!this->RunSegmentationDirectorySubFrame)
+    {
+    this->RunSegmentationDirectorySubFrame = vtkKWFrame::New();
+    }
+  if (!this->RunSegmentationDirectorySubFrame->IsCreated())
+    {
+      this->RunSegmentationDirectorySubFrame->SetParent( this->RunSegmentationSaveFrame->GetFrame());
+      this->RunSegmentationDirectorySubFrame->Create();
+    }
+
+  this->Script("pack %s -side top -anchor nw -fill x -padx 0 -pady 0", this->RunSegmentationDirectorySubFrame->GetWidgetName());
+
+
+  if (!this->RunSegmentationDirectoryLabel)
+    {
+    this->RunSegmentationDirectoryLabel = vtkKWLabel::New();
+    }
+
+  if (!this->RunSegmentationDirectoryLabel->IsCreated())
+    {
+    this->RunSegmentationDirectoryLabel->SetParent(this->RunSegmentationDirectorySubFrame);
+    this->RunSegmentationDirectoryLabel->Create();
+    this->RunSegmentationDirectoryLabel->SetWidth(EMSEG_WIDGETS_LABEL_WIDTH);
+    this->RunSegmentationDirectoryLabel->SetText("Select Working Directory: ");
+    }
+  this->Script( "pack %s -side left -anchor nw -padx 2 -pady 2", this->RunSegmentationDirectoryLabel->GetWidgetName());
 
   if (!this->RunSegmentationDirectoryButton)
     {
@@ -381,8 +356,7 @@ void vtkEMSegmentRunSegmentationStep::ShowUserInterface()
     }
   if (!this->RunSegmentationDirectoryButton->IsCreated())
     {
-    this->RunSegmentationDirectoryButton->SetParent(
-      this->RunSegmentationDirectoryFrame->GetFrame());
+      this->RunSegmentationDirectoryButton->SetParent(this->RunSegmentationDirectorySubFrame);
     this->RunSegmentationDirectoryButton->Create();
     this->RunSegmentationDirectoryButton->SetImageToPredefinedIcon(
       vtkKWIcon::IconFolderOpen);
@@ -405,7 +379,7 @@ void vtkEMSegmentRunSegmentationStep::ShowUserInterface()
     }
   else
     {
-    this->RunSegmentationDirectoryButton->SetText("Select Working Directory");
+    this->RunSegmentationDirectoryButton->SetText("Select");
     this->RunSegmentationDirectoryButton->GetLoadSaveDialog()->
       RetrieveLastPathFromRegistry("OpenPath");
     }
@@ -413,68 +387,10 @@ void vtkEMSegmentRunSegmentationStep::ShowUserInterface()
   this->RunSegmentationDirectoryButton->SetEnabled(
     mrmlManager->HasGlobalParametersNode() ? enabled : 0);
 
-  this->Script(
-    "pack %s -side left -anchor nw -fill x -padx 2 -pady 2", 
-    this->RunSegmentationDirectoryButton->GetWidgetName());
-  
-  // Create the output image frame
+  this->Script("pack %s -side left -anchor nw -fill x -padx 2 -pady 2", this->RunSegmentationDirectoryButton->GetWidgetName());
 
-  // if (!this->RunSegmentationOutputFrame)
-  //   {
-  //   this->RunSegmentationOutputFrame = vtkKWFrameWithLabel::New();
-  //   }
-  // if (!this->RunSegmentationOutputFrame->IsCreated())
-  //   {
-  //   this->RunSegmentationOutputFrame->SetParent(parent);
-  //   this->RunSegmentationOutputFrame->Create();
-  //   this->RunSegmentationOutputFrame->SetLabelText("Output Labelmap");
-  //   }
-  // this->Script(
-  //   "pack %s -side top -anchor nw -fill x -padx 0 -pady 2", 
-  //   this->RunSegmentationOutputFrame->GetWidgetName());
-  // 
-  // // Create the output image frame
-  // 
-  // if (!this->RunSegmentationOutVolumeSelector)
-  //   {
-  //   this->RunSegmentationOutVolumeSelector = vtkSlicerNodeSelectorWidget::New();
-  //   }
-  // if (!this->RunSegmentationOutVolumeSelector->IsCreated())
-  //   {
-  //   this->RunSegmentationOutVolumeSelector->SetNodeClass("vtkMRMLScalarVolumeNode",  "LabelMap", "1",  "EMSegment");
-  //   this->RunSegmentationOutVolumeSelector->SetNewNodeEnabled(1);
-  //   this->RunSegmentationOutVolumeSelector->SetParent(this->RunSegmentationOutputFrame->GetFrame());
-  //   this->RunSegmentationOutVolumeSelector->Create();
-  //   this->RunSegmentationOutVolumeSelector->SetMRMLScene(mrmlManager->GetMRMLScene());
-  // 
-  //   this->RunSegmentationOutVolumeSelector->SetBorderWidth(2);
-  //   this->RunSegmentationOutVolumeSelector->SetLabelText( "Output Label Map: ");
-  //   this->RunSegmentationOutVolumeSelector->SetBalloonHelpString("select an output label map from the current mrml scene.");
-  //   }
-  // 
-  // this->RunSegmentationOutVolumeSelector->UpdateMenu();
-  // //if(!mrmlManager->GetOutputVolumeNode())
-  // //  {
-  // //    this->RunSegmentationOutVolumeSelector->ProcessNewNodeCommand("vtkMRMLScalarVolumeNode", "EM Map");
-  // //  }
-  // 
-  // // cout << "Trying to set selcted mrmlManager->GetOutputVolumeMRMLID())
-  // this->RunSegmentationOutVolumeSelector->SetSelected(mrmlManager->GetMRMLScene()->GetNodeByID(mrmlManager->GetOutputVolumeMRMLID()));
-  // 
-  // this->RunSegmentationOutVolumeSelector->SetEnabled(
-  //   mrmlManager->HasGlobalParametersNode() ? enabled : 0);
-  // 
-  // this->Script(
-  //   "pack %s -side top -anchor nw -padx 2 -pady 2", 
-  //   this->RunSegmentationOutVolumeSelector->GetWidgetName());
-  // this->AddRunRegistrationOutputGUIObservers();
-  
-  // Create the boundary frame
-
-  this->ShowROIGUI(parent); 
 
   // Create the run frame
-
   if (!this->RunSegmentationMiscFrame)
     {
     this->RunSegmentationMiscFrame = vtkKWFrameWithLabel::New();
@@ -616,14 +532,10 @@ void vtkEMSegmentRunSegmentationStep::SelectTemplateFileCallback()
       vtksys_stl::string filename = 
         this->RunSegmentationSaveTemplateButton->GetFileName();
       vtkEMSegmentMRMLManager *mrmlManager = this->GetGUI()->GetMRMLManager();
-      vtkEMSegmentLogic *logic = this->GetGUI()->GetLogic();
       if (mrmlManager)
         {
         mrmlManager->SetSaveTemplateFilename(filename.c_str());
-        }
-      if (logic)
-        {
-        logic->SaveTemplateNow();
+    mrmlManager->CreateTemplateFile();
         }
       }
     }
@@ -2146,3 +2058,92 @@ void vtkEMSegmentRunSegmentationStep::CenterRYGSliceViews(double ptX, double ptY
       applicationGUI->GetMainSliceGUI("Green")->GetSliceController()->GetOffsetScale()->SetValue(ptY);
 }
 
+  // Create the working directory frame
+
+ 
+
+  // Create the save intermediate results button
+
+ 
+
+  // Create the generate surface model button
+  // if (!this->RunSegmentationGenerateSurfaceCheckButton)
+  //   {
+  //   this->RunSegmentationGenerateSurfaceCheckButton = 
+  //     vtkKWCheckButtonWithLabel::New();
+  //   }
+  // if (!this->RunSegmentationGenerateSurfaceCheckButton->IsCreated())
+  //   {
+  //   this->RunSegmentationGenerateSurfaceCheckButton->SetParent(this->RunSegmentationDirectorySubFrame);
+  //   this->RunSegmentationGenerateSurfaceCheckButton->Create();
+  //   this->RunSegmentationGenerateSurfaceCheckButton->GetLabel()->
+  //     SetWidth(EMSEG_WIDGETS_LABEL_WIDTH - 6);
+  //   this->RunSegmentationGenerateSurfaceCheckButton->
+  //     SetLabelText("Generate Surface Model:");
+  //   this->RunSegmentationGenerateSurfaceCheckButton->
+  //     GetWidget()->SetCommand(this, "GenerateSurfaceModelsCallback");
+  //   }
+
+  // disable for now, not used and confusing
+  //   this->Script(
+  //     "pack %s -side top -anchor nw -padx 2 -pady 2", 
+  //     this->RunSegmentationGenerateSurfaceCheckButton->GetWidgetName());
+  
+  //this->RunSegmentationGenerateSurfaceCheckButton->GetWidget()->SetSelectedState(mrmlManager->GetSaveSurfaceModels());
+  //this->RunSegmentationGenerateSurfaceCheckButton->SetEnabled(mrmlManager->HasGlobalParametersNode() ? enabled : 0);
+
+
+  
+  // Create the output image frame
+
+  // if (!this->RunSegmentationOutputFrame)
+  //   {
+  //   this->RunSegmentationOutputFrame = vtkKWFrameWithLabel::New();
+  //   }
+  // if (!this->RunSegmentationOutputFrame->IsCreated())
+  //   {
+  //   this->RunSegmentationOutputFrame->SetParent(parent);
+  //   this->RunSegmentationOutputFrame->Create();
+  //   this->RunSegmentationOutputFrame->SetLabelText("Output Labelmap");
+  //   }
+  // this->Script(
+  //   "pack %s -side top -anchor nw -fill x -padx 0 -pady 2", 
+  //   this->RunSegmentationOutputFrame->GetWidgetName());
+  // 
+  // // Create the output image frame
+  // 
+  // if (!this->RunSegmentationOutVolumeSelector)
+  //   {
+  //   this->RunSegmentationOutVolumeSelector = vtkSlicerNodeSelectorWidget::New();
+  //   }
+  // if (!this->RunSegmentationOutVolumeSelector->IsCreated())
+  //   {
+  //   this->RunSegmentationOutVolumeSelector->SetNodeClass("vtkMRMLScalarVolumeNode",  "LabelMap", "1",  "EMSegment");
+  //   this->RunSegmentationOutVolumeSelector->SetNewNodeEnabled(1);
+  //   this->RunSegmentationOutVolumeSelector->SetParent(this->RunSegmentationOutputFrame->GetFrame());
+  //   this->RunSegmentationOutVolumeSelector->Create();
+  //   this->RunSegmentationOutVolumeSelector->SetMRMLScene(mrmlManager->GetMRMLScene());
+  // 
+  //   this->RunSegmentationOutVolumeSelector->SetBorderWidth(2);
+  //   this->RunSegmentationOutVolumeSelector->SetLabelText( "Output Label Map: ");
+  //   this->RunSegmentationOutVolumeSelector->SetBalloonHelpString("select an output label map from the current mrml scene.");
+  //   }
+  // 
+  // this->RunSegmentationOutVolumeSelector->UpdateMenu();
+  // //if(!mrmlManager->GetOutputVolumeNode())
+  // //  {
+  // //    this->RunSegmentationOutVolumeSelector->ProcessNewNodeCommand("vtkMRMLScalarVolumeNode", "EM Map");
+  // //  }
+  // 
+  // // cout << "Trying to set selcted mrmlManager->GetOutputVolumeMRMLID())
+  // this->RunSegmentationOutVolumeSelector->SetSelected(mrmlManager->GetMRMLScene()->GetNodeByID(mrmlManager->GetOutputVolumeMRMLID()));
+  // 
+  // this->RunSegmentationOutVolumeSelector->SetEnabled(
+  //   mrmlManager->HasGlobalParametersNode() ? enabled : 0);
+  // 
+  // this->Script(
+  //   "pack %s -side top -anchor nw -padx 2 -pady 2", 
+  //   this->RunSegmentationOutVolumeSelector->GetWidgetName());
+  // this->AddRunRegistrationOutputGUIObservers();
+  
+  // Create the boundary frame

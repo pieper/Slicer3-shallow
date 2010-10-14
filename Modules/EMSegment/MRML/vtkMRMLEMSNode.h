@@ -5,7 +5,9 @@
 #include "vtkMRMLNode.h"
 
 #include "vtkEMSegment.h"
-#include "vtkMRMLEMSSegmenterNode.h"
+#include "vtkMRMLScene.h"
+
+class vtkMRMLEMSSegmenterNode;
 
 // Description: 
 // The scripted module node is simply a MRMLNode container for 

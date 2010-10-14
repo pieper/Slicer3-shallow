@@ -3,6 +3,7 @@
 #include "vtkMRMLScene.h"
 
 #include <vtksys/ios/sstream>
+#include "vtkMRMLEMSSegmenterNode.h"
 
 //-----------------------------------------------------------------------------
 vtkMRMLEMSNode* 
@@ -184,6 +185,6 @@ GetSegmenterNode()
     vtkMRMLNode* snode = 
       this->GetScene()->GetNodeByID(this->SegmenterNodeID);
     node = vtkMRMLEMSSegmenterNode::SafeDownCast(snode);
-    }
+    } 
   return node;
 }

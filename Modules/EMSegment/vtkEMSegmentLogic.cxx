@@ -106,29 +106,6 @@ void vtkEMSegmentLogic::PrintSelf(ostream& os, vtkIndent indent)
 }
 
 //----------------------------------------------------------------------------
-void
-vtkEMSegmentLogic::
-SaveTemplateNow()
-{
-  //
-  // for now just save entire mrml scene, later it might be helpful to
-  // decide which nodes are important and which are unimportant
-  //
-  
-  // according to comments this should be "file://path/file.xml"
-  // but that does not work
-
-  if (this->MRMLManager->GetNode() == NULL)
-    {
-    vtkErrorMacro("Attempting to save scene but EMSNode is null");
-    return;
-    }
-  vtksys_stl::string url = ""; 
-  url += this->MRMLManager->GetSaveTemplateFilename();
-  this->GetMRMLScene()->Commit(url.c_str());
-}
-
-//----------------------------------------------------------------------------
 bool
 vtkEMSegmentLogic::
 SaveIntermediateResults()

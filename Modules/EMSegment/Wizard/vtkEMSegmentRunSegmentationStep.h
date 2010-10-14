@@ -73,10 +73,13 @@ protected:
   vtkKWFrameWithLabel        *RunSegmentationDirectoryFrame;
   //vtkKWFrameWithLabel        *RunSegmentationOutputFrame;
   //vtkSlicerNodeSelectorWidget* RunSegmentationOutVolumeSelector;
+  vtkKWFrame                 *RunSegmentationSaveTemplateFrame;
+  vtkKWLabel                 *RunSegmentationSaveTemplateLabel;
   vtkKWLoadSaveButton        *RunSegmentationSaveTemplateButton;
+
   vtkKWFrame                 *RunSegmentationDirectorySubFrame;
+  vtkKWLabel                 *RunSegmentationDirectoryLabel;
   vtkKWLoadSaveButton         *RunSegmentationDirectoryButton;
-  vtkKWCheckButtonWithLabel  *RunSegmentationSaveAfterSegmentationCheckButton;
   vtkKWCheckButtonWithLabel  *RunSegmentationSaveIntermediateCheckButton;
   vtkKWCheckButtonWithLabel  *RunSegmentationGenerateSurfaceCheckButton;
   vtkKWFrameWithLabel        *RunSegmentationROIFrame;
