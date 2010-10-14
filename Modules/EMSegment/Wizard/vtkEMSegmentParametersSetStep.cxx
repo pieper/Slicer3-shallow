@@ -383,7 +383,7 @@ void vtkEMSegmentParametersSetStep::SelectedParameterSetChangedCallback(int inde
     anat_step->GetAnatomicalStructureTree()->GetWidget()->DeleteAllNodes();
     }
 
-  std::string tclFileName = this->GetGUI()->GetLogic()->DefineTclTaskFullPathName(mrmlManager->GetNode()->GetTclTaskFilename());
+  std::string tclFileName = this->GetGUI()->GetLogic()->DefineTclTaskFullPathName(mrmlManager->GetTclTaskFilename());
 
   this->SourceTclFile(tclFileName.c_str());
   if (flag && (!this->SettingSegmentationMode(0)))
@@ -612,10 +612,8 @@ int vtkEMSegmentParametersSetStep::LoadDefaultData(const char *tclFile, bool war
   vtksys_stl::string mrmlFile(vtkSlicerApplication::SafeDownCast(this->GetGUI()->GetApplication())->Script("::EMSegmenterParametersStepTcl::DefineMRMLFile"));
   scene->SetURL(mrmlFile.c_str());
  
-  // Kilian Sep 2010 : Do not use scene->Import() here otherwise the assignments get screewed up. Here is a simple example. Load in a single volume -> vtkMRMLScalarVolumeNode1 is created
-  // Now download a MRI Human Brain which also has vtkMRMLScalarVolumeNode1 (atlas_whitematter). Then when slicer is replacing  in the new scene  vtkMRMLScalarVolumeNode1 with  vtkMRMLScalarVolumeNode2. The nodes in the mrml file that referenced vtkMRMLScalarVolumeNode1 now will point to vtkMRMLScalarVolumeNode2. Now vtkMRMLScalarVolumeNode2 already existed in the mrml file  before the replacement (atlas_greymatter). Thus, slicer3 will replace the id of vtkMRMLScalarVolumeNode2 with vtkMRMLScalarVolumeNode3. In addition all the nodes in the mrml file that originally referenced vtkMRMLScalarVolumeNode1 will now reference vtkMRMLScalarVolumeNode3. Thus they will reference a different scalar volume node then originally disuccsed.
-  // reported in bug 971
-  if (!scene->Connect()) 
+  // if (!scene->Connect()) 
+  if (!scene->Import()) 
     {
       vtksys_stl::string msg= vtksys_stl::string("Could not load mrml file ") +  mrmlFile  ;
       vtkKWMessageDialog::PopupMessage(this->GetApplication(),NULL,"Load Error", msg.c_str(), vtkKWMessageDialog::ErrorIcon | vtkKWMessageDialog::InvokeAtPointer);

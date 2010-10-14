@@ -4581,6 +4581,13 @@ vtkEMSegmentMRMLManager::CreateTemplateFile()
       this->GetSegmenterNode()->SetOutputVolumeNodeID("");
     }
 
+  // This is important otherwise when you load a volume with different dimensions it creates problems 
+  if (this->GetGlobalParametersNode()) 
+    {
+      int maxPoint[3] = {-1, -1, -1};
+      this->SetSegmentationBoundaryMax(maxPoint);
+    }
+
   vtkMRMLEMSWorkingDataNode *workingNode = this->GetWorkingDataNode();
   if (workingNode)
     {
@@ -4600,6 +4607,9 @@ vtkEMSegmentMRMLManager::CreateTemplateFile()
   // Extract all EM Related Nodes and copy those in the new file 
   // 
   vtkMRMLScene *cScene =  vtkMRMLScene::New();
+  std::string outputDirectory = vtksys::SystemTools::GetFilenamePath(this->GetSaveTemplateFilename());
+  cScene->SetRootDirectory(outputDirectory.c_str());
+  cScene->SetURL(this->GetSaveTemplateFilename());
   this->CopyEMRelatedNodesToMRMLScene(cScene);
   cScene->Commit(this->GetSaveTemplateFilename());
   cScene->Delete();
@@ -5388,9 +5398,9 @@ vtkMRMLVolumeNode*  vtkEMSegmentMRMLManager::GetAlignedSpatialPriorFromTreeNodeI
 //----------------------------------------------------------------------------
 const char*  vtkEMSegmentMRMLManager::GetTclTaskFilename()
 {
-    if (this->Node != NULL)
+    if (!this->Node)
       {
-      vtkWarningMacro("Can't get tcl file name bc EMSNode is nonnull");
+      vtkWarningMacro("Can't get tcl file name bc EMSNode is null");
       return NULL;
       }
     return this->Node->GetTclTaskFilename();
@@ -5400,9 +5410,9 @@ const char*  vtkEMSegmentMRMLManager::GetTclTaskFilename()
 //----------------------------------------------------------------------------
 void  vtkEMSegmentMRMLManager::SetTclTaskFilename(const char* fileName)
 {
-    if (this->Node != NULL)
+    if (!this->Node)
       {
-      vtkWarningMacro("Can't set tcl file name bc EMSNode is nonnull");
+      vtkWarningMacro("Can't set tcl file name bc EMSNode is null");
       return;
       }
     this->Node->SetTclTaskFilename(fileName);
