@@ -42,15 +42,19 @@ proc SliceViewerShutdown { sliceGUI } {
 }
 
 proc __Slicer_bgerror {m} { 
-  set msg "Slicer has encountered an unhandled background error:\n\n  $m\n\nYou may have run out of memory.  Please save your work."
-  set dialog [vtkKWMessageDialog New]
-  $dialog SetParent [$::slicer3::ApplicationGUI GetMainSlicerWindow]
-  $dialog SetMasterWindow [$::slicer3::ApplicationGUI GetMainSlicerWindow]
-  $dialog SetStyleToMessage
-  $dialog SetText $msg
-  $dialog Create
-  $dialog Invoke
-  $dialog Delete
+  $::slicer3::Application ErrorMessage $m
+  $::slicer3::Application ErrorMessage $::errorInfo
+  if { !$::slicer3::TEST_MODE } {
+    set msg "Slicer has encountered an unhandled background error:\n\n  $m\n\nYou may have run out of memory.  Please save your work."
+    set dialog [vtkKWMessageDialog New]
+    $dialog SetParent [$::slicer3::ApplicationGUI GetMainSlicerWindow]
+    $dialog SetMasterWindow [$::slicer3::ApplicationGUI GetMainSlicerWindow]
+    $dialog SetStyleToMessage
+    $dialog SetText $msg
+    $dialog Create
+    $dialog Invoke
+    $dialog Delete
+  }
 }
 
 
