@@ -22,6 +22,7 @@ Version:   $Revision: 1.6 $
 class vtkKWFrameWithLabel;
 class vtkKWMenuButtonWithLabel;
 class vtkKWTopLevel;
+class vtkKWLabel;
 class vtkKWPushButton;
 class vtkKWEntryWithLabel;
 
@@ -47,6 +48,7 @@ public:
   virtual void SelectedDefaultTaskChangedCallback(int index, bool warningFlag = 1);
 
   void RenameApplyCallback(const char* newName);
+  void UpdateTasksCallback();
   void HideRenameEntry();
 
   vtkGetObjectMacro(RenameEntry,vtkKWEntryWithLabel);
@@ -66,6 +68,8 @@ protected:
   vtkKWEntryWithLabel *RenameEntry;
   vtkKWPushButton *RenameApply;
   vtkKWPushButton *RenameCancel;
+  vtkKWLabel *UpdateTasksLabel;
+  vtkKWPushButton *UpdateTasksButton;
 
 
   // Description:

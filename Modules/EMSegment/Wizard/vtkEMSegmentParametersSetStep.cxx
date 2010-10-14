@@ -56,6 +56,9 @@ vtkEMSegmentParametersSetStep::vtkEMSegmentParametersSetStep()
 
   this->ParameterSetFrame      = NULL;
   this->ParameterSetMenuButton = NULL;
+  this->UpdateTasksButton      = NULL;
+  this->UpdateTasksLabel       = NULL;
+
 
   this->RenameIndex = -1;
   this->RenameEntry = NULL;
@@ -71,6 +74,18 @@ vtkEMSegmentParametersSetStep::~vtkEMSegmentParametersSetStep()
     {
     this->ParameterSetMenuButton->Delete();
     this->ParameterSetMenuButton = NULL;
+    }
+
+  if (this->UpdateTasksLabel)
+    {
+    this->UpdateTasksLabel->Delete();
+    this->UpdateTasksLabel = NULL;
+    }
+
+  if (this->UpdateTasksButton)
+    {
+    this->UpdateTasksButton->Delete();
+    this->UpdateTasksButton = NULL;
     }
 
   if (this->ParameterSetFrame)
@@ -159,7 +174,47 @@ void vtkEMSegmentParametersSetStep::ShowUserInterface()
   this->Script("pack %s -side top -anchor nw -padx 2 -pady 2", 
                this->ParameterSetMenuButton->GetWidgetName());
 
+
+
+  if (!this->UpdateTasksLabel)
+    {
+    this->UpdateTasksLabel = vtkKWLabel::New();
+    }
+
+  if (!this->UpdateTasksLabel->IsCreated())
+    {
+    this->UpdateTasksLabel->SetParent(this->ParameterSetFrame->GetFrame());
+    this->UpdateTasksLabel->Create();
+    this->UpdateTasksLabel->SetWidth(EMSEG_WIDGETS_LABEL_WIDTH);
+    this->UpdateTasksLabel->SetText("Update Tasks:");
+    }
+
+  this->Script("pack %s -side top -padx 2 -pady 2",
+               this->UpdateTasksLabel->GetWidgetName());
+//  this->UpdateTasksLabel->SetEnabled( mrmlManager->HasGlobalParametersNode() ? enabled : 0);
+
+  // Create the update tasks button
+
+  if (!this->UpdateTasksButton)
+    {
+    this->UpdateTasksButton = vtkKWPushButton::New();
+    }
+  if (!this->UpdateTasksButton->IsCreated())
+    {
+    this->UpdateTasksButton->SetParent(this->ParameterSetFrame->GetFrame());
+    this->UpdateTasksButton->Create();
+    this->UpdateTasksButton->SetImageToPredefinedIcon(vtkKWIcon::IconFloppy);
+    this->UpdateTasksButton->SetCommand(this, "UpdateTasksCallback");
+    }
+  this->Script("pack %s -padx 2 -pady 2",
+               this->UpdateTasksButton->GetWidgetName());
+
+
   this->UpdateLoadedParameterSets();
+}
+
+void vtkEMSegmentParametersSetStep::UpdateTasksCallback()
+{
 }
 
 //----------------------------------------------------------------------------
