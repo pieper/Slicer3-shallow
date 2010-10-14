@@ -37,6 +37,8 @@ if { [itcl::find class SliceSWidget] == "" } {
     variable _actionModifier ""
     variable _swidgets ""
     variable _inWidget 0
+    variable _lastLabelOpacity 1.0
+    variable _lastForegroundOpacity 1.0
 
     # methods
     method updateSWidgets {} {}
@@ -747,12 +749,16 @@ itcl::body SliceSWidget::processEvent { {caller ""} {event ""} } {
     "TimerEvent" { }
     "KeyPressEvent" { 
       set key [$_interactor GetKeySym]
-      if { [lsearch "v r b f space c e s S Up Down Left Right" $key] != -1 } {
+      if { [lsearch "v V r b f g G T space c e s S Up Down Left Right" $key] != -1 } {
         $sliceGUI SetCurrentGUIEvent "" ;# reset event so we don't respond again
         $sliceGUI SetGUICommandAbortFlag 1
         switch [$_interactor GetKeySym] {
           "v" {
             $_sliceNode SetSliceVisible [expr ![$_sliceNode GetSliceVisible]]
+          }
+          "V" {
+           # toggle all slices visibility
+           puts "Toggling all slices visibility not implemented yet"
           }
           "r" {
             # figure out the new field of view for the current slice
@@ -775,6 +781,33 @@ itcl::body SliceSWidget::processEvent { {caller ""} {event ""} } {
               foreach {fx fy fz} [$snode GetFieldOfView] {}
               # new prescribed x fov, aspect corrected y fov, orig z fov
               $snode SetFieldOfView $nfx [expr $nfx*$fy/$fx] $fz
+            }
+          }
+          "g" {
+            # toggle the label opacity via the slice compoiste node
+              set opacity [$_sliceCompositeNode GetLabelOpacity]
+              if {$opacity != 0.0} {
+                  set _lastLabelOpacity $opacity
+              }
+              if { $opacity == 0.0 } {
+                  $_sliceCompositeNode SetLabelOpacity $_lastLabelOpacity
+              } else {
+                  $_sliceCompositeNode SetLabelOpacity 0.0
+              }
+          }
+          "G" {
+              puts "Toggling label opacity for all slices not implemented yet"
+          }
+          "T" {
+            # toggle opacity of foreground overlay       
+            set opacity [$_sliceCompositeNode GetForegroundOpacity]
+            if {$opacity != 0.0} {
+                set _lastForegroundOpacity $opacity
+            }
+            if { $opacity == 0.0 } {
+                $_sliceCompositeNode SetForegroundOpacity $_lastForegroundOpacity
+            } else {
+                $_sliceCompositeNode SetForegroundOpacity 0.0
             }
           }
           "b" - "Left" - "Down" {
