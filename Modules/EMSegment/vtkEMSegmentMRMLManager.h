@@ -589,6 +589,9 @@ public:
                                               vtkstd::vector<vtkIdType>& list);
   //ETX
 
+  virtual const char* GetTclTaskFilename();
+  virtual void SetTclTaskFilename(const char* fileName);
+
 private:
   vtkEMSegmentMRMLManager();
   ~vtkEMSegmentMRMLManager();

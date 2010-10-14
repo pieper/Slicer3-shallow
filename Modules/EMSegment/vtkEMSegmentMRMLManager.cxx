@@ -5384,3 +5384,26 @@ vtkMRMLVolumeNode*  vtkEMSegmentMRMLManager::GetAlignedSpatialPriorFromTreeNodeI
     }
     return NULL;
 }
+
+//----------------------------------------------------------------------------
+const char*  vtkEMSegmentMRMLManager::GetTclTaskFilename()
+{
+    if (this->Node != NULL)
+      {
+      vtkWarningMacro("Can't get tcl file name bc EMSNode is nonnull");
+      return NULL;
+      }
+    return this->Node->GetTclTaskFilename();
+
+}
+
+//----------------------------------------------------------------------------
+void  vtkEMSegmentMRMLManager::SetTclTaskFilename(const char* fileName)
+{
+    if (this->Node != NULL)
+      {
+      vtkWarningMacro("Can't set tcl file name bc EMSNode is nonnull");
+      return;
+      }
+    this->Node->SetTclTaskFilename(fileName);
+}

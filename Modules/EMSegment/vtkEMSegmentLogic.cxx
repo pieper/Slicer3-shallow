@@ -2418,7 +2418,7 @@ std::string vtkEMSegmentLogic::DefineTclTasksFileFromMRML()
     // No special files 
     return tclFile;
       }
-  vtksys_stl::string tmpFile = this->MRMLManager->GetNode()->GetTclTaskFilename();
+  vtksys_stl::string tmpFile = this->MRMLManager->GetTclTaskFilename();
   tclFile = FilePath + tmpFile; 
 
   if (vtksys::SystemTools::FileExists(tclFile.c_str()) && (!vtksys::SystemTools::FileIsDirectory(tclFile.c_str())) )
