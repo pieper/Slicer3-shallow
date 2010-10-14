@@ -57,7 +57,6 @@ vtkEMSegmentParametersSetStep::vtkEMSegmentParametersSetStep()
   this->ParameterSetFrame      = NULL;
   this->ParameterSetMenuButton = NULL;
   this->UpdateTasksButton      = NULL;
-  this->UpdateTasksLabel       = NULL;
 
 
   this->RenameIndex = -1;
@@ -74,12 +73,6 @@ vtkEMSegmentParametersSetStep::~vtkEMSegmentParametersSetStep()
     {
     this->ParameterSetMenuButton->Delete();
     this->ParameterSetMenuButton = NULL;
-    }
-
-  if (this->UpdateTasksLabel)
-    {
-    this->UpdateTasksLabel->Delete();
-    this->UpdateTasksLabel = NULL;
     }
 
   if (this->UpdateTasksButton)
@@ -176,23 +169,6 @@ void vtkEMSegmentParametersSetStep::ShowUserInterface()
 
 
 
-  if (!this->UpdateTasksLabel)
-    {
-    this->UpdateTasksLabel = vtkKWLabel::New();
-    }
-
-  if (!this->UpdateTasksLabel->IsCreated())
-    {
-    this->UpdateTasksLabel->SetParent(this->ParameterSetFrame->GetFrame());
-    this->UpdateTasksLabel->Create();
-    this->UpdateTasksLabel->SetWidth(EMSEG_WIDGETS_LABEL_WIDTH);
-    this->UpdateTasksLabel->SetText("Update Tasks:");
-    }
-
-  this->Script("pack %s -side top -padx 2 -pady 2",
-               this->UpdateTasksLabel->GetWidgetName());
-//  this->UpdateTasksLabel->SetEnabled( mrmlManager->HasGlobalParametersNode() ? enabled : 0);
-
   // Create the update tasks button
 
   if (!this->UpdateTasksButton)
@@ -203,7 +179,7 @@ void vtkEMSegmentParametersSetStep::ShowUserInterface()
     {
     this->UpdateTasksButton->SetParent(this->ParameterSetFrame->GetFrame());
     this->UpdateTasksButton->Create();
-    this->UpdateTasksButton->SetImageToPredefinedIcon(vtkKWIcon::IconFloppy);
+    this->UpdateTasksButton->SetText("Update task list");
     this->UpdateTasksButton->SetCommand(this, "UpdateTasksCallback");
     }
   this->Script("pack %s -padx 2 -pady 2",
@@ -215,6 +191,8 @@ void vtkEMSegmentParametersSetStep::ShowUserInterface()
 
 void vtkEMSegmentParametersSetStep::UpdateTasksCallback()
 {
+  cout << "Load new task list...";
+  cout << "DONE" << endl;
 }
 
 //----------------------------------------------------------------------------
