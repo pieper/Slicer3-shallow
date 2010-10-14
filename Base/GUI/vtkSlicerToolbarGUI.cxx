@@ -867,15 +867,15 @@ void vtkSlicerToolbarGUI::ProcessGUIEvents ( vtkObject *caller,
           }
         else if (!strcmp ( whichLayout, "Side-by-side lightbox layout"))
           {
-          PopUpCompareViewCustomLayoutFrame();
+          PopUpCompareViewCustomLayoutFrame( vtkMRMLLayoutNode::SlicerLayoutSideBySideLightboxView);
           }
         else if (!strcmp ( whichLayout, "Compare layout"))
           {
-          PopUpCompareViewCustomLayoutFrame();
+          PopUpCompareViewCustomLayoutFrame(vtkMRMLLayoutNode::SlicerLayoutCompareView);
           }
         else if (!strcmp ( whichLayout, "Compare widescreen layout"))
           {
-          PopUpCompareViewCustomLayoutFrame();
+          PopUpCompareViewCustomLayoutFrame(vtkMRMLLayoutNode::SlicerLayoutCompareWidescreenView);
           }
         else if ( !strcmp (whichLayout, "Red slice only layout") )
           {
@@ -1838,7 +1838,7 @@ void vtkSlicerToolbarGUI::BuildGUI ( )
 }
 
 //--------------------------------------------------------------------------
-void vtkSlicerToolbarGUI::PopUpCompareViewCustomLayoutFrame( )
+void vtkSlicerToolbarGUI::PopUpCompareViewCustomLayoutFrame( int whichLayout)
 {
   if ( !this->ChooseLayoutIconMenuButton || !this->ChooseLayoutIconMenuButton->IsCreated())
     {
@@ -1853,6 +1853,40 @@ void vtkSlicerToolbarGUI::PopUpCompareViewCustomLayoutFrame( )
   if ( !this->ColorIconButton || !this->ColorIconButton->IsCreated())
     {
     return;
+    }
+
+
+    //--- grid up lightbox configuration
+
+  // Set defaults in the GUI based on layout
+  switch ( whichLayout )
+    {
+    case vtkMRMLLayoutNode::SlicerLayoutSideBySideLightboxView:
+      // Number of Compare Viewers
+      this->CompareViewBoxRowEntry->SetValueAsInt (2);
+      // Number of Lightbox Rows in each Compare Viewer
+      this->CompareViewLightboxRowEntry->SetValueAsInt ( 4 );
+      // Number of Lightbox Columns in each Compare Viewer
+      this->CompareViewLightboxColumnEntry->SetValueAsInt ( 2 );
+      break;
+    case vtkMRMLLayoutNode::SlicerLayoutCompareView:
+      // Number of Compare Viewers
+      this->CompareViewBoxRowEntry->SetValueAsInt (2);
+      // Number of Lightbox Rows in each Compare Viewer
+      this->CompareViewLightboxRowEntry->SetValueAsInt ( 1 );
+      // Number of Lightbox Columns in each Compare Viewer
+      this->CompareViewLightboxColumnEntry->SetValueAsInt ( 6 );
+      break;
+    case vtkMRMLLayoutNode::SlicerLayoutCompareWidescreenView:
+      // Number of Compare Viewers
+      this->CompareViewBoxRowEntry->SetValueAsInt (2);
+      // Number of Lightbox Rows in each Compare Viewer
+      this->CompareViewLightboxRowEntry->SetValueAsInt ( 4 );
+      // Number of Lightbox Columns in each Compare Viewer
+      this->CompareViewLightboxColumnEntry->SetValueAsInt ( 1 );
+      break;
+    default:
+      break;
     }
 
   // Get the position of the mouse, the position and size of the push button,

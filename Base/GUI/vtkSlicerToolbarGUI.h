@@ -108,7 +108,7 @@ class VTK_SLICER_BASE_GUI_EXPORT vtkSlicerToolbarGUI : public vtkSlicerComponent
     virtual void ProcessGUIEvents ( vtkObject *caller, unsigned long event, void *callData );
     virtual void ProcessMRMLEvents ( vtkObject *caller, unsigned long event, void *callData );
 
-  virtual void PopUpCompareViewCustomLayoutFrame();
+  virtual void PopUpCompareViewCustomLayoutFrame(int whichLayout);
   virtual void HideCompareViewCustomLayoutFrame();
 
     
