@@ -4566,6 +4566,51 @@ PackageAndWriteData(const char* packageDirectory)
   return true;
 }
 
+
+//-----------------------------------------------------------------------------
+void
+vtkEMSegmentMRMLManager::CreateTemplateFile()
+{
+  //
+  // Reset all the data in the EMStree that is not template specific
+  // 
+  this->GetMRMLScene()->SaveStateForUndo();
+
+  if (this->GetSegmenterNode()) 
+    {
+      this->GetSegmenterNode()->SetOutputVolumeNodeID("");
+    }
+
+  vtkMRMLEMSWorkingDataNode *workingNode = this->GetWorkingDataNode();
+  if (workingNode)
+    {
+      workingNode->SetInputTargetNodeIsValid(0);
+      workingNode->SetNormalizedTargetNodeIsValid(0);  
+      workingNode->SetAlignedTargetNodeIsValid(0);  
+      workingNode->SetInputAtlasNodeIsValid(0);  
+      workingNode->SetAlignedAtlasNodeIsValid(0);
+            
+      workingNode->SetInputTargetNodeID("");
+      workingNode->SetNormalizedTargetNodeID("");
+      workingNode->SetAlignedTargetNodeID("");
+      workingNode->SetAlignedAtlasNodeID("");
+    }
+
+  // 
+  // Extract all EM Related Nodes and copy those in the new file 
+  // 
+  vtkMRMLScene *cScene =  vtkMRMLScene::New();
+  this->CopyEMRelatedNodesToMRMLScene(cScene);
+  cScene->Commit(this->GetSaveTemplateFilename());
+  cScene->Delete();
+
+  //
+  // Reset Scene
+  // 
+  this->MRMLScene->Undo();
+}
+
+
 //-----------------------------------------------------------------------------
 void
 vtkEMSegmentMRMLManager::

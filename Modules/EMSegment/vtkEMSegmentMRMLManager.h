@@ -48,6 +48,8 @@ public:
   virtual void ProcessMRMLEvents ( vtkObject *caller, unsigned long event,
                                    void *callData );
 
+  void CreateTemplateFile();
+
   // 
   // copy all nodes relating to the EMSegmenter into newScene
   virtual bool PackageAndWriteData(const char* packageDirectoryName);
