@@ -435,6 +435,9 @@ void vtkEMSegmentParametersSetStep::UpdateTasksCallback()
   // ** ALL DONE, NOW CLEANUP **
   //
   
+  // destruct the application pointer
+  app = 0;
+  
   // delete the HTTP handler
   httpHandler->Delete();
   
