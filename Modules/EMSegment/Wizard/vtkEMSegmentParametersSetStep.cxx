@@ -41,8 +41,15 @@
 
 #include "vtkDirectory.h"
 #include "vtkMRMLEMSNode.h"
+
+#include "vtkHTTPHandler.h"
+
 // Need to include this bc otherwise cannot find std functions  for some g ++ compilers 
 #include <algorithm>
+
+// need the ITK systemtools
+#include <itksys/SystemTools.hxx>
+
 
 //----------------------------------------------------------------------------
 vtkStandardNewMacro(vtkEMSegmentParametersSetStep);
@@ -196,10 +203,246 @@ void vtkEMSegmentParametersSetStep::ShowUserInterface()
   this->UpdateLoadedParameterSets();
 }
 
+//----------------------------------------------------------------------------
+// Updates the .tcl Tasks from an external website and replaces the content
+// in $tmpDir/EMSegmentTask (e.g. /home/Slicer3USER/EMSegmentTask)
+//----------------------------------------------------------------------------
 void vtkEMSegmentParametersSetStep::UpdateTasksCallback()
 {
-  cout << "Load new task list...";
-  cout << "DONE" << endl;
+
+  { // we want our own scope in this one :D
+  
+  //
+  // ** THE URL **
+  //
+  // the url to the EMSegment task repository
+  std::string taskRepository = "http://people.csail.mit.edu/pohl/EMSegmentUpdates/";
+
+  //
+  // ** PATH MANAGEMENT **
+  //
+  // we need the slicer application to query the $tmp_dir path
+  vtkSlicerApplication* app = vtkSlicerApplication::SafeDownCast(this->GetGUI()->GetApplicationGUI()->GetSlicerApplication());
+  
+  if (!app)
+    {
+    vtkErrorMacro("UpdateTasksCallback: Could not get Slicer application!")
+    return;
+    }
+  
+  // get the $tmpDir path
+  std::string tmpDir = app->GetTemporaryDirectory();
+  // and add the EmSegmentTask directory
+  std::string taskDir(tmpDir + std::string("/EMSegmentTask"));
+  // also add the manifest filename
+  std::string manifestFilename(tmpDir + std::string("/EMSegmentTasksManifest.html"));
+
+  //
+  // ** HTTP ACCESS **
+  //
+  // our HTTP handler
+  vtkHTTPHandler* httpHandler = vtkHTTPHandler::New();
+
+  // prevent funny behavior on windows with the side-effect of more network resources are used
+  // (o_o) who cares about traffic or the tcp/ip ports? *g
+  httpHandler->SetForbidReuse(1);
+
+  // safe-check if the handler can really handle the hardcoded uri protocal
+  if (!httpHandler->CanHandleURI(taskRepository.c_str()))
+    {
+    vtkErrorMacro("UpdateTasksCallback: Invalid URI specified and you can't do anything about it bcuz it is *hardcoded*!")
+    return;
+    }
+
+  //
+  // ** THE ACTION STARTS **
+  //
+  // make sure we can access the task repository
+  // TODO: this function will be provided by Wendy sooner or later :D
+  //       for now, we just assume that we are on-line!
+  
+  // get the directory listing of the EMSegment task repository and save it as $tmpDir/EMSegmentTasksManifest.html.
+  // the manifest always gets overwritten, but nobody should care
+  httpHandler->StageFileRead(taskRepository.c_str(),manifestFilename.c_str());
+  
+  // sanity checks: if manifestFilename does not exist or size<1, exit here before it is too late!
+  if (!itksys::SystemTools::FileExists(manifestFilename.c_str()) || itksys::SystemTools::FileLength(manifestFilename.c_str())<1)
+    {
+    vtkErrorMacro("UpdateTasksCallback: Could not get the manifest! Try again later..")
+    return;
+    }
+  
+  
+  // what happens now? answer: a three-step-processing chain!!!
+  // (1) now we got the manifest and we can parse it for filenames of EMSegment tasks.
+  // (2) then, download these files and copy them to our $tmpDir.
+  //     after we are sure we got the files (we can not be really sure but we can check if some files where downloaded), 
+  // (3) we delete all old files in $taskDir and then copy our newly downloaded EMSegment tasks from $tmpDir to $taskDir.
+  // sounds good!
+  
+  // 1) open the manifest and get the filenames
+  char* htmlManifest = 0;
+  std::ifstream fileStream(manifestFilename.c_str());
+  if (!fileStream.fail())
+    {
+    fileStream.seekg(0,std::ios::end);
+    size_t length = fileStream.tellg();
+    fileStream.seekg(0,std::ios::beg);
+    htmlManifest = new char[length+1];
+    fileStream.read(htmlManifest, length);
+    htmlManifest[length] = '\n';
+    }
+    
+  fileStream.close();
+    
+  // when C++0x is released, we could easily do something like this to filter out the .tcl filenames:
+  //  cmatch regexResult;
+  //  regex expression("(\w*-*)+.tcl(?!\")");  
+  //  regex_search(htmlManifest, regexResult, expression); 
+  // but right now, we have to manually parse the string.
+  // at least we can use std::string methods :D
+  std::string beginFilenameTag(".tcl\">");
+  std::string endFilenameTag(".tcl</a>");
+  
+  std::vector<std::string> taskFilenames;
+  std::string htmlManifestAsString(htmlManifest);
+  
+  std::string::size_type beginFilenameIndex = htmlManifestAsString.find(beginFilenameTag,0);
+  
+  while(beginFilenameIndex!=std::string::npos)
+    {
+    // as long as we find the beginning of a filename, do the following..
+    
+    // find the corresponding end
+    std::string::size_type endFilenameIndex = htmlManifestAsString.find(endFilenameTag,beginFilenameIndex);
+  
+    if (endFilenameIndex==std::string::npos)
+      {
+      vtkErrorMacro("UpdateTasksCallback: Error during parsing! There was no end *AAAAAAAAAAAAAAAAAAAAHHHH*")
+      return;
+      }
+    
+    // now get the string between begin and end, then add it to the vector
+    taskFilenames.push_back(htmlManifestAsString.substr(beginFilenameIndex+beginFilenameTag.size(),endFilenameIndex-(beginFilenameIndex+beginFilenameTag.size())));
+    
+    // and try to find the next beginTag
+    beginFilenameIndex = htmlManifestAsString.find(beginFilenameTag,endFilenameIndex);
+    }
+    
+  // sanity checks: if the vector does not contain any filenames, exit here before it is too late!
+  if (taskFilenames.size()==0)
+    {
+    vtkErrorMacro("UpdateTasksCallback: There were no task files in the manifest! *AAAAAAAAAAAAAAAAAHHH*")
+    return;
+    }
+    
+  // 2) loop through the vector and download the task files to the $tmpDir
+  std::string currentTaskUrl;
+  std::string currentTaskName;
+  std::string currentTaskFilepath;
+  
+  for (std::vector<std::string>::iterator i = taskFilenames.begin(); i != taskFilenames.end(); ++i)
+    {
+    
+    currentTaskName = *i;
+    
+    // sanity checks: if the filename is "", exit here before it is too late!
+    if (!strcmp(currentTaskName.c_str(),""))
+      {
+      vtkErrorMacro("UpdateTasksCallback: At least one filename was empty, get outta here NOW! *AAAAAAAAAAAAAAAAAHHH*")
+      return;
+      }
+    
+    // generate the url of this task
+    currentTaskUrl = std::string(taskRepository + currentTaskName + std::string(".tcl"));
+    
+    // generate the destination filename of this task in $tmpDir
+    currentTaskFilepath = std::string(tmpDir + std::string("/") + currentTaskName + std::string(".tcl"));
+    
+    // and get the content and save it to $tmpDir
+    httpHandler->StageFileRead(currentTaskUrl.c_str(),currentTaskFilepath.c_str());
+    
+    // sanity checks: if the downloaded file does not exist or size<1, exit here before it is too late!
+    if (!itksys::SystemTools::FileExists(currentTaskFilepath.c_str()) || itksys::SystemTools::FileLength(currentTaskFilepath.c_str())<1)
+      {
+      vtkErrorMacro("UpdateTasksCallback: At least one file was not downloaded correctly! Aborting.. *beepbeepbeep*")
+      return;
+      }
+   
+    }
+
+  // we got the .tcl files now at a safe location and they have at least some content :P
+  // this makes it safe to delete all old EMSegment tasks and activate the new one :D
+  
+  // OMG did you realize that this is a kind of backdoor to take over your home directory?? the
+  // downloaded .tcl files get sourced later and can do whatever they want to do!! but pssst let's keep it a secret
+  // option for a Slicer backdoor :) on the other hand, the EMSegment tasks repository will be monitored closely and is not
+  // public, but what happens if someone changes the URL to the repository *evilgrin*
+  
+  // 3) delete the $taskDir. and create it again. then, move our downloaded files to it
+  
+  // purge, NOW!! but only if the $taskDir exists..
+  if (itksys::SystemTools::FileExists(taskDir.c_str()))
+  {
+    if (!itksys::SystemTools::RemoveADirectory(taskDir.c_str()))
+      {
+      vtkErrorMacro("UpdateTasksCallback: Could not delete " << taskDir.c_str() << "! This is very bad, we abort the update..")
+      return;
+      }
+  }
+  
+  // check if the taskDir is gone now!
+  if (!itksys::SystemTools::FileExists(taskDir.c_str()))
+    {
+    // the $taskDir does not exist, so create it
+    bool couldCreateTaskDir = itksys::SystemTools::MakeDirectory(taskDir.c_str());
+
+    // sanity checks: if the directory could not be created, something is wrong!
+    if (!couldCreateTaskDir)
+      {
+      vtkErrorMacro("UpdateTasksCallback: Could not (re-)create the EMSegmentTask directory: " << taskDir.c_str())
+      return;
+      }
+    }
+    
+  std::string currentTaskDestinationFilepath;
+  
+  // now move the downloaded .tcl files to the $taskDir
+  for (std::vector<std::string>::iterator i = taskFilenames.begin(); i != taskFilenames.end(); ++i)
+    {
+    
+    currentTaskName = *i;    
+    
+    // generate the destination filename of this task in $tmpDir
+    currentTaskFilepath = std::string(tmpDir + std::string("/") + currentTaskName + std::string(".tcl"));
+    
+    // generate the destination filename of this task in $taskDir
+    currentTaskDestinationFilepath = std::string(taskDir + std::string("/") + currentTaskName + std::string(".tcl"));    
+    
+    if (!itksys::SystemTools::CopyFileAlways(currentTaskFilepath.c_str(),currentTaskDestinationFilepath.c_str()))
+      {
+      vtkErrorMacro("UpdateTasksCallback: Could not copy at least one downloaded task file. Everything is lost now! Sorry :(")
+      return;
+      }
+    }
+    
+  // if we get here, we are DONE!
+  this->UpdateTasksButton->SetText("Update completed!");
+  this->UpdateTasksButton->SetEnabled(0);
+  // TODO: Trigger the tasklist reload??
+    
+  //
+  // ** ALL DONE, NOW CLEANUP **
+  //
+  
+  // delete the HTTP handler
+  httpHandler->Delete();
+  
+  // delete the htmlManifest char buffer
+  delete[] htmlManifest;
+  
+  } // now go for destruction, donkey!!
+  
 }
 
 //----------------------------------------------------------------------------
