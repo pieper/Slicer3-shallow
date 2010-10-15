@@ -234,6 +234,13 @@ void
 vtkMRMLEMSVolumeCollectionNode::
 RemoveAllVolumes()
 {
+  // if you do not do that then even after one clears all the volumes the  node still references to the volume node according to the scene 
+  for (KeyConstIterator i = this->KeyList.begin(); i != this->KeyList.end(); ++i)
+    {
+    std::string volumeNodeID = this->KeyToVolumeNodeIDMap[*i];
+    this->Scene->RemoveReferencedNodeID(volumeNodeID.c_str(), this);
+    }
+
   this->KeyList.clear();
   this->KeyToVolumeNodeIDMap.clear();
   this->VolumeNodeIDToKeyMap.clear();
@@ -246,6 +253,7 @@ RemoveVolumeByKey(const char* key)
   std::string mrmlID = this->KeyToVolumeNodeIDMap[key];
   if (!mrmlID.empty())
     {
+    this->Scene->RemoveReferencedNodeID(mrmlID.c_str(), this);
     this->VolumeNodeIDToKeyMap.erase(mrmlID);
     this->KeyToVolumeNodeIDMap.erase(key);
     this->KeyList.remove(key);
@@ -259,6 +267,7 @@ RemoveVolumeByNodeID(const char* nodeID)
   std::string key = this->VolumeNodeIDToKeyMap[nodeID];
   if (!key.empty())
     {
+    this->Scene->RemoveReferencedNodeID(nodeID, this);
     this->VolumeNodeIDToKeyMap.erase(nodeID);
     this->KeyToVolumeNodeIDMap.erase(key);
     this->KeyList.remove(key);
@@ -274,6 +283,7 @@ RemoveNthVolume(int n)
   std::string key    = *i;
   std::string mrmlID = this->KeyToVolumeNodeIDMap[key];
 
+  this->Scene->RemoveReferencedNodeID(mrmlID.c_str(), this);
   this->KeyToVolumeNodeIDMap.erase(key);
   this->VolumeNodeIDToKeyMap.erase(mrmlID);
   this->KeyList.remove(key);
