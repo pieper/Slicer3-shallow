@@ -4589,6 +4589,7 @@ vtkEMSegmentMRMLManager::CreateTemplateFile()
     }
 
   vtkMRMLEMSWorkingDataNode *workingNode = this->GetWorkingDataNode();
+  vtkMRMLEMSTargetNode *inputTargetNode = NULL;
   if (workingNode)
     {
       workingNode->SetInputTargetNodeIsValid(0);
@@ -4596,22 +4597,33 @@ vtkEMSegmentMRMLManager::CreateTemplateFile()
       workingNode->SetAlignedTargetNodeIsValid(0);  
       workingNode->SetInputAtlasNodeIsValid(0);  
       workingNode->SetAlignedAtlasNodeIsValid(0);
-            
-      workingNode->SetInputTargetNodeID("");
+
+      // You cannot set it to null like the other nodes below bc otherwise 
+      // user interface of step 2 does not work correctly - has to be fixed later 
+      inputTargetNode = workingNode->GetInputTargetNode();
+      if (inputTargetNode) 
+    {
+      inputTargetNode->RemoveAllVolumes();
+    }
       workingNode->SetNormalizedTargetNodeID("");
       workingNode->SetAlignedTargetNodeID("");
       workingNode->SetAlignedAtlasNodeID("");
+
     }
 
   // 
   // Extract all EM Related Nodes and copy those in the new file 
   // 
   vtkMRMLScene *cScene =  vtkMRMLScene::New();
+
   std::string outputDirectory = vtksys::SystemTools::GetFilenamePath(this->GetSaveTemplateFilename());
   cScene->SetRootDirectory(outputDirectory.c_str());
   cScene->SetURL(this->GetSaveTemplateFilename());
+
   this->CopyEMRelatedNodesToMRMLScene(cScene);
+  
   cScene->Commit(this->GetSaveTemplateFilename());
+
   cScene->Delete();
 
   //
