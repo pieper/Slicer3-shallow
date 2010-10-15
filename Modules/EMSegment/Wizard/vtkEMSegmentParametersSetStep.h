@@ -46,6 +46,7 @@ public:
   virtual void SelectedParameterSetChangedCallback(int index) { this->SelectedParameterSetChangedCallback(index,1);}
   virtual void SelectedParameterSetChangedCallback(int index, int flag);
   virtual void SelectedDefaultTaskChangedCallback(int index, bool warningFlag = 1);
+  virtual void SelectedPreprocessingChangedCallback(int index, bool warningFlag = 1);
 
   void RenameApplyCallback(const char* newName);
   void UpdateTasksCallback();
@@ -62,6 +63,7 @@ protected:
 
   vtkKWFrameWithLabel      *ParameterSetFrame;
   vtkKWMenuButtonWithLabel *ParameterSetMenuButton;
+  vtkKWMenuButtonWithLabel *PreprocessingMenuButton;
 
   int RenameIndex;
   vtkKWTopLevel *RenameTopLevel;
@@ -89,6 +91,8 @@ private:
   //BTX:
   std::vector<std::string> pssDefaultTasksName;
   std::vector<std::string> pssDefaultTasksFile;
+  std::vector<std::string> DefinePreprocessingTasksName;
+  std::vector<std::string> DefinePreprocessingTasksFile;
  //ETX:
 
   int SettingSegmentationMode(int flag);

@@ -54,9 +54,10 @@ vtkEMSegmentParametersSetStep::vtkEMSegmentParametersSetStep()
   this->SetName("1/9. Define Task");
   this->SetDescription("Select a (new) task.");
 
-  this->ParameterSetFrame      = NULL;
-  this->ParameterSetMenuButton = NULL;
-  this->UpdateTasksButton      = NULL;
+  this->ParameterSetFrame       = NULL;
+  this->ParameterSetMenuButton  = NULL;
+  this->UpdateTasksButton       = NULL;
+  this->PreprocessingMenuButton = NULL;
 
 
   this->RenameIndex = -1;
@@ -73,6 +74,12 @@ vtkEMSegmentParametersSetStep::~vtkEMSegmentParametersSetStep()
     {
     this->ParameterSetMenuButton->Delete();
     this->ParameterSetMenuButton = NULL;
+    }
+
+  if (this->PreprocessingMenuButton)
+    {
+    this->PreprocessingMenuButton->Delete();
+    this->PreprocessingMenuButton = NULL;
     }
 
   if (this->UpdateTasksButton)
@@ -214,7 +221,7 @@ void vtkEMSegmentParametersSetStep::PopulateLoadedParameterSets()
   // Check on Parameter Files 
   this->DefineDefaultTasksList();
 
-  // Define Menue
+  // Define Menu
   vtkKWMenu *menu = this->ParameterSetMenuButton->GetWidget()->GetMenu();
   menu->DeleteAllItems();
 
@@ -227,27 +234,26 @@ void vtkEMSegmentParametersSetStep::PopulateLoadedParameterSets()
 
     if (name)
       {
-    
       sprintf(buffer, "%s %d", "SelectedParameterSetChangedCallback", index);
       menu->AddRadioButton(name, this, buffer);
       }
     }
  
-    for (int i = 0 ; i < (int)this->pssDefaultTasksName.size(); i++)
+  for (int i = 0 ; i < (int)this->pssDefaultTasksName.size(); i++)
     {
-      int index = 0;
-      // Check if the mrml file associated with the default parameter set is already loaded in the scene 
-      while ((index < numSets) && strcmp(mrmlManager->GetNthParameterSetName(index),pssDefaultTasksName[i].c_str() ))
+    int index = 0;
+    // Check if the mrml file associated with the default parameter set is already loaded in the scene
+    while ((index < numSets) && strcmp(mrmlManager->GetNthParameterSetName(index),pssDefaultTasksName[i].c_str() ))
       {
       index++;
       }
 
-      // If it is then do not add the item to the menu list bc it was already added in the previous AddRadioButton
-      // and jump over this step      
-      if (index == numSets)
+    // If it is then do not add the item to the menu list bc it was already added in the previous AddRadioButton
+    // and jump over this step
+    if (index == numSets)
       {
-        sprintf(buffer, "SelectedDefaultTaskChangedCallback %d 1", i);
-        menu->AddRadioButton(pssDefaultTasksName[i].c_str(), this, buffer);
+      sprintf(buffer, "SelectedDefaultTaskChangedCallback %d 1", i);
+      menu->AddRadioButton(pssDefaultTasksName[i].c_str(), this, buffer);
       }
     }
 }
@@ -276,7 +282,7 @@ void vtkEMSegmentParametersSetStep::UpdateLoadedParameterSets()
     sel_value = menuButton->GetValue();
     }
 
-  // Update Mnue Task List 
+  // Update Menu Task List
   this->PopulateLoadedParameterSets();
 
   // Reset selection to stored value 
@@ -334,6 +340,27 @@ SelectedDefaultTaskChangedCallback(int index, bool warningFlag)
   this->LoadDefaultTask(index, warningFlag);
 }
 
+//----------------------------------------------------------------------------
+void vtkEMSegmentParametersSetStep::
+SelectedPreprocessingChangedCallback(int index, bool warningFlag)
+{
+  if (index < 0 || index >  int(this->DefinePreprocessingTasksName.size() -1) )
+    {
+      vtkErrorMacro("Index is not defined");
+      return;
+    }
+
+  vtkEMSegmentMRMLManager *mrmlManager = this->GetGUI()->GetMRMLManager();
+
+  size_t found;
+  cout << "Splitting: " << this->DefinePreprocessingTasksFile[index] << endl;
+  found = this->DefinePreprocessingTasksFile[index].find_last_of("/\\");
+  cout << " folder: " << this->DefinePreprocessingTasksFile[index].substr(0,found) << endl;
+  cout << " file: " << this->DefinePreprocessingTasksFile[index].substr(found+1) << endl;
+
+  mrmlManager->SetTclTaskFilename(this->DefinePreprocessingTasksFile[index].substr(found+1).c_str());
+}
+
 void vtkEMSegmentParametersSetStep::UpdateTaskListIndex(int index) 
 {
   vtkEMSegmentMRMLManager *mrmlManager = this->GetGUI()->GetMRMLManager();
@@ -387,9 +414,9 @@ void vtkEMSegmentParametersSetStep::SelectedParameterSetChangedCallback(int inde
 
   this->SourceTclFile(tclFileName.c_str());
   if (flag && (!this->SettingSegmentationMode(0)))
-      {
+    {
     return ;
-      }
+    }
 
   this->GUI->GetWizardWidget()->GetWizardWorkflow()->AttemptToGoToNextStep(); 
 }
@@ -509,13 +536,50 @@ void vtkEMSegmentParametersSetStep::PopUpRenameEntry(int index)
     this->RenameEntry->GetWidget()->SetCommandTrigger(vtkKWEntry::TriggerOnReturnKey); 
     this->RenameEntry->GetWidget()->SetCommand (this, "RenameApplyCallback");
     app->Script ( "grid %s -row 0 -column 0 -padx 2 -pady 8", this->RenameEntry->GetWidgetName() );
+
+    // Create the Parameters Set Menu button
+
+    if (!this->PreprocessingMenuButton)
+      {
+      this->PreprocessingMenuButton = vtkKWMenuButtonWithLabel::New();
+      }
+
+    if (!this->PreprocessingMenuButton->IsCreated())
+      {
+      this->PreprocessingMenuButton->SetParent(popUpFrameP);
+      this->PreprocessingMenuButton->Create();
+      this->PreprocessingMenuButton->GetLabel()->SetWidth(
+        EMSEG_WIDGETS_LABEL_WIDTH - 10);
+      this->PreprocessingMenuButton->SetLabelText(
+        "Preprocessing:");
+      this->PreprocessingMenuButton->GetWidget()->SetWidth(
+        EMSEG_MENU_BUTTON_WIDTH + 10);
+      this->PreprocessingMenuButton->SetBalloonHelpString(
+        "Select Standard Task.");
+      }
+
+    if (!this->PreprocessingMenuButton ||
+       !this->PreprocessingMenuButton->IsCreated())
+      {
+      return;
+      }
+    char buffer[256];
+    vtkKWMenu *preprocessing_menu = this->PreprocessingMenuButton->GetWidget()->GetMenu();
+    preprocessing_menu->DeleteAllItems();
+    for (int i = 0 ; i < (int)this->DefinePreprocessingTasksName.size(); i++)
+      {
+      sprintf(buffer, "SelectedPreprocessingChangedCallback %d 1", i);
+      preprocessing_menu->AddRadioButton(DefinePreprocessingTasksName[i].c_str(), this, buffer);
+      }
+
+    app->Script ( "grid %s -row 1 -column 0 -padx 2 -pady 2", this->PreprocessingMenuButton->GetWidgetName() );
     popUpFrameP->Delete();
 
 
     vtkKWFrame *fP = vtkKWFrame::New();
     fP->SetParent ( popUpFrameP);
     fP->Create();
-    app->Script ( "grid %s -row 1 -column 0 -columnspan 1 -pady 8 -sticky ew", fP->GetWidgetName() );
+    app->Script ( "grid %s -row 2 -column 0 -columnspan 1 -pady 8 -sticky ew", fP->GetWidgetName() );
 
     this->RenameApply = vtkKWPushButton::New ();
     this->RenameApply->SetParent (fP);
@@ -570,7 +634,7 @@ int vtkEMSegmentParametersSetStep::LoadDefaultTask(int index, bool warningFlag)
     }
 
 
-  // Remove the default selection entry from the menue, 
+  // Remove the default selection entry from the menu,
   this->PopulateLoadedParameterSets();
       
   // Figure out the menu index number of the default task that was just loaded
@@ -578,13 +642,13 @@ int vtkEMSegmentParametersSetStep::LoadDefaultTask(int index, bool warningFlag)
   int numSets = mrmlManager->GetNumberOfParameterSets();
   for(int i = 0; i < numSets; i++)
     {
-      const char *name = mrmlManager->GetNthParameterSetName(i);
-      if (name && !strcmp(name,pssDefaultTasksName[index].c_str()))
-    {
-      // Select the Node 
+    const char *name = mrmlManager->GetNthParameterSetName(i);
+    if (name && !strcmp(name,pssDefaultTasksName[index].c_str()))
+      {
+      // Select the Node
       this->SelectedParameterSetChangedCallback(i,0);
       break;
-    }
+      }
     }
   return 0;
 }
@@ -641,66 +705,68 @@ int vtkEMSegmentParametersSetStep::LoadDefaultData(const char *tclFile, bool war
 void vtkEMSegmentParametersSetStep::DefineDefaultTasksList()
 {
   //  cout << "-------- DefineDefaultTasksList Start" << endl;
- // set define list of parameters 
+  // set define list of parameters
   this->pssDefaultTasksName.clear();
   this->pssDefaultTasksFile.clear();
+  this->DefinePreprocessingTasksName.clear();
+  this->DefinePreprocessingTasksFile.clear();
 
   vtkDirectory *dir = vtkDirectory::New();
   vtksys_stl::string FilePath =  this->GetGUI()->GetLogic()->GetTclTaskDirectory();
   if (!dir->Open(FilePath.c_str()))
-      {
+    {
     vtkErrorMacro("Cannot open " << this->GetGUI()->GetLogic()->GetTclTaskDirectory());
     // No special files 
     dir->Delete();
     return;
-      }
+    }
     
   for (int i = 0; i < dir->GetNumberOfFiles(); i++)
+    {
+    vtksys_stl::string filename = dir->GetFile(i);
+    //skip ., ..,  and the default file
+    if (strcmp(filename.c_str(), ".") == 0)
       {
-      vtksys_stl::string filename = dir->GetFile(i);
-      //skip ., ..,  and the default file  
-      if (strcmp(filename.c_str(), ".") == 0)
-        {
-        continue;
-        }
-      if (strcmp(filename.c_str(), "..") == 0)
-        {
-        continue;
-        }
-      
-      if (strcmp(filename.c_str(), vtkMRMLEMSNode::GetDefaultTclTaskFilename()) == 0)
-        {
-        continue;
-        }
+      continue;
+      }
+    if (strcmp(filename.c_str(), "..") == 0)
+      {
+      continue;
+      }
+
+    if (strcmp(filename.c_str(), vtkMRMLEMSNode::GetDefaultTclTaskFilename()) == 0)
+      {
+      continue;
+      }
  
-      vtksys_stl::string fullName = this->GetGUI()->GetLogic()->DefineTclTaskFullPathName(filename.c_str());
+    vtksys_stl::string fullName = this->GetGUI()->GetLogic()->DefineTclTaskFullPathName(filename.c_str());
       
-      if (strcmp(vtksys::SystemTools::
-                 GetFilenameExtension(fullName.c_str()).c_str(), ".tcl") != 0)
-        {
-        continue;
-        }
+    if (strcmp(vtksys::SystemTools::
+               GetFilenameExtension(fullName.c_str()).c_str(), ".tcl") != 0)
+      {
+      continue;
+      }
 
-      if (!vtksys::SystemTools::FileIsDirectory(fullName.c_str()))
-        {
-
+    if (!vtksys::SystemTools::FileIsDirectory(fullName.c_str()))
+      {
       vtkstd::replace(filename.begin(), filename.end(), '-', ' ');
       // Get Rid of extension
       filename.resize(filename.size() - 4);
       this->pssDefaultTasksFile.push_back(fullName);
       this->pssDefaultTasksName.push_back(vtksys_stl::string(filename));
-        } 
+      this->DefinePreprocessingTasksFile.push_back(fullName);
+      this->DefinePreprocessingTasksName.push_back(vtksys_stl::string(filename));
       }
+    }
   dir->Delete();
   if (!this->pssDefaultTasksFile.size()) 
     {
-      vtkWarningMacro("No default tasks found in " << this->GetGUI()->GetLogic()->GetTclTaskDirectory());
+    vtkWarningMacro("No default tasks found in " << this->GetGUI()->GetLogic()->GetTclTaskDirectory());
     }
   // The last one is always "Create New" 
   this->pssDefaultTasksFile.push_back(vtksys_stl::string(""));
   this->pssDefaultTasksName.push_back("Create new task");
   // cout << "-------- DefineDefaultTasksList End" << endl;
-
 }
 
 void vtkEMSegmentParametersSetStep::_Validate(int flag)
