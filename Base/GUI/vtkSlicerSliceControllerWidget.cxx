@@ -1915,7 +1915,7 @@ void vtkSlicerSliceControllerWidget::RotateSliceToBackground ( int link )
 {
 
   vtkSlicerSlicesGUI *ssgui;
-  vtkSlicerSliceGUI *sgui;
+  vtkSlicerSliceGUI *mysgui;
   vtkSlicerApplication *app;
   vtkSlicerApplicationGUI *appGUI;
   int found = 0;
@@ -1933,18 +1933,18 @@ void vtkSlicerSliceControllerWidget::RotateSliceToBackground ( int link )
       {
       if (i == 0)
         {
-        sgui = ssgui->GetFirstSliceGUI();
+        mysgui = ssgui->GetFirstSliceGUI();
         layoutname = ssgui->GetFirstSliceGUILayoutName();
         }
       else
         {
-        sgui = ssgui->GetNextSliceGUI(layoutname);
+        mysgui = ssgui->GetNextSliceGUI(layoutname);
         layoutname = ssgui->GetNextSliceGUILayoutName(layoutname);
         }
         
-      if (sgui)
+      if (mysgui)
         {
-        if (sgui->GetSliceNode() == this->SliceNode )
+        if (mysgui->GetSliceNode() == this->SliceNode )
           {
           found = 1;
           break;
@@ -1961,50 +1961,67 @@ void vtkSlicerSliceControllerWidget::RotateSliceToBackground ( int link )
     {
     if ( link )
       {
+      // If the controllers are linked, we want to call
+      // RotateToVolumePlane of the current slice node and then copy
+      // its SliceToRAS to the other slice nodes.
+
       // First save all SliceNodes for undo:
       vtkCollection *nodes = vtkCollection::New();
       const char *layoutname = NULL;
       int nSliceGUI = ssgui->GetNumberOfSliceGUI();
+      vtkSlicerSliceGUI *tsgui;
       for (int i = 0; i < nSliceGUI; i++)
         {
         if (i == 0)
           {
-          sgui = ssgui->GetFirstSliceGUI();
+          tsgui = ssgui->GetFirstSliceGUI();
           layoutname = ssgui->GetFirstSliceGUILayoutName();
           }
         else
           {
-          sgui = ssgui->GetNextSliceGUI(layoutname);
+          tsgui = ssgui->GetNextSliceGUI(layoutname);
           layoutname = ssgui->GetNextSliceGUILayoutName(layoutname);
           }
             
-        if (sgui)
-          nodes->AddItem ( sgui->GetSliceNode ( ) );
+        if (tsgui)
+          nodes->AddItem ( tsgui->GetSliceNode ( ) );
         }
         
       this->MRMLScene->SaveStateForUndo ( nodes );
       nodes->Delete ( );
+
+      // RotateToVolumePlane this slice node
+      this->MRMLScene->SaveStateForUndo ( this->SliceNode );
+      vtkMRMLVolumeNode *backgroundNode = mysgui->GetLogic()->GetLayerVolumeNode(0);
+      if ( backgroundNode )
+        {
+        mysgui->GetSliceNode()->RotateToVolumePlane( backgroundNode );
+        }
         
-      // Now fit all Slices to background
+      // Now copy the SliceToRAS to all Slices 
       for (int i = 0; i < nSliceGUI; i++)
         {
         if (i == 0)
           {
-          sgui = ssgui->GetFirstSliceGUI();
+          tsgui = ssgui->GetFirstSliceGUI();
           layoutname = ssgui->GetFirstSliceGUILayoutName();
           }
         else
           {
-          sgui = ssgui->GetNextSliceGUI(layoutname);
+          tsgui = ssgui->GetNextSliceGUI(layoutname);
           layoutname = ssgui->GetNextSliceGUILayoutName(layoutname);
           }
             
-        if (sgui)
+        if (tsgui)
           {
-          vtkMRMLVolumeNode *backgroundNode = sgui->GetLogic()->GetLayerVolumeNode(0);
+          vtkMRMLVolumeNode *backgroundNode = tsgui->GetLogic()->GetLayerVolumeNode(0);
           if ( backgroundNode )
             {
-            sgui->GetSliceNode()->RotateToVolumePlane( backgroundNode );
+            tsgui->GetLogic()->GetSliceCompositeNode()->SetLinkedControl(0);
+            tsgui->GetSliceNode()->SetSliceToRAS( this->SliceNode->GetSliceToRAS() );
+            tsgui->GetSliceNode()->SetOrientationToReformat();
+            tsgui->GetSliceViewer()->RequestRender();
+            tsgui->GetLogic()->GetSliceCompositeNode()->SetLinkedControl(1);
             }
           }
         }
@@ -2012,10 +2029,10 @@ void vtkSlicerSliceControllerWidget::RotateSliceToBackground ( int link )
     else
       {
       this->MRMLScene->SaveStateForUndo ( this->SliceNode );
-      vtkMRMLVolumeNode *backgroundNode = sgui->GetLogic()->GetLayerVolumeNode(0);
+      vtkMRMLVolumeNode *backgroundNode = mysgui->GetLogic()->GetLayerVolumeNode(0);
       if ( backgroundNode )
         {
-        sgui->GetSliceNode()->RotateToVolumePlane( backgroundNode );
+        mysgui->GetSliceNode()->RotateToVolumePlane( backgroundNode );
         }
       }
     }
