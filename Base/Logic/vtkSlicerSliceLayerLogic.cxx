@@ -192,17 +192,9 @@ void vtkSlicerSliceLayerLogic::ProcessMRMLEvents(vtkObject * caller,
         {
         this->VolumeDisplayNode->CopyWithoutModifiedEvent(this->VolumeDisplayNodeObserved);
         }
-    vtkMRMLDiffusionTensorVolumeDisplayNode *dtiVDN = vtkMRMLDiffusionTensorVolumeDisplayNode::SafeDownCast(caller);
-    if (this->VolumeDisplayNode == dtiVDN && dtiVDN != NULL)
-      {
-      this->DTIMathematics->SetOperation(dtiVDN->GetScalarInvariant());
-      }
-    else
-      {      
-      vtkDebugMacro("vtkSlicerSliceLayerLogic::ProcessMRMLEvents: volume display node " \
-          << (this->VolumeDisplayNode == NULL ? " is null" : "is set, but") \
-          << ", not updating (color node may be null)\n");
-      }
+      this->UpdateImageDisplay();
+      this->Modified();
+      return;
     }
   this->UpdateTransforms();
   
