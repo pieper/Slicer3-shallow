@@ -132,31 +132,42 @@ template<class PixelType> int DoIt( int argc, const char * argv[], PixelType )
     ++itr;
     }
   
-  // find the first zero baseline image and use it for the noise estimation
+  //=====================================================================================
+  // find the first zero baseline image and use it for the noise estimation; in case no
+  // explicit baselines are found, we keep those directions with the weakest gradient
+  // strengths
 
-  ::size_t iNrOfDWIs = diffusionDirections.size();
+  ::size_t iNrOfDWIs      = diffusionDirections.size();
   ::size_t iFirstBaseline = std::string::npos;
+  vnl_vector<double> norms( iNrOfDWIs );
+  CovariantVectorType minStrengthGrad(0.0f);
 
-  for ( ::size_t iI=0; iI<iNrOfDWIs; iI++ )
-    {
-
-    if ( diffusionDirections[iI].GetNorm()==0 )
-      {
+  for( ::size_t iI=0; iI<iNrOfDWIs; iI++ ){
+    norms[iI] = diffusionDirections[iI].GetNorm();
+    if ( diffusionDirections[iI].GetNorm()<1e-6 ){
       iFirstBaseline = iI;
       std::cout << "First baseline found at index = " << iFirstBaseline << std::endl;
       break;
-      }
-
     }
-
-  if ( iFirstBaseline == std::string::npos )
-    {
-
+  }
+  if ( iFirstBaseline == std::string::npos ){
     std::cout << "Did not find an explicit baseline image." << std::endl;
-    std::cout << "Treating the first volume as the baseline volume." << std::endl;
+    std::cout << "Using the gradient with the weakest strength." << std::endl;
+/*****************************************************************************/
+/** For some reason, arg_min() is not implemented in this version of VNL :-( */
+    //iFirstBaseline  = norms.arg_min();
     iFirstBaseline = 0;
-
+    double minNormForArg = norms[0];
+    for( ::size_t iI=1; iI<iNrOfDWIs; iI++ ){
+      if( norms[iI] < minNormForArg ){
+        minNormForArg = norms[iI];
+        iFirstBaseline = iI;
+      }
     }
+/*****************************************************************************/
+    minStrengthGrad = diffusionDirections[ iFirstBaseline ];
+  }
+  //=====================================================================================
 
   typename ScalarImageType::SizeType indexRadiusE;
   typename ScalarImageType::SizeType indexRadiusF;
@@ -187,16 +198,18 @@ template<class PixelType> int DoIt( int argc, const char * argv[], PixelType )
   std::vector<int> pDWI;
   std::vector<int> pBaselines;
   for( unsigned int iI=0; iI<channels; ++iI ){
-    float norm = diffusionDirections[iI].GetNorm();
-    if( norm>1e-3 ){
-    grad[0] = diffusionDirections[iI][0]/norm;
-    grad[1] = diffusionDirections[iI][1]/norm;
-    grad[2] = diffusionDirections[iI][2]/norm;
-    ricianFilter->AddGradientDirection( grad );
-    ++nDWI;
-    pDWI.push_back( iI );
+    float norm = (diffusionDirections[iI]-minStrengthGrad).GetNorm();
+    if( norm>1e-5 ){
+      std::cout << "Found gradient at index: " << iI << std::endl;
+      grad[0] = diffusionDirections[iI][0]/norm;
+      grad[1] = diffusionDirections[iI][1]/norm;
+      grad[2] = diffusionDirections[iI][2]/norm;
+      ricianFilter->AddGradientDirection( grad );
+      ++nDWI;
+      pDWI.push_back( iI );
     }
   else{
+    std::cout << "Found baseline at index: " << iI << std::endl;
     ++nBaselines;
     pBaselines.push_back( iI );
   }
