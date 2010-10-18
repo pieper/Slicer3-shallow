@@ -676,7 +676,7 @@ if { $::GETBUILDTEST(pack) && $::GETBUILDTEST(pack-dir) != "" } {
 if { $::GETBUILDTEST(extend) == "true" } {
   # build the slicer3 extensions
   cd $::Slicer3_HOME
-  set cmd "sh ./Scripts/extend.tcl $::GETBUILDTEST(test-type) $::GETBUILDTEST(release)"
+  set cmd "sh ./Scripts/extend.tcl $::GETBUILDTEST(release)"
   eval runcmd $cmd
 }
 
