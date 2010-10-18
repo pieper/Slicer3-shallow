@@ -1949,8 +1949,8 @@ void vtkSlicerViewerWidget::RequestRender()
 
   // move the render to the last thing on the idle processing queue
   this->SetRenderPending(1);
-  this->Script("after cancel \"%s Render\"", this->GetTclName());
-  this->Script("after idle \"%s Render\"", this->GetTclName());
+  this->Script("after cancel \"::slicer3::ProtectedMethodCall %s Render\"", this->GetTclName());
+  this->Script("after idle \"::slicer3::ProtectedMethodCall %s Render\"", this->GetTclName());
 }
 
 //---------------------------------------------------------------------------

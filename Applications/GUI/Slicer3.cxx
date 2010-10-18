@@ -818,6 +818,20 @@ int Slicer3_main(int& argc, char *argv[])
   Slicer3_Tcl_Eval( interp, tclCmd.c_str() );
   }
 
+  {
+  std::string tclCmd;
+
+  tclCmd +=
+    "namespace eval slicer3 { \
+       proc ProtectedMethodCall { instance method args } { \
+         if { [info command $instance] != \"\" } { \
+           eval $instance $method $args \
+         } \
+       } \
+    }";
+  Slicer3_Tcl_Eval( interp, tclCmd.c_str() );
+  }
+
   //
   // ignore any modules specified on the command line
   //
