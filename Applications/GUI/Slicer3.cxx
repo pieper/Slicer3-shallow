@@ -649,7 +649,28 @@ int Slicer3_main(int& argc, char *argv[])
   // the executable to run
   if (PrintModulePaths)
     {
-    vtkSlicerApplication *slicerApp = vtkSlicerApplication::GetInstance ( );
+    
+    vtkObject::GlobalWarningDisplayOff();
+    
+    vtkSlicerApplication *slicerApp = 0;
+    
+    if ( ConfigurationDirectory == "" && TemporaryDirectory == "" )
+      {
+      // first call to GetInstance will create the Application
+      //
+      // make a substitute tcl proc for the 'exit' built in that
+      // goes through the vtkKWApplication methodology for exiting
+      // cleanly
+      //
+      slicerApp = vtkSlicerApplication::GetInstance ( );
+      }
+    else
+      {
+      const char* config_dir = ConfigurationDirectory.c_str();
+      const char* tmp_dir = TemporaryDirectory.c_str();
+      slicerApp = vtkSlicerApplication::GetInstance (tmp_dir, config_dir);
+      }    
+    
     slicerApp->SetRegistryLevel(0);
     slicerApp->PromptBeforeExitOff();
     std::cout << slicerApp->GetModulePaths() << std::endl;

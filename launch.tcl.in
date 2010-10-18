@@ -442,6 +442,7 @@ proc launch_ParseArgs {argv} {
   set ::LAUNCH(launchCommand) ""
   set ::LAUNCH(launchDesigner) 0
   set ::LAUNCH(detach) 0
+  set ::LAUNCH(configDir) ""
 
   # 
   # look for launcher-specific arguments
@@ -1038,11 +1039,36 @@ proc launch_ImportModulePaths {} {
 
     set ::globallines ""  ; # reset buffer for global lines
 
-    # run the program with argument --print-module-paths
+    #
+    # change from tcl escape to shell escape for command line arguments 
+    # that contain spaces -- note that shell notation only works for a single
+    # level of nesting
+    # - change backslashes to forward slashes (for windows paths)
+    # - escape the spaces in each of the arguments (non-windows only)
+    # - handle any escaped | where the \ was changed to / by mistake
+    #
+    regsub -all "\\\\" $::argv "/" ::argv
+    regsub -all "/\\|" $::argv "\\\\|" ::argv
+    if {$::env(BUILD) != $::WINDOWS} {
+      set newargv ""
+      foreach a $::argv {
+          regsub -all " " $a "\\\ " a
+          lappend newargv $a
+      }
+      set ::argv $newargv
+    }
+
+    if {$::env(BUILD) != $::WINDOWS} {
+      # turn curly braces into quotes
+      regsub -all "{|}" $::argv "\\\"" ::argv
+    }
+
+    # run the program with argument --print-module-paths and also append the other arguments,
+    # just in case if the tmp_dir or config_dir are set
     if {$::env(BUILD) == $::WINDOWS} {
-        set fp [open "| \"$::Slicer3_REAL\" --print-module-paths" r]
+        set fp [open "| \"$::Slicer3_REAL\" --print-module-paths $::argv" r]
     } else {
-        set fp [open "| sh -c \"'$::Slicer3_REAL' --print-module-paths \" |& cat" r]
+        set fp [open "| sh -c \"'$::Slicer3_REAL' --print-module-paths $::argv\" |& cat" r]
     }
 
     # call the helper but do not pass thru output directly!
