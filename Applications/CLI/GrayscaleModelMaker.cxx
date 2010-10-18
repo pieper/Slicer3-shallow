@@ -230,6 +230,7 @@ int main(int argc, char * argv[])
                                            CLPProcessInformation,
                                            1.0/7.0, 4.0/7.0);
     transformer->SetInput(smootherSinc->GetOutput());
+    /* Removed b/c bug #482
     if ((transformIJKtoRAS->GetMatrix())->Determinant() < 0)
       { 
       transformer->SetInput(reverser->GetOutput());
@@ -238,6 +239,7 @@ int main(int argc, char * argv[])
       {
       transformer->SetInput(decimator->GetOutput());
       }
+    */
 
     transformer->SetTransform(transformIJKtoRAS);
     if (debug)
