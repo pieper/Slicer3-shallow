@@ -442,7 +442,6 @@ proc launch_ParseArgs {argv} {
   set ::LAUNCH(launchCommand) ""
   set ::LAUNCH(launchDesigner) 0
   set ::LAUNCH(detach) 0
-  set ::LAUNCH(configDir) ""
 
   # 
   # look for launcher-specific arguments
