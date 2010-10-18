@@ -164,9 +164,9 @@ proc EditorBuildGUI {this} {
   $::Editor($this,enableCheckPoint) Create
   $::Editor($this,enableCheckPoint) SetText "Undo/Redo"
   $::Editor($this,enableCheckPoint) SetBalloonHelpString "Volume Check Points allow you to undo and redo recent edits.\n\nNote: for large volumes, you may run out of system memory when this is enabled."
-  $::Editor($this,enableCheckPoint) SetSelectedState 0
+  set ::Editor(checkPointsEnabled) 1
+  $::Editor($this,enableCheckPoint) SetSelectedState $::Editor(checkPointsEnabled)
   pack [$::Editor($this,enableCheckPoint) GetWidgetName] -side left
-  set ::Editor(checkPointsEnabled) 0
 
 }
 

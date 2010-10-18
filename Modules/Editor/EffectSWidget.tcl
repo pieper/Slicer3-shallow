@@ -342,12 +342,20 @@ itcl::body EffectSWidget::preProcessEvent { {caller ""} {event ""} } {
   switch $event {
     "KeyPressEvent" {
       set key [$_interactor GetKeySym]
-      if { [lsearch "Escape" $key] != -1 } {
+      if { [lsearch "Escape z y" $key] != -1 } {
         $sliceGUI SetCurrentGUIEvent "" ;# reset event so we don't respond again
         $sliceGUI SetGUICommandAbortFlag 1
         switch [$_interactor GetKeySym] {
           "Escape" {
             after idle ::EffectSWidget::RemoveAll
+            return 1
+          }
+          "z" {
+            EditorPerformPreviousCheckPoint
+            return 1
+          }
+          "y" {
+            EditorPerformNextCheckPoint
             return 1
           }
         }
