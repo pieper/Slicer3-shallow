@@ -124,5 +124,5 @@ int main(int argc, char* argv[] )
   // The result is contained in the scalar colormap of the output.
 
   return EXIT_SUCCESS;
-  }
 }
+
