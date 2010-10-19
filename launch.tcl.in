@@ -1038,6 +1038,9 @@ proc launch_ImportModulePaths {} {
 
     set ::globallines ""  ; # reset buffer for global lines
 
+    # copy the global arguments to prevent touching them directly
+    set argvCopy $::argv
+
     #
     # change from tcl escape to shell escape for command line arguments 
     # that contain spaces -- note that shell notation only works for a single
@@ -1046,28 +1049,28 @@ proc launch_ImportModulePaths {} {
     # - escape the spaces in each of the arguments (non-windows only)
     # - handle any escaped | where the \ was changed to / by mistake
     #
-    regsub -all "\\\\" $::argv "/" ::argv
-    regsub -all "/\\|" $::argv "\\\\|" ::argv
+    regsub -all "\\\\" $argvCopy "/" argvCopy
+    regsub -all "/\\|" $argvCopy "\\\\|" argvCopy
     if {$::env(BUILD) != $::WINDOWS} {
       set newargv ""
-      foreach a $::argv {
+      foreach a $argvCopy {
           regsub -all " " $a "\\\ " a
           lappend newargv $a
       }
-      set ::argv $newargv
+      set argvCopy $newargv
     }
 
     if {$::env(BUILD) != $::WINDOWS} {
       # turn curly braces into quotes
-      regsub -all "{|}" $::argv "\\\"" ::argv
+      regsub -all "{|}" $argvCopy "\\\"" argvCopy
     }
 
     # run the program with argument --print-module-paths and also append the other arguments,
     # just in case if the tmp_dir or config_dir are set
     if {$::env(BUILD) == $::WINDOWS} {
-        set fp [open "| \"$::Slicer3_REAL\" --print-module-paths $::argv" r]
+        set fp [open "| \"$::Slicer3_REAL\" --print-module-paths $argvCopy" r]
     } else {
-        set fp [open "| sh -c \"'$::Slicer3_REAL' --print-module-paths $::argv\" |& cat" r]
+        set fp [open "| sh -c \"'$::Slicer3_REAL' --print-module-paths $argvCopy\" |& cat" r]
     }
 
     # call the helper but do not pass thru output directly!
