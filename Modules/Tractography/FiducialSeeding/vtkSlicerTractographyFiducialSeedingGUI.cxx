@@ -872,8 +872,8 @@ void vtkSlicerTractographyFiducialSeedingGUI::BuildGUI ( )
   this->RegionSampleSizeScale->SetParent ( moduleFrame->GetFrame() );
   this->RegionSampleSizeScale->Create ( );
   this->RegionSampleSizeScale->SetLabelText("Fiducial Seeding Step Size (mm)");
-  this->RegionSampleSizeScale->GetWidget()->SetRange(0.5,9.5);
-  this->RegionSampleSizeScale->GetWidget()->SetResolution(0.5);
+  this->RegionSampleSizeScale->GetWidget()->SetRange(0.2,10);
+  this->RegionSampleSizeScale->GetWidget()->SetResolution(0.2);
   this->RegionSampleSizeScale->GetWidget()->SetValue(1.0);
   this->RegionSampleSizeScale->SetBalloonHelpString("Step between seedin samples in the fiducial region");
   this->Script ( "pack %s -side top -anchor nw -expand y -fill x -padx 2 -pady 2",
