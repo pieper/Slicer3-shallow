@@ -4583,8 +4583,10 @@ PackageAndWriteData(const char* packageDirectory)
 void
 vtkEMSegmentMRMLManager::CreateTemplateFile()
 {
+  cout << "vtkEMSegmentMRMLManager::CreateTemplateFile()" << endl;
   if (!this->GetSaveTemplateFilename())
     {
+      vtkErrorMacro("No template file name defined!");
       return;
     }
 
@@ -4594,9 +4596,10 @@ vtkEMSegmentMRMLManager::CreateTemplateFile()
   this->GetMRMLScene()->SaveStateForUndo();
 
   // Name of EMSNode depends on filename ! 
-  std::string fileName = vtksys::SystemTools::GetFilenameName(this->GetSaveTemplateFilename());
-  std::string name  = TurnDefaultMRMLFileIntoTaskName(fileName.c_str());
-  this->Node->SetName(name.c_str()); 
+  std::string fileName = this->GetSaveTemplateFilename();
+  std::string mrmlName = vtksys::SystemTools::GetFilenameName(fileName.c_str());
+  std::string taskName  = TurnDefaultMRMLFileIntoTaskName(mrmlName.c_str());
+  this->Node->SetName(taskName.c_str()); 
 
   if (this->GetSegmenterNode()) 
     {
@@ -4648,9 +4651,9 @@ vtkEMSegmentMRMLManager::CreateTemplateFile()
   cScene->SetRootDirectory(outputDirectory.c_str());
   cScene->SetURL(fileName.c_str());
   this->CopyEMRelatedNodesToMRMLScene(cScene);
-  // Does not work that way bc we cannot delete general slicer notes 
-  // cScene->Commit(fileName.c_str());
-
+  cout << "Write Template to  " << fileName.c_str() << " ..." << endl;
+  cScene->Commit(fileName.c_str());
+  cout << "... finished" << endl;
   cScene->Delete();
 
   //
@@ -5331,7 +5334,7 @@ double NormalToLogIntensities(double val)
 // This is for GUI
 double vtkEMSegmentMRMLManager:: GetTreeNodeDistributionMeanWithCorrection(vtkIdType nodeID, int volumeNumber) {  
   double value = LogToNormalIntensities(this->GetTreeNodeDistributionLogMeanWithCorrection(nodeID, volumeNumber));
-   cout << "GetTreeNodeDistributionMeanWithCorrection :" << value << endl; 
+  // cout << "GetTreeNodeDistributionMeanWithCorrection :" << value << endl; 
    return value;
 }
 
@@ -5344,7 +5347,7 @@ double vtkEMSegmentMRMLManager::GetTreeNodeDistributionLogMeanWithCorrection(vtk
     return 0;
     }
    double value = this->GetTreeNodeDistributionLogMean(nodeID, volumeNumber) - this->GetTreeNodeDistributionLogMeanCorrection(nodeID, volumeNumber); 
-   cout << "GetTreeNodeDistributionLogMeanWithCorrection :" << value << endl; 
+   // cout << "GetTreeNodeDistributionLogMeanWithCorrection :" << value << endl; 
    return value;
 }
 
@@ -5443,7 +5446,7 @@ double vtkEMSegmentMRMLManager::GetTreeNodeDistributionLogCovarianceWithCorrecti
     {
      value =  node->GetLogCovariance(rowIndex,columnIndex);
     }
-  cout << "GetTreeNodeDistributionLogCovarianceWithCorrection " << value << endl;
+  // cout << "GetTreeNodeDistributionLogCovarianceWithCorrection " << value << endl;
   return value; 
 }
 

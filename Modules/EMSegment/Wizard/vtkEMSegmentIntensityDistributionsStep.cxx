@@ -641,7 +641,7 @@ void vtkEMSegmentIntensityDistributionsStep::IntensityDistributionMeanChangedCal
                                               vtkIdType sel_vol_id, int vtkNotUsed(row), int col, const char *value)
 {
   // The distribution mean vector has changed because of user interaction
-  cout << "vtkEMSegmentIntensityDistributionsStep::IntensityDistributionMeanChangedCallback " << value << endl;
+  // cout << "vtkEMSegmentIntensityDistributionsStep::IntensityDistributionMeanChangedCallback " << value << endl;
 
   vtkEMSegmentMRMLManager *mrmlManager = this->GetGUI()->GetMRMLManager();
   if (!mrmlManager)
