@@ -1091,63 +1091,67 @@ void vtkEMSegmentParametersSetStep::AddDefaultTasksToList(const char* FilePath)
   vtkDirectory *dir = vtkDirectory::New();
   // Do not give out an error message here bc it otherwise comes up when loading slicer 
   // the path might simply not be created !
+  
   if (!dir->Open(FilePath))
     {
       dir->Delete();
       return;
     }
     
-  for (int i = 0; i < dir->GetNumberOfFiles(); i++)
-    {
-    vtksys_stl::string filename = dir->GetFile(i);
-    //skip ., ..,  if it is not a mrml extension, or a directory
-    if (strcmp(filename.c_str(), ".") == 0)
-      {
-      continue;
-      }
-    if (strcmp(filename.c_str(), "..") == 0)
-      {
-      continue;
-      }
-    if (strcmp(vtksys::SystemTools::GetFilenameExtension(filename.c_str()).c_str(), ".mrml") != 0)
-      {
-      continue;
-      }
-
-    //if (strcmp(filename.c_str(), vtkMRMLEMSNode::GetDefaultTclTaskFilename()) == 0)
-    //  {
-    //  continue;
-    //  }
- 
-    vtksys_stl::string tmpFullFileName = vtksys_stl::string(FilePath) + vtksys_stl::string("/") + filename.c_str();
-    vtksys_stl::string fullFileName = vtksys::SystemTools::ConvertToOutputPath(tmpFullFileName.c_str());
-    if (vtksys::SystemTools::FileIsDirectory(fullFileName.c_str()))
-      {
-    continue;
-      }
+  int numberOfFiles = dir->GetNumberOfFiles();
     
-    // Generate Name of Task from File name
-    vtksys_stl::string taskName = this->GetGUI()->GetMRMLManager()->TurnDefaultMRMLFileIntoTaskName(filename.c_str());
+  for (int i = 0; i < numberOfFiles; i++)
+    {
+    
+    vtksys_stl::string filename = dir->GetFile(i);
+    
+    // do nothing if file is ".", ".." or does not have a .mrml extension
+    if (strcmp(filename.c_str(), ".") && strcmp(filename.c_str(), "..") && !strcmp(vtksys::SystemTools::GetFilenameExtension(filename.c_str()).c_str(), ".mrml"))
+      {
 
-    // make sure that file is not already in the list 
-    int existFlag = 0;
-    for (i=0; i < int(pssDefaultTasksName.size()); i++)
-      {
-    if (!this->pssDefaultTasksName[i].compare(taskName))
-      {
-        existFlag =1;
-      }
-      }
-    if (existFlag)
-      {
-    continue;
-      }
-    // Add to List
-    this->pssDefaultTasksFile.push_back(fullFileName);
-    this->pssDefaultTasksName.push_back(taskName);
-    this->DefinePreprocessingTasksFile.push_back(fullFileName);
-    this->DefinePreprocessingTasksName.push_back(taskName);
-    }
+      //if (strcmp(filename.c_str(), vtkMRMLEMSNode::GetDefaultTclTaskFilename()) == 0)
+      //  {
+      //  continue;
+      //  }
+   
+      vtksys_stl::string tmpFullFileName = vtksys_stl::string(FilePath) + vtksys_stl::string("/") + filename.c_str();
+      vtksys_stl::string fullFileName = vtksys::SystemTools::ConvertToOutputPath(tmpFullFileName.c_str());
+      
+      // if it has a .mrml extension but is a directory, do nothing
+      if (!vtksys::SystemTools::FileIsDirectory(fullFileName.c_str()))
+        {
+      
+        // Generate Name of Task from File name
+        vtksys_stl::string taskName = this->GetGUI()->GetMRMLManager()->TurnDefaultMRMLFileIntoTaskName(filename.c_str());
+
+        // make sure that file is not already in the list
+        // we loop through the list and set existFlag to 1 if it exists already 
+        int existFlag = 0;
+        
+        // we need a new index for this inner loop *grrrrr took me long to find this one
+        for (int j=0; j < int(pssDefaultTasksName.size()); j++)
+          {
+          if (!this->pssDefaultTasksName[j].compare(taskName))
+            {
+              existFlag =1;
+            }
+          }
+          
+        if (!existFlag)
+          {
+          // Add to List if it does not exist
+          this->pssDefaultTasksFile.push_back(fullFileName);
+          this->pssDefaultTasksName.push_back(taskName);
+          this->DefinePreprocessingTasksFile.push_back(fullFileName);
+          this->DefinePreprocessingTasksName.push_back(taskName);
+          }
+          
+        } // check if it is not a directory
+        
+      } // check if the file is .,.. or does not have a .mrml extension
+      
+    } // loop through all the files
+    
   dir->Delete();
 }
 
