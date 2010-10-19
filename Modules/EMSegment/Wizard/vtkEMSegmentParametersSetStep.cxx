@@ -216,8 +216,8 @@ void vtkEMSegmentParametersSetStep::UpdateTasksCallback()
   // ** THE URL **
   //
   // the url to the EMSegment task repository
-  std::string taskRepository = "http://people.csail.mit.edu/pohl/EMSegmentUpdates/";
-  //std::string taskRepository = "http://slicer.org/EMSegmentUpdates/";
+  //std::string taskRepository = "http://people.csail.mit.edu/pohl/EMSegmentUpdates/";
+  std::string taskRepository = "http://slicer.org/EMSegmentUpdates/";
 
   //
   // ** PATH MANAGEMENT **
@@ -301,10 +301,13 @@ void vtkEMSegmentParametersSetStep::UpdateTasksCallback()
   //  regex_search(htmlManifest, regexResult, mrmlExpression);   
   // but right now, we have to manually parse the string.
   // at least we can use std::string methods :D
-  std::string beginTaskFilenameTag(".tcl\">");
+  std::string beginTaskFilenameTag(".tcl\"> ");
   std::string endTaskFilenameTag(".tcl</a>");
-  std::string beginMrmlFilenameTag(".mrml\">");
+  std::string beginMrmlFilenameTag(".mrml\"> ");
   std::string endMrmlFilenameTag(".mrml</a>");  
+  
+  bool tclFilesExist = false;
+  bool mrmlFilesExist = false;
   
   std::vector<std::string> taskFilenames;
   std::vector<std::string> mrmlFilenames;
@@ -334,11 +337,10 @@ void vtkEMSegmentParametersSetStep::UpdateTasksCallback()
     beginTaskFilenameIndex = htmlManifestAsString.find(beginTaskFilenameTag,endTaskFilenameIndex);
     }
     
-  // sanity checks: if the vector does not contain any filenames, exit here before it is too late!
-  if (taskFilenames.size()==0)
+  // enable copying of .tcl files if they exist
+  if (taskFilenames.size()!=0)
     {
-    vtkErrorMacro("UpdateTasksCallback: There were no task files in the manifest! *AAAAAAAAAAAAAAAAAHHH*")
-    return;
+    tclFilesExist = true;
     }
     
   std::string::size_type beginMrmlFilenameIndex = htmlManifestAsString.find(beginMrmlFilenameTag,0);
@@ -364,11 +366,10 @@ void vtkEMSegmentParametersSetStep::UpdateTasksCallback()
     beginMrmlFilenameIndex = htmlManifestAsString.find(beginMrmlFilenameTag,endMrmlFilenameIndex);
     }
     
-  // sanity checks: if the vector does not contain any filenames, exit here before it is too late!
-  if (mrmlFilenames.size()==0)
+  // enable copying of .mrml files if they exist
+  if (mrmlFilenames.size()!=0)
     {
-    vtkErrorMacro("UpdateTasksCallback: There were no mrml files in the manifest! *AAAAAAAAAAAAAAAAAHHH*")
-    return;
+    mrmlFilesExist = true;
     }    
     
   // 2) loop through the vector and download the task files and the mrml files to the $tmpDir
@@ -380,67 +381,73 @@ void vtkEMSegmentParametersSetStep::UpdateTasksCallback()
   std::string currentMrmlName;
   std::string currentMrmlFilepath;
   
-  // loop for .tcl
-  for (std::vector<std::string>::iterator i = taskFilenames.begin(); i != taskFilenames.end(); ++i)
+  if (tclFilesExist)
     {
-    
-    currentTaskName = *i;
-    
-    // sanity checks: if the filename is "", exit here before it is too late!
-    if (!strcmp(currentTaskName.c_str(),""))
+    // loop for .tcl
+    for (std::vector<std::string>::iterator i = taskFilenames.begin(); i != taskFilenames.end(); ++i)
       {
-      vtkErrorMacro("UpdateTasksCallback: At least one filename was empty, get outta here NOW! *AAAAAAAAAAAAAAAAAHHH*")
-      return;
+      
+      currentTaskName = *i;
+      
+      // sanity checks: if the filename is "", exit here before it is too late!
+      if (!strcmp(currentTaskName.c_str(),""))
+        {
+        vtkErrorMacro("UpdateTasksCallback: At least one filename was empty, get outta here NOW! *AAAAAAAAAAAAAAAAAHHH*")
+        return;
+        }
+      
+      // generate the url of this task
+      currentTaskUrl = std::string(taskRepository + currentTaskName + std::string(".tcl"));
+      
+      // generate the destination filename of this task in $tmpDir
+      currentTaskFilepath = std::string(tmpDir + std::string("/") + currentTaskName + std::string(".tcl"));
+      
+      // and get the content and save it to $tmpDir
+      httpHandler->StageFileRead(currentTaskUrl.c_str(),currentTaskFilepath.c_str());
+      
+      // sanity checks: if the downloaded file does not exist or size<1, exit here before it is too late!
+      if (!vtksys::SystemTools::FileExists(currentTaskFilepath.c_str()) || vtksys::SystemTools::FileLength(currentTaskFilepath.c_str())<1)
+        {
+        vtkErrorMacro("UpdateTasksCallback: At least one file was not downloaded correctly! Aborting.. *beepbeepbeep*")
+        return;
+        }
+     
       }
-    
-    // generate the url of this task
-    currentTaskUrl = std::string(taskRepository + currentTaskName + std::string(".tcl"));
-    
-    // generate the destination filename of this task in $tmpDir
-    currentTaskFilepath = std::string(tmpDir + std::string("/") + currentTaskName + std::string(".tcl"));
-    
-    // and get the content and save it to $tmpDir
-    httpHandler->StageFileRead(currentTaskUrl.c_str(),currentTaskFilepath.c_str());
-    
-    // sanity checks: if the downloaded file does not exist or size<1, exit here before it is too late!
-    if (!vtksys::SystemTools::FileExists(currentTaskFilepath.c_str()) || vtksys::SystemTools::FileLength(currentTaskFilepath.c_str())<1)
-      {
-      vtkErrorMacro("UpdateTasksCallback: At least one file was not downloaded correctly! Aborting.. *beepbeepbeep*")
-      return;
-      }
-   
     }
-    
-  // loop for .mrml
-  for (std::vector<std::string>::iterator i = mrmlFilenames.begin(); i != mrmlFilenames.end(); ++i)
-    {
-    
-    currentMrmlName = *i;
-    
-    // sanity checks: if the filename is "", exit here before it is too late!
-    if (!strcmp(currentMrmlName.c_str(),""))
+  
+  if (mrmlFilesExist)
+    {  
+    // loop for .mrml
+    for (std::vector<std::string>::iterator i = mrmlFilenames.begin(); i != mrmlFilenames.end(); ++i)
       {
-      vtkErrorMacro("UpdateTasksCallback: At least one filename was empty, get outta here NOW! *AAAAAAAAAAAAAAAAAHHH*")
-      return;
-      }
-    
-    // generate the url of this mrml file
-    currentMrmlUrl = std::string(taskRepository + currentMrmlName + std::string(".mrml"));
-    
-    // generate the destination filename of this task in $tmpDir
-    currentMrmlFilepath = std::string(tmpDir + std::string("/") + currentMrmlName + std::string(".mrml"));
-    
-    // and get the content and save it to $tmpDir
-    httpHandler->StageFileRead(currentMrmlUrl.c_str(),currentMrmlFilepath.c_str());
-    
-    // sanity checks: if the downloaded file does not exist or size<1, exit here before it is too late!
-    if (!vtksys::SystemTools::FileExists(currentMrmlFilepath.c_str()) || vtksys::SystemTools::FileLength(currentMrmlFilepath.c_str())<1)
-      {
-      vtkErrorMacro("UpdateTasksCallback: At least one file was not downloaded correctly! Aborting.. *beepbeepbeep*")
-      return;
-      }
-   
-    }    
+      
+      currentMrmlName = *i;
+      
+      // sanity checks: if the filename is "", exit here before it is too late!
+      if (!strcmp(currentMrmlName.c_str(),""))
+        {
+        vtkErrorMacro("UpdateTasksCallback: At least one filename was empty, get outta here NOW! *AAAAAAAAAAAAAAAAAHHH*")
+        return;
+        }
+      
+      // generate the url of this mrml file
+      currentMrmlUrl = std::string(taskRepository + currentMrmlName + std::string(".mrml"));
+      
+      // generate the destination filename of this task in $tmpDir
+      currentMrmlFilepath = std::string(tmpDir + std::string("/") + currentMrmlName + std::string(".mrml"));
+      
+      // and get the content and save it to $tmpDir
+      httpHandler->StageFileRead(currentMrmlUrl.c_str(),currentMrmlFilepath.c_str());
+      
+      // sanity checks: if the downloaded file does not exist or size<1, exit here before it is too late!
+      if (!vtksys::SystemTools::FileExists(currentMrmlFilepath.c_str()) || vtksys::SystemTools::FileLength(currentMrmlFilepath.c_str())<1)
+        {
+        vtkErrorMacro("UpdateTasksCallback: At least one file was not downloaded correctly! Aborting.. *beepbeepbeep*")
+        return;
+        }
+     
+      }    
+    }
 
   // we got the .tcl files and the .mrml files now at a safe location and they have at least some content :P
   // this makes it safe to delete all old EMSegment tasks and activate the new one :D
@@ -487,43 +494,49 @@ void vtkEMSegmentParametersSetStep::UpdateTasksCallback()
   std::string currentTaskDestinationFilepath;
   std::string currentMrmlDestinationFilepath;
   
-  // now move the downloaded .tcl files to the $taskDir
-  for (std::vector<std::string>::iterator i = taskFilenames.begin(); i != taskFilenames.end(); ++i)
+  if (tclFilesExist)
     {
-    
-    currentTaskName = *i;    
-    
-    // generate the destination filename of this task in $tmpDir
-    currentTaskFilepath = std::string(tmpDir + std::string("/") + currentTaskName + std::string(".tcl"));
-    
-    // generate the destination filename of this task in $taskDir
-    currentTaskDestinationFilepath = std::string(taskDir + std::string("/") + currentTaskName + std::string(".tcl"));    
-    
-    if (!vtksys::SystemTools::CopyFileAlways(currentTaskFilepath.c_str(),currentTaskDestinationFilepath.c_str()))
+    // now move the downloaded .tcl files to the $taskDir
+    for (std::vector<std::string>::iterator i = taskFilenames.begin(); i != taskFilenames.end(); ++i)
       {
-      vtkErrorMacro("UpdateTasksCallback: Could not copy at least one downloaded task file. Everything is lost now! Sorry :( Just kidding: there was a backup in " << taskDir << "!")
-      return;
+      
+      currentTaskName = *i;    
+      
+      // generate the destination filename of this task in $tmpDir
+      currentTaskFilepath = std::string(tmpDir + std::string("/") + currentTaskName + std::string(".tcl"));
+      
+      // generate the destination filename of this task in $taskDir
+      currentTaskDestinationFilepath = std::string(taskDir + std::string("/") + currentTaskName + std::string(".tcl"));    
+      
+      if (!vtksys::SystemTools::CopyFileAlways(currentTaskFilepath.c_str(),currentTaskDestinationFilepath.c_str()))
+        {
+        vtkErrorMacro("UpdateTasksCallback: Could not copy at least one downloaded task file. Everything is lost now! Sorry :( Just kidding: there was a backup in " << taskDir << "!")
+        return;
+        }
       }
     }
     
-  // now move the downloaded .mrml files to the $taskDir
-  for (std::vector<std::string>::iterator i = mrmlFilenames.begin(); i != mrmlFilenames.end(); ++i)
+  if (mrmlFilesExist)
     {
-    
-    currentMrmlName = *i;    
-    
-    // generate the destination filename of this task in $tmpDir
-    currentMrmlFilepath = std::string(tmpDir + std::string("/") + currentMrmlName + std::string(".mrml"));
-    
-    // generate the destination filename of this task in $taskDir
-    currentMrmlDestinationFilepath = std::string(taskDir + std::string("/") + currentMrmlName + std::string(".mrml"));    
-    
-    if (!vtksys::SystemTools::CopyFileAlways(currentMrmlFilepath.c_str(),currentMrmlDestinationFilepath.c_str()))
+    // now move the downloaded .mrml files to the $taskDir
+    for (std::vector<std::string>::iterator i = mrmlFilenames.begin(); i != mrmlFilenames.end(); ++i)
       {
-      vtkErrorMacro("UpdateTasksCallback: Could not copy at least one downloaded mrml file. Everything is lost now! Sorry :( Just kidding: there was a backup in " << taskDir << "!")
-      return;
+      
+      currentMrmlName = *i;    
+      
+      // generate the destination filename of this task in $tmpDir
+      currentMrmlFilepath = std::string(tmpDir + std::string("/") + currentMrmlName + std::string(".mrml"));
+      
+      // generate the destination filename of this task in $taskDir
+      currentMrmlDestinationFilepath = std::string(taskDir + std::string("/") + currentMrmlName + std::string(".mrml"));    
+      
+      if (!vtksys::SystemTools::CopyFileAlways(currentMrmlFilepath.c_str(),currentMrmlDestinationFilepath.c_str()))
+        {
+        vtkErrorMacro("UpdateTasksCallback: Could not copy at least one downloaded mrml file. Everything is lost now! Sorry :( Just kidding: there was a backup in " << taskDir << "!")
+        return;
+        }
       }
-    }    
+    }
     
   // if we get here, we are DONE!
   this->UpdateTasksButton->SetText("Update completed!");
@@ -1075,7 +1088,7 @@ int vtkEMSegmentParametersSetStep::LoadDefaultData(const char *mrmlFile, bool wa
 
 void vtkEMSegmentParametersSetStep::AddDefaultTasksToList(const char* FilePath)
 {
-  /*vtkDirectory *dir = vtkDirectory::New();
+  vtkDirectory *dir = vtkDirectory::New();
   // Do not give out an error message here bc it otherwise comes up when loading slicer 
   // the path might simply not be created !
   if (!dir->Open(FilePath))
@@ -1135,7 +1148,7 @@ void vtkEMSegmentParametersSetStep::AddDefaultTasksToList(const char* FilePath)
     this->DefinePreprocessingTasksFile.push_back(fullFileName);
     this->DefinePreprocessingTasksName.push_back(taskName);
     }
-  dir->Delete();*/
+  dir->Delete();
 }
 
 //-------------vtksys_stl::string ---------------------------------------------------------------
