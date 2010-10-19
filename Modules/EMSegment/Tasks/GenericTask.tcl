@@ -588,7 +588,7 @@ namespace eval EMSegmenterPreProcessingTcl {
         lappend ValueList "String outputVolume [$outVolumeNode GetID]"
 
          $LOGIC PrintText "TCL: =========================================="
-         $LOGIC PrintText "TCL: == Resample Image"
+         $LOGIC PrintText "TCL: == Resample Image: [$inputVolumeNode GetName]"
          $LOGIC PrintText "TCL: =========================================="
 
         $module Enter
