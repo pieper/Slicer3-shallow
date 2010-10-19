@@ -863,6 +863,22 @@ void vtkCacheManager::CacheSizeCheck()
     }
 }
 
+
+//----------------------------------------------------------------------------
+bool vtkCacheManager::CacheSizeQuickCheck()
+{
+  //--- Compute size of the current cache
+  this->ComputeCacheSize(this->RemoteCacheDirectory.c_str(), 0);
+  //--- Invoke an event if cache size is exceeded.
+  if ( this->CurrentCacheSize > (float) (this->RemoteCacheLimit) )
+    {
+    this->InvokeEvent ( vtkCacheManager::CacheLimitExceededEvent );
+    return false;
+    }
+  return true;
+}
+
+
 //----------------------------------------------------------------------------
 float vtkCacheManager::GetFreeCacheSpaceRemaining()
 {

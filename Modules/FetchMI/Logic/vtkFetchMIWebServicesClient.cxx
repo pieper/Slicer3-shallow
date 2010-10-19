@@ -13,12 +13,17 @@ vtkFetchMIWebServicesClient::vtkFetchMIWebServicesClient ( )
 {
   this->Name = NULL;
   this->URIHandler = NULL;
+  this->FetchMINode = NULL;
 }
 
 
 //---------------------------------------------------------------------------
 vtkFetchMIWebServicesClient::~vtkFetchMIWebServicesClient ( )
 {
+  if ( this->FetchMINode )
+    {
+    this->SetFetchMINode ( NULL );
+    }
   if ( this->Name )
     {
     this->SetName ( NULL);

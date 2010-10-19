@@ -360,14 +360,17 @@ void vtkSlicerCacheAndDataIOManagerGUI::ProcessGUIEvents ( vtkObject *caller,
     if ( sb == this->CacheLimitSpinBox->GetWidget() && event == vtkKWSpinBox::SpinBoxValueChangedEvent )
       {
       app->SetRemoteCacheLimit ((int)(this->CacheLimitSpinBox->GetWidget()->GetValue()) );
+      this->UpdateOverviewPanel();      
       }
     else if ( sb == this->CacheFreeBufferSizeSpinBox->GetWidget() && event == vtkKWSpinBox::SpinBoxValueChangedEvent )
       {
       app->SetRemoteCacheFreeBufferSize((int)(this->CacheFreeBufferSizeSpinBox->GetWidget()->GetValue()) );
+      this->UpdateOverviewPanel();      
       }
     if ( lsb == this->CacheDirectoryButton->GetWidget()->GetLoadSaveDialog() && event == vtkKWTopLevel::WithdrawEvent )
       {
       app->SetRemoteCacheDirectory ( this->CacheDirectoryButton->GetWidget()->GetLoadSaveDialog()->GetFileName() );
+      this->UpdateOverviewPanel();      
       }
     if ( c == this->ForceReloadCheckButton && event == vtkKWCheckButton::SelectedStateChangedEvent )
       {
@@ -476,6 +479,27 @@ void vtkSlicerCacheAndDataIOManagerGUI::ProcessMRMLEvents ( vtkObject *caller,
     {
     if ( event == vtkCacheManager::CacheLimitExceededEvent )
       {
+        //--- pop up dialog. --/
+        vtkSlicerApplication *app = vtkSlicerApplication::SafeDownCast ( this->GetApplication());
+        if ( app != NULL )
+          {
+          vtkSlicerApplicationGUI *appGUI = app->GetApplicationGUI();
+          if ( appGUI != NULL )
+            {
+            vtkSlicerWindow *win = appGUI->GetMainSlicerWindow();
+            if ( win != NULL )
+              {
+              vtkKWMessageDialog *d = vtkKWMessageDialog::New();
+              d->SetParent ( win->GetViewFrame() );
+              d->SetStyleToMessage();
+              std::string msg = "It appears you are close to or have exceeded your cache limit.  Please clear your cache or raise the limit before attempting this operation.";
+              d->SetText ( msg.c_str());
+              d->Create();
+              d->Invoke();
+              d->Delete();
+              }
+            }
+          }
       this->UpdateOverviewPanel();
       }
     else if ( event == vtkCacheManager::SettingsUpdateEvent )

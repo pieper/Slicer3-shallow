@@ -430,6 +430,12 @@ void vtkFetchMIResourceUploadWidget::ProcessWidgetEvents(vtkObject *caller,
   vtkKWMultiColumnList *l = vtkKWMultiColumnList::SafeDownCast( caller );
   vtkKWMenu *m = vtkKWMenu::SafeDownCast ( caller );
   vtkKWEntry *e = vtkKWEntry::SafeDownCast ( caller );
+
+  if ( this->Logic == NULL )
+    {
+    vtkErrorMacro ( "ProcessWidgetEvents: got NULL Logic" );
+    return;
+    }
   
   if ( this->IsCreated() )
     {
@@ -511,6 +517,28 @@ void vtkFetchMIResourceUploadWidget::ProcessWidgetEvents(vtkObject *caller,
       }
     else if ( (b == this->GetUploadButton()) && (event == vtkKWPushButton::InvokedEvent ) )
       {
+      //---TEST
+      //--- Check to see if network and server are available.
+      //--- Methods produce error message for user and abort if not.
+      if ( this->Logic->CheckConnectionAndServer() == false )
+        {
+        return;
+        }
+      //--- check for enough cache to do the work.
+      if ( this->GetMRMLScene() == NULL || this->GetMRMLScene()->GetCacheManager() == NULL )
+        {
+        vtkErrorMacro ( "QueryServerForTags: Got NULL CacheManager." );
+        return;
+        }
+      else
+        {
+        if ( this->GetMRMLScene()->GetCacheManager()->CacheSizeQuickCheck() == false )
+          {
+          //--- event invoked by cache manager should be posted by cache&remoteioGUI.
+          vtkErrorMacro ( "QueryServerForTags: Cache size exceeded quota." );
+          return;
+          }
+        }
       this->InvokeEvent ( vtkFetchMIResourceUploadWidget::UploadRequestedEvent );
       }
     else if ( (b == this->GetSelectAllButton()) && (event == vtkKWPushButton::InvokedEvent ) )
@@ -990,7 +1018,7 @@ void vtkFetchMIResourceUploadWidget::CreateWidget ( )
   vtkKWLabel *l2 = vtkKWLabel::New();
   l2->SetParent ( f2 );
   l2->Create();
-  l2->SetText ( "  Upload:" );
+  l2->SetText ( "    Upload:" );
   this->UploadButton = vtkKWPushButton::New();
   this->UploadButton->SetParent ( f3 );
   this->UploadButton->Create();

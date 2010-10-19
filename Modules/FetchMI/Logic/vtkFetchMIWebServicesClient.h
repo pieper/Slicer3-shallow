@@ -4,6 +4,7 @@
 // MRML includes
 #include "vtkURIHandler.h"
 #include "vtkTagTable.h"
+#include "vtkMRMLFetchMINode.h"
 
 // VTK includes
 #include "vtkObject.h"
@@ -26,6 +27,13 @@ public:
   vtkGetObjectMacro ( URIHandler, vtkURIHandler );
   vtkSetObjectMacro ( URIHandler, vtkURIHandler );
   
+  // Description:
+  // Get/Set on the FetchMINode, whch allows error messages to
+  // be propagated back through to the Logic and GUI.
+  vtkGetObjectMacro ( FetchMINode, vtkMRMLFetchMINode );
+  vtkSetObjectMacro ( FetchMINode, vtkMRMLFetchMINode );
+  
+  virtual bool CheckConnectionAndServer ( ) { return false; }
   virtual int QueryServerForTags ( const char *vtkNotUsed(responseFileName) ) { return 0; };
   virtual int QueryServerForTagValues ( const char *vtkNotUsed(att),
                                         const char *vtkNotUsed(responseFilename) ) { return 0; };
@@ -54,6 +62,7 @@ public:
   vtkFetchMIWebServicesClient();
   virtual ~vtkFetchMIWebServicesClient();
   vtkURIHandler *URIHandler;
+  vtkMRMLFetchMINode *FetchMINode;
   char *Name;
   
   vtkFetchMIWebServicesClient(const vtkFetchMIWebServicesClient&); // Not implemented

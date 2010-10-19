@@ -203,6 +203,29 @@ void vtkFetchMIQueryTermWidget::ProcessWidgetEvents(vtkObject *caller,
               t->SetRestoreSelectionState(1);
               //--- this queries server for tags
 
+              //---TEST
+              //--- Check to see if network and server are available.
+              //--- Methods produce error message for user and abort if not.
+              if ( this->Logic->CheckConnectionAndServer() == false )
+                {
+                return;
+                }
+              //--- check for enough cache to do the work.
+              if ( this->GetMRMLScene() == NULL || this->GetMRMLScene()->GetCacheManager() == NULL )
+                {
+                vtkErrorMacro ( "QueryServerForTags: Got NULL CacheManager." );
+                return;
+                }
+              else
+                {
+                if ( this->GetMRMLScene()->GetCacheManager()->CacheSizeQuickCheck() == false )
+                  {
+                  //--- event invoked by cache manager should be posted by cache&remoteioGUI.
+                  vtkErrorMacro ( "QueryServerForTags: Cache size exceeded quota." );
+                  return;
+                  }
+                }
+
               //--- try to post a message....
               if ( this->GetApplication() )
                 {
@@ -241,6 +264,29 @@ void vtkFetchMIQueryTermWidget::ProcessWidgetEvents(vtkObject *caller,
       }
     else if ( (b == this->GetSearchButton()) && (event == vtkKWPushButton::InvokedEvent ) )
       {
+      //---TEST
+      //--- Check to see if network and server are available.
+      //--- Methods produce error message for user and abort if not.
+      if ( this->Logic->CheckConnectionAndServer() == false )
+        {
+        return;
+        }
+      //--- check for enough cache to do the work.
+      if ( this->GetMRMLScene() == NULL || this->GetMRMLScene()->GetCacheManager() == NULL )
+        {
+        vtkErrorMacro ( "QueryServerForTags: Got NULL CacheManager." );
+        return;
+        }
+      else
+        {
+        if ( this->GetMRMLScene()->GetCacheManager()->CacheSizeQuickCheck() == false )
+          {
+          //--- event invoked by cache manager should be posted by cache&remoteioGUI.
+          vtkErrorMacro ( "QueryServerForTags: Cache size exceeded quota." );
+          return;
+          }
+        }
+
       this->InvokeEvent ( vtkFetchMIQueryTermWidget::QuerySubmittedEvent );
       this->SetStatusText ("Querying selected server for resources...");
 
@@ -477,7 +523,7 @@ void vtkFetchMIQueryTermWidget::CreateWidget ( )
   vtkKWLabel *l1 = vtkKWLabel::New();
   l1->SetParent ( f2 );
   l1->Create();
-  l1->SetText ( "  Refresh Query:" );
+  l1->SetText ( "  Refresh Metadata:" );
   this->RefreshButton = vtkKWPushButton::New();
   this->RefreshButton->SetParent (f2);
   this->RefreshButton->Create();
@@ -489,7 +535,7 @@ void vtkFetchMIQueryTermWidget::CreateWidget ( )
   vtkKWLabel *l2 = vtkKWLabel::New();
   l2->SetParent ( f2 );
   l2->Create();
-  l2->SetText ( "Query Server:" );
+  l2->SetText ( "Find Matching Resources:" );
   this->SearchButton = vtkKWPushButton::New();
   this->SearchButton->SetParent (f2);
   this->SearchButton->Create();
@@ -512,10 +558,10 @@ void vtkFetchMIQueryTermWidget::CreateWidget ( )
                 this->ClearSelectedButton->GetWidgetName(),
                 this->ClearAllButton->GetWidgetName() );
   this->Script ("pack %s %s %s %s -side left -anchor w  -expand n -padx 2 -pady 2",
-                l2->GetWidgetName(),
-                this->SearchButton->GetWidgetName(),
                 l1->GetWidgetName(),
-                this->RefreshButton->GetWidgetName() );
+                this->RefreshButton->GetWidgetName(),
+                l2->GetWidgetName(),
+                this->SearchButton->GetWidgetName() );
   this->Script ("pack %s -side right -anchor w -expand n -padx 2 -pady 2",
                 this->HelpButton->GetWidgetName() );
 

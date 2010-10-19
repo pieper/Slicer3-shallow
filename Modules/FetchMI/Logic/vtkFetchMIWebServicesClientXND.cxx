@@ -30,6 +30,42 @@ void vtkFetchMIWebServicesClientXND::PrintSelf ( ostream& os, vtkIndent indent )
 }
 
 
+//---------------------------------------------------------------------------
+bool vtkFetchMIWebServicesClientXND::CheckConnectionAndServer ( )
+{
+  vtkXNDHandler *h = vtkXNDHandler::SafeDownCast ( this->GetURIHandler() );
+  if ( h == NULL )
+    {
+    vtkErrorMacro ( "CheckConnectionAndServer: No handler set on Client.");
+    return 0;
+    }
+  if  ( h->GetHostName() == NULL )
+    {
+    vtkErrorMacro ( "CheckConnectionAndServer: No host name set on URIHandler." );
+    return 0;
+    }
+  const char *hostname = h->GetHostName();
+  std::stringstream q;
+  q << hostname;
+  q << "/tags";
+  std::string query = q.str();
+  const char *errorString = h->CheckServerStatus(query.c_str() );
+  if ( !strcmp (errorString, "OK"))
+    {
+    return 1;
+    }
+  else
+    {
+    if ( this->FetchMINode != NULL )
+      {
+      this->FetchMINode->SetErrorMessage (errorString );
+      this->FetchMINode->InvokeEvent ( vtkMRMLFetchMINode::RemoteIOErrorEvent );
+      }
+    }
+  return 0;
+}
+
+
 
 //---------------------------------------------------------------------------
 int vtkFetchMIWebServicesClientXND::QueryServerForTags ( const char *responseFileName )

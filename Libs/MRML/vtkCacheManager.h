@@ -113,6 +113,7 @@ class VTK_MRML_EXPORT vtkCacheManager : public vtkObject
   const char* EncodeURI ( const char *uri );
     
   void CacheSizeCheck();
+  bool CacheSizeQuickCheck();
   void FreeCacheBufferCheck();
   int GetCachedFileList(const char *dirname);
   float ComputeCacheSize( const char *dirname, unsigned long size );

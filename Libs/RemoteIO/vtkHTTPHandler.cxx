@@ -275,3 +275,73 @@ void vtkHTTPHandler::StageFileWrite(const char * source, const char * destinatio
   this->LocalFile = NULL;
   */
 }
+
+
+
+//----------------------------------------------------------------------------
+const char *vtkHTTPHandler::CheckServerStatus ( const char *uri )
+{
+
+  if ( uri == NULL )
+    {
+    vtkErrorMacro ( "CheckServerStatus: got NULL uri." );
+    return ( "A NULL uri was specified." );
+    }
+
+  CURLcode retval = CURLE_OK;
+  const char *returnString;
+
+  // configure a handle to send a generic ping.
+  this->InitTransfer( );
+  curl_easy_setopt(this->CurlHandle, CURLOPT_URL, uri);
+  curl_easy_setopt(this->CurlHandle, CURLOPT_NOPROGRESS, true);
+  curl_easy_setopt(this->CurlHandle, CURLOPT_FOLLOWLOCATION, true);
+  curl_easy_setopt(this->CurlHandle, CURLOPT_HEADER, true);
+  curl_easy_setopt(this->CurlHandle, CURLOPT_NOBODY, true);  
+  curl_easy_setopt(this->CurlHandle, CURLOPT_CONNECTTIMEOUT, 10 );
+  curl_easy_setopt(this->CurlHandle, CURLOPT_TIMEOUT, 20 );
+  retval = curl_easy_perform(this->CurlHandle);
+
+/*
+  long httpCode;
+  long responseCode;
+  long connectCode;
+  curl_easy_getinfo ( this->CUrlHandle, CURLINFO_HTTP_CONNECTCODE, &connectCode );
+  curl_easy_getinfo ( this->CUrlHandle, CURLINFO_HTTP_CODE, &httpCode );
+  curl_easy_getinfo ( this->CUrlHandle, CURLINFO_RESPONSE_CODE, &responseCode );
+*/
+  
+  this->CloseTransfer();
+  
+  if (retval == CURLE_OK)
+    {
+    returnString = "OK";
+    vtkDebugMacro("CheckServerStatus: successful return from curl");
+    }
+  else
+    {
+    if (retval == CURLE_COULDNT_CONNECT)
+      {
+      returnString = "Could not establish connection to server. Please check server status or your network connection.";
+      vtkErrorMacro ( "CheckServerStatus: could not connect." );
+      }
+    else if (retval == CURLE_COULDNT_RESOLVE_HOST)
+      {
+      returnString = "Could not reach server. Please check to see if webservices are active.";
+      vtkErrorMacro ( "CheckServerStatus: could not reach server." );
+      }
+    else if (retval == CURLE_OUT_OF_MEMORY)
+      {
+      returnString = "Transfer library (cURL) ran out of memory.";
+      vtkErrorMacro ( "CheckServerStatus: cURL ran out of memory." );
+      }
+    else
+      {
+      returnString = curl_easy_strerror(retval);
+      vtkErrorMacro ( "CheckServerStatus: trouble connecting to web services." );
+      }
+    }
+
+  return (returnString);
+
+}

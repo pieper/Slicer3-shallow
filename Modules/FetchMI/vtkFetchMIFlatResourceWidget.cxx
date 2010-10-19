@@ -152,6 +152,12 @@ void vtkFetchMIFlatResourceWidget::ProcessWidgetEvents(vtkObject *caller,
 {
   vtkKWPushButton *b = vtkKWPushButton::SafeDownCast ( caller );
   
+  if ( this->Logic == NULL )
+    {
+    vtkErrorMacro ( "ProcessWidgetEvents: got NULL Logic" );
+    return;
+    }
+  
   if ( this->IsCreated() )
     {
     if ( (b == this->GetClearAllButton()) && (event == vtkKWPushButton::InvokedEvent ) )
@@ -164,6 +170,30 @@ void vtkFetchMIFlatResourceWidget::ProcessWidgetEvents(vtkObject *caller,
       }
     else if ( (b == this->GetDownloadSelectedButton()) && (event == vtkKWPushButton::InvokedEvent ) )
       {
+      //---TEST
+      //--- Check to see if network and server are available.
+      //--- Methods produce error message for user and abort if not.
+      if ( this->Logic->CheckConnectionAndServer() == false )
+        {
+        return;
+        }
+      //--- check for enough cache to do the work.
+      if ( this->GetMRMLScene() == NULL || this->GetMRMLScene()->GetCacheManager() == NULL )
+        {
+        vtkErrorMacro ( "QueryServerForTags: Got NULL CacheManager." );
+        return;
+        }
+      else
+        {
+        if ( this->GetMRMLScene()->GetCacheManager()->CacheSizeQuickCheck() == false )
+          {
+          //--- event invoked by cache manager should be posted by cache&remoteioGUI.
+          vtkErrorMacro ( "QueryServerForTags: Cache size exceeded quota." );
+          return;
+          }
+        }
+
+
       vtkSlicerApplication *app = vtkSlicerApplication::SafeDownCast ( this->GetApplication());
       if ( app )
         {
@@ -263,6 +293,28 @@ void vtkFetchMIFlatResourceWidget::ProcessWidgetEvents(vtkObject *caller,
       }
     else if ( (b == this->GetDeleteButton() ) && (event == vtkKWPushButton::InvokedEvent ) )
       {
+      //---TEST
+      //--- Check to see if network and server are available.
+      //--- Methods produce error message for user and abort if not.
+      if ( this->Logic->CheckConnectionAndServer() == false )
+        {
+        return;
+        }
+      //--- check for enough cache to do the work.
+      if ( this->GetMRMLScene() == NULL || this->GetMRMLScene()->GetCacheManager() == NULL )
+        {
+        vtkErrorMacro ( "QueryServerForTags: Got NULL CacheManager." );
+        return;
+        }
+      else
+        {
+        if ( this->GetMRMLScene()->GetCacheManager()->CacheSizeQuickCheck() == false )
+          {
+          //--- event invoked by cache manager should be posted by cache&remoteioGUI.
+          vtkErrorMacro ( "QueryServerForTags: Cache size exceeded quota." );
+          return;
+          }
+        }
       // Tell the FetchMIGUI to delete all selected resources from the selected server.
       this->InvokeEvent ( vtkFetchMIFlatResourceWidget::DeleteResourceEvent );
       }
@@ -575,7 +627,7 @@ void vtkFetchMIFlatResourceWidget::CreateWidget ( )
   vtkKWLabel *l2 = vtkKWLabel::New();
   l2->SetParent ( f2 );
   l2->Create();
-  l2->SetText ( "Delete:" );
+  l2->SetText ( "Delete on Server:" );
   this->DeleteButton = vtkKWPushButton::New();
   this->DeleteButton->SetParent ( f2 );
   this->DeleteButton->Create();

@@ -45,6 +45,15 @@ class VTK_MRML_EXPORT vtkURIHandler : public vtkObject
   /// NOTE: Subclasses should implement this method
   virtual int CanHandleURI ( const char * vtkNotUsed(uri) ) { return 0; };
 
+  ///
+  /// This function checks to see if the remote host can be reached.
+  /// This should be called prior to any attempt to GET or PUT,
+  /// and its return value is either "OK" or an error string that
+  /// can be posted to the user.
+  /// NOTE: Subclasses should implement this method.
+  virtual const char *CheckServerStatus ( const char *uri ) { return NULL; };
+
+
   /// 
   /// This function writes the downloaded data in a buffered manner
   size_t BufferedWrite ( char *buffer, size_t size, size_t nitems );

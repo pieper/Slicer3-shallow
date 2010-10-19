@@ -47,6 +47,13 @@ class VTK_RemoteIO_EXPORT vtkHTTPHandler : public vtkURIHandler
   //BTX
   using vtkURIHandler::StageFileWrite;
   //ETX
+  ///
+  /// This function checks to see if the remote host can be reached.
+  /// This should be called prior to any attempt to GET or PUT,
+  /// and its return value is either "OK" or an error string that
+  /// can be posted to the user.
+  virtual const char *CheckServerStatus ( const char *uri );
+
   virtual void InitTransfer ( );
   virtual int CloseTransfer ( );
 

@@ -18,6 +18,10 @@ public:
   vtkTypeRevisionMacro(vtkFetchMIWebServicesClientXND,vtkFetchMIWebServicesClient);
   void PrintSelf(ostream& os, vtkIndent indent);
 
+  // Description:
+  // Method assembles a uri that can be used to check whether
+  // network connection and server are available.
+  virtual bool CheckConnectionAndServer ();
   virtual int QueryServerForTags ( const char *responseFileName );
   virtual int QueryServerForTagValues ( const char *att, const char *responseFilename );
   virtual int QueryServerForResources ( vtkTagTable *table, const char *responseFileName );

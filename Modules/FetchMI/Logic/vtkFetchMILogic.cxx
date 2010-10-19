@@ -375,6 +375,89 @@ void vtkFetchMILogic::CreateTemporaryFiles ( )
 
 
 
+
+//----------------------------------------------------------------------------
+bool vtkFetchMILogic::CheckConnectionAndServer ( )
+{
+
+  //---
+  //--- NULL Pointer checking.
+  if ( this->GetCurrentWebService() == NULL )
+    {
+    vtkErrorMacro ( "Got NULL Current Web Service." );
+    return false;
+    }
+  if ( this->GetCurrentWebService()->GetURIHandler() == NULL )
+    {
+    vtkErrorMacro ( "Got NULL URI handler on current web service." );
+    return false;
+    }
+  if ( this->GetCurrentWebService()->GetWebServicesClient() == NULL )
+    {
+    vtkErrorMacro ( "Got NULL Web Services Client." );
+    return false;
+    }
+  if ( this->ServerCollection == NULL )
+    {
+    vtkErrorMacro ( "Got NULL Server Collection.");
+    return false;
+    }
+  if ( this->GetFetchMINode() == NULL )
+    {
+    vtkErrorMacro ( "Got NULL FetchMINode.");
+    return false;
+    }
+
+  //---
+  //--- error checking
+  const char *svrName = this->GetCurrentWebService()->GetName();
+  const char *svctype = this->GetCurrentWebService()->GetServiceType();          
+  if ( svrName == NULL || !(strcmp(svrName, "") ) )
+    {
+    vtkErrorMacro ("CheckConnectionAndServer: Null or empty server name." );
+    std::string msg = "Remote IO got a null server name. Server can not be queried" ;
+    this->FetchMINode->SetErrorMessage (msg.c_str() );
+    this->FetchMINode->InvokeEvent ( vtkMRMLFetchMINode::RemoteIOErrorEvent );
+    return false;
+    }
+  if (! this->ServerCollection->IsKnownServiceType(svctype) )
+    {
+    vtkErrorMacro ( "CheckConnectionAndServer:Got unknown web service type");
+    std::string msg = "Remote IO got a null web service type. Server cannot be queried";
+    this->FetchMINode->SetErrorMessage (msg.c_str() );
+    this->FetchMINode->InvokeEvent ( vtkMRMLFetchMINode::RemoteIOErrorEvent );
+    return false;
+    }
+
+  //---
+  //--- make sure CurrentWebService is current with node.
+  vtkFetchMIServer *webservice =this->GetServerCollection()->FindServerByName ( this->FetchMINode->GetSelectedServer() );
+  if ( this->CurrentWebService != webservice )
+    {
+    this->CurrentWebService = this->GetServerCollection()->FindServerByName ( this->FetchMINode->GetSelectedServer() );
+    this->CurrentWebService->SetTagTable (this->FetchMINode->GetTagTableCollection()->
+                                          FindTagTableByName (  this->CurrentWebService->GetTagTableName() ) );
+    }
+
+  //---
+  //--- configure the client's handler in case the server has changed...
+  vtkURIHandler *handler = this->GetCurrentWebService()->GetURIHandler();
+  handler->SetHostName (svrName );
+  this->GetCurrentWebService()->GetWebServicesClient()->SetURIHandler ( handler );
+ 
+  //---
+  //--- now check to see if the network and service respond.
+  if ( this->GetCurrentWebService()->GetWebServicesClient()->GetFetchMINode() == NULL )
+    {
+    this->GetCurrentWebService()->GetWebServicesClient()->SetFetchMINode(this->FetchMINode);
+    }
+  bool ping = this->GetCurrentWebService()->GetWebServicesClient()->CheckConnectionAndServer();
+  return (ping );
+}
+
+
+
+
 //----------------------------------------------------------------------------
 const char *vtkFetchMILogic::GetServiceTypeForServer ( const char *svc )
 {
@@ -1271,6 +1354,11 @@ void vtkFetchMILogic::ProcessMRMLEvents(vtkObject *caller,
     vtkErrorMacro ( "FetchMILogic::ProcessMRMLEvents: got null FetchMINode TagTableCollection." );
     return;
     }
+  if ( this->GetServerCollection() == NULL )
+    {
+    vtkErrorMacro ( "FetchMILogic::ProcessMRMLEvents: got null ServerCollection");
+    return;
+    }
 
   vtkMRMLScene *scene = vtkMRMLScene::SafeDownCast ( caller );
   if ( scene == this->MRMLScene && event == vtkMRMLScene::NodeAddedEvent )
@@ -1284,6 +1372,9 @@ void vtkFetchMILogic::ProcessMRMLEvents(vtkObject *caller,
     return;
     }
 
+  //---
+  //--- Update the CurrentWebService if it has changed on the node.
+  //---
   vtkMRMLFetchMINode* node = vtkMRMLFetchMINode::SafeDownCast ( caller );
   if ( node == this->FetchMINode && event == vtkMRMLFetchMINode::SelectedServerModifiedEvent )
     {
@@ -2150,6 +2241,7 @@ const char *vtkFetchMILogic::GetTemporaryResponseFileName ( )
 
 
 
+
 //----------------------------------------------------------------------------
 void vtkFetchMILogic::QueryServerForTags ( )
 {
@@ -2207,7 +2299,7 @@ void vtkFetchMILogic::QueryServerForTags ( )
   const char *svctype = this->GetCurrentWebService()->GetServiceType();          
   if ( svrName == NULL || !(strcmp(svrName, "") ) )
     {
-    vtkErrorMacro ("vtkFetchMILogic: Null or empty server name." );
+    vtkErrorMacro ("QueryServerForTags:: Null or empty server name." );
     std::string msg = "Remote IO got a null server name. Server can not be queried" ;
     this->FetchMINode->SetErrorMessage (msg.c_str() );
     this->FetchMINode->InvokeEvent ( vtkMRMLFetchMINode::RemoteIOErrorEvent );
@@ -2229,6 +2321,29 @@ void vtkFetchMILogic::QueryServerForTags ( )
   vtkURIHandler *handler = this->GetCurrentWebService()->GetURIHandler();
   handler->SetHostName (svrName );
   this->GetCurrentWebService()->GetWebServicesClient()->SetURIHandler ( handler );
+
+  //--- check the connection and server.
+  if ( this->CheckConnectionAndServer() == false )
+    {
+    vtkErrorMacro ( "QueryServerForTags: failed to connect to network or server." );
+    return;
+    }
+
+  //--- check for enough cache to do the work.
+  if ( this->GetMRMLScene() == NULL || this->GetMRMLScene()->GetCacheManager() == NULL )
+    {
+    vtkErrorMacro ( "QueryServerForTags: Got NULL CacheManager." );
+    return;
+    }
+  else
+    {
+    if ( this->GetMRMLScene()->GetCacheManager()->CacheSizeQuickCheck() == false )
+      {
+      //--- event invoked by cache manager should be posted by cache&remoteioGUI.
+      vtkErrorMacro ( "QueryServerForTags: Cache size exceeded quota." );
+      return;
+      }
+    }
   
   if (this->CurrentWebService->GetWebServicesClient()->QueryServerForTags( this->GetHTTPResponseFileName() ) )
     {
@@ -2289,7 +2404,7 @@ void vtkFetchMILogic::QueryServerForTagValues ( )
     }
   if ( this->GetServerCollection() == NULL )
     {
-    vtkErrorMacro ( "QueryServerForTags: FetchMINode is NULL.");
+    vtkErrorMacro ( "QueryServerForTagsValues: FetchMINode is NULL.");
     std::string msg = "Error in query configuration. Server was not queried.";
     this->FetchMINode->SetErrorMessage (msg.c_str() );
     this->FetchMINode->InvokeEvent ( vtkMRMLFetchMINode::RemoteIOErrorEvent );
@@ -4689,7 +4804,13 @@ void vtkFetchMILogic::SetURIHandlerOnSelectedResources(vtkURIHandler *handler)
     for (int i = 0; i < numStorageNodes; i++)
       {
       storageNode = storableNode->GetNthStorageNode(i);
-      storageNode->SetURIHandler(handler);
+      if ( storageNode )
+        { 
+        if ( handler != NULL && storageNode->GetURIHandler() != handler )
+          {
+          storageNode->SetURIHandler(handler);
+          }
+        }
       }
     }
 }

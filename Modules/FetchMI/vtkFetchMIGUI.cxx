@@ -150,6 +150,10 @@ vtkFetchMIGUI::~vtkFetchMIGUI()
       {
       this->QueryList->SetParent ( NULL );
       this->QueryList->SetApplication ( NULL );
+      if ( this->QueryList->GetMRMLScene() != NULL )
+        {
+        this->QueryList->SetMRMLScene ( NULL );
+        }
       this->QueryList->Delete();
       this->QueryList = NULL;
       }
@@ -594,6 +598,10 @@ void vtkFetchMIGUI::ProcessGUIEvents(vtkObject *caller,
         }
       this->SwallowGUIEvent();
 
+      //---
+      // Test to see if network and server are available...
+      //---
+
       //--- try to post a message....
       if ( this->GetApplication() )
         {
@@ -734,6 +742,7 @@ void vtkFetchMIGUI::ProcessGUIEvents(vtkObject *caller,
               }
             else
               {
+              this->QueryList->DeleteAllItems();
               this->ResourceList->DeleteAllItems();
               this->TaggedDataList->ResetCurrentTagLabel();
               }
@@ -754,10 +763,34 @@ void vtkFetchMIGUI::ProcessGUIEvents(vtkObject *caller,
             this->FetchMINode->SetServer ( this->ServerMenuButton->GetValue() );
             }
 
-          //--- this queries server for tags
+          //--- Check to see if network and server are available.
+          //--- Methods produce error message for user and abort if not.
+          if ( this->Logic->CheckConnectionAndServer() == false )
+            {
+            return;
+            }
+
+          //--- check for enough cache to do the work.
+          if ( this->GetMRMLScene() == NULL || this->GetMRMLScene()->GetCacheManager() == NULL )
+            {
+            vtkErrorMacro ( "QueryServerForTags: Got NULL CacheManager." );
+            return;
+            }
+          else
+            {
+            if ( this->GetMRMLScene()->GetCacheManager()->CacheSizeQuickCheck() == false )
+              {
+              //--- event invoked by cache manager should be posted by cache&remoteioGUI.
+              vtkErrorMacro ( "QueryServerForTags: Cache size exceeded quota." );
+              return;
+              }
+            }
+          
+
           vtkDebugMacro ("--------------------GUI event calling Query.");
           this->SetStatusText ( "Querying selected server for metadata (may take a little while)..." );
 
+          //--- this queries server for tags...
           //--- try to put up a 'remoteio in process' window
           if ( this->GetApplication() )
             {
@@ -2449,6 +2482,7 @@ void vtkFetchMIGUI::BuildGUI ( )
   this->QueryList->Create();
   this->QueryList->SetApplication ( app );
   this->QueryList->SetLogic ( this->Logic );
+  this->QueryList->SetMRMLScene ( this->MRMLScene);
   this->Script ( "pack %s -side top -anchor nw -fill x -padx 2 -pady 2", this->QueryList->GetWidgetName() );
 
   this->ResourceList = vtkFetchMIFlatResourceWidget::New();

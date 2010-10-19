@@ -590,3 +590,67 @@ const char* vtkXNDHandler::GetNameSpace()
   const char *returnString = "xmlns=\"http://nrg.wustl.edu/xe\"";
   return (returnString);
 }
+
+
+//----------------------------------------------------------------------------
+const char *vtkXNDHandler::CheckServerStatus ( const char *uri )
+{
+
+  if ( uri == NULL )
+    {
+    vtkErrorMacro ( "CheckServerStatus: got NULL uri." );
+    return ( "A NULL uri was specified." );
+    }
+
+  this->InitTransfer( );
+
+  //--- not sure what config options we need...
+
+  curl_easy_setopt(this->CurlHandle, CURLOPT_HTTPGET, 1);
+  curl_easy_setopt(this->CurlHandle, CURLOPT_URL, uri);
+  curl_easy_setopt(this->CurlHandle, CURLOPT_FOLLOWLOCATION, true);
+  CURLcode retval = curl_easy_perform(this->CurlHandle);
+  const char *returnString;
+
+  long httpCode;
+  long responseCode;
+  long connectCode;
+  curl_easy_getinfo ( this->CurlHandle, CURLINFO_HTTP_CONNECTCODE, &connectCode );
+  curl_easy_getinfo ( this->CurlHandle, CURLINFO_HTTP_CODE, &httpCode );
+  curl_easy_getinfo ( this->CurlHandle, CURLINFO_RESPONSE_CODE, &responseCode );
+
+  vtkDebugMacro ("HTTPCONNECTCODE = " << connectCode );
+  vtkDebugMacro ("HTTPCODE = " << httpCode);
+  vtkDebugMacro ("RESPONSECODE = " << responseCode);
+
+  if (retval == CURLE_OK)
+    {
+    returnString = "OK";
+    vtkDebugMacro("CheckServerStatus: successful return from curl");
+    }
+  else
+    {
+    if (retval == CURLE_COULDNT_CONNECT)
+      {
+      returnString = "Could not establish connection to server. Please check server status or your network connection.";
+      vtkErrorMacro ( "CheckServerStatus: could not connect." );
+      }
+    else if (retval == CURLE_COULDNT_RESOLVE_HOST)
+      {
+      returnString = "Could not reach server. Please check to see if webservices are active.";
+      vtkErrorMacro ( "CheckServerStatus: could not reach server." );
+      }
+    else if (retval == CURLE_OUT_OF_MEMORY)
+      {
+      returnString = "Transfer library (cURL) ran out of memory.";
+      vtkErrorMacro ( "CheckServerStatus: cURL ran out of memory." );
+      }
+    else
+      {
+      returnString = curl_easy_strerror(retval);
+      vtkErrorMacro ( "CheckServerStatus: trouble connecting to web services." );
+      }
+    }
+  this->CloseTransfer();
+  return ( returnString );
+}

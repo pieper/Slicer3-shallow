@@ -121,6 +121,16 @@ class VTK_SLICER_FETCHMI_MODULE_LOGIC_EXPORT vtkFetchMILogic : public vtkSlicerM
   // and creates filenames for query responses and for
   // upload metadata descriptions.
   void CreateTemporaryFiles ( );
+
+  //Description:
+  // This method calls a similarly named method on
+  // the Client for whatever the currently selected web service is.
+  // The method returns false for a bad connection or unreachable host.
+  // The method returns true if the query returns without error.
+  // The method will trigger an error message to user as well.
+  // This method should be used as a test-ping before any remote
+  // upload/download/query operations are attempted.
+  bool CheckConnectionAndServer ( );
   
   //---------------------------------------------------------------------
   // Query, Parsing, And Download Methods
