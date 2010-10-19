@@ -48,27 +48,37 @@ if( NOT output_test )
  message( FATAL_ERROR "Variable output_test not defined" )
 endif( NOT output_test )
 
-message (STATUS "right before running ${test_cmd}")
-
 # need two execute process calls since chaining them fails (broken pipe?) and the comparison is run w/o the test having completed
 
 execute_process(
- COMMAND ${test_cmd} ${test_name} --inputScene ${input_scene} -c ${c1}  -c ${c2}  -c ${c3}  -c ${c4} -c ${c5} -c ${c6} --outputModel ${output_model}
- RESULT_VARIABLE exec_not_successful
- OUTPUT_QUIET
+ COMMAND ${test_cmd} ${test_name} --inputScene ${input_scene} -c ${c1}  -c ${c2}  -c ${c3}  -c ${c4} -c ${c5} -c ${c6} --outputModel ${output_model} --is_test 1 --baselineModel ${output_baseline}
+ RESULT_VARIABLE sfls_result_out OUTPUT_QUIET
 )
+message (STATUS "value of output var: ${sfls_result_out}" )
+if ( sfls_result_out EQUAL 2)
+ message (STATUS "returned value 2 from sfls test" )
+endif ( sfls_result_out EQUAL 2)
 
-if ( exec_not_successful )
- message (SEND_ERROR "${test_cmd} failed to run properly with args:\n${test_name} --inputScene ${input_scene} -c ${c1}  -c ${c2}  -c ${c3}  -c ${c4} -c ${c5} -c ${c6} --outputModel ${output_model}")
-endif ( exec_not_successful )
+set( test_not_successful 0 )
+if ( sfls_result_out EQUAL 0 )
+ set( test_not_successful 0 )
+ # message (SEND_ERROR "${test_cmd} failed to run properly with args:\n${test_name} --inputScene ${input_scene} -c ${c1}  -c ${c2}  -c ${c3}  -c ${c4} -c ${c5} -c ${c6} --outputModel ${output_model}")
+endif ( sfls_result_out EQUAL 0 )
 
-execute_process(
- COMMAND ${CMAKE_COMMAND} -E compare_files ${output_baseline} ${output_test}
- RESULT_VARIABLE test_not_successful
- OUTPUT_QUIET
- ERROR_QUIET
- )
 
-if( test_not_successful )
- message( SEND_ERROR "${output_test} does not match ${output_baseline}!" )
-endif( test_not_successful )
+if( sfls_result_out EQUAL 1 )
+ set( test_not_successful 1 )
+ message( SEND_ERROR "value of test_not_succesful: ${test_not_successful}" )
+ message( SEND_ERROR "crashed, or ${output_test} fails to sufficiently match ${output_baseline}!" )
+endif( sfls_result_out EQUAL 1 )
+
+
+#
+
+# No: don't do direct compare!
+#execute_process(
+# COMMAND ${CMAKE_COMMAND} -E compare_files ${output_baseline} ${output_test}
+# RESULT_VARIABLE test_not_successful
+# OUTPUT_QUIET
+# ERROR_QUIET
+# )
