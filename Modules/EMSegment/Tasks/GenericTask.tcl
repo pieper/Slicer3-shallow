@@ -20,14 +20,6 @@ if {0} { ;# comment
 # This is the default processing pipeline - which does not do anything
 #
 
-# Remember to run make before executing script again so that this tcl script is copied over to slicer3-build directory
-namespace eval EMSegmenterParametersStepTcl {
-    proc DefineMRMLFile { } {
-        return ""
-    }
-}
-
-
 namespace eval EMSegmenterPreProcessingTcl {
 
     #
@@ -108,7 +100,8 @@ namespace eval EMSegmenterPreProcessingTcl {
     }
 
     proc PrintError { TEXT } {
-        puts stderr "TCL: ERROR: EMSegmenterPreProcessingTcl::${TEXT}"
+        variable LOGIC
+        $LOGIC PrintText "TCL: ERROR: EMSegmenterPreProcessingTcl::${TEXT}"
     }
 
 
@@ -185,29 +178,34 @@ namespace eval EMSegmenterPreProcessingTcl {
         variable inputAtlasNode
         variable outputAtlasNode
 
-        puts "TCL: =========================================="
-        puts "TCL: == Init Variables"
-        puts "TCL: =========================================="
+        
         set GUI $::slicer3::Application
         if { $GUI == "" } {
-            PrintError "InitVariables: GUI not defined"
+            puts stderr "ERROR: GenericTask: InitVariables: GUI not defined"
             return 1
         }
 
         if { $initLOGIC == "" } {
-            set MOD [$::slicer3::Application GetModuleGUIByName "EMSegmenter"]
+            set MOD [$GUI GetModuleGUIByName "EMSegmenter"]
             if {$MOD == ""} {
-                PrintError "InitVariables: EMSegmenter not defined"
+                puts stderr "ERROR: GenericTask: InitVariables: EMSegmenter not defined"
                 return 1
             }
             set LOGIC [$MOD GetLogic]
             if { $LOGIC == "" } {
-                PrintError "InitVariables: LOGIC not defined"
+                puts stderr "ERROR: GenericTask: InitVariables: LOGIC not defined"
                 return 1
             }
         } else {
             set LOGIC $initLOGIC
         }
+
+        # Do not move it before bc LOGIC is not defined until here 
+
+         $LOGIC PrintText "TCL: =========================================="
+         $LOGIC PrintText "TCL: == Init Variables"
+         $LOGIC PrintText "TCL: =========================================="
+  
 
         if { $initManager == "" } {
             set MOD [$::slicer3::Application GetModuleGUIByName "EMSegmenter"]
@@ -269,12 +267,14 @@ namespace eval EMSegmenterPreProcessingTcl {
     # return 0 when no error occurs
     proc ShowUserInterface { } {
         variable preGUI
+        variable LOGIC
 
-        puts "TCL: Preprocessing GenericTask"
         if { [InitVariables] } {
-            PrintError "ShowUserInterface: Not all variables are correctly defined!"
+            puts stderr "ERROR: GernicTask.tcl: ShowUserInterface: Not all variables are correctly defined!"
             return 1
         }
+
+        $LOGIC PrintText "TCL: Preprocessing GenericTask"
 
         # -------------------------------------
         # Define Interface Parameters
@@ -292,9 +292,9 @@ namespace eval EMSegmenterPreProcessingTcl {
         variable LOGIC
         variable SCENE
 
-        puts "TCL: =========================================="
-        puts "TCL: == Register Input Images --"
-        puts "TCL: =========================================="
+         $LOGIC PrintText "TCL: =========================================="
+         $LOGIC PrintText "TCL: == Register Input Images --"
+         $LOGIC PrintText "TCL: =========================================="
         # ----------------------------------------------------------------
         # set up rigid registration
         set alignedTarget [$workingDN GetAlignedTargetNode]
@@ -337,9 +337,9 @@ namespace eval EMSegmenterPreProcessingTcl {
         # ----------------------------------------------------------------
         # inform the user what happens next
         if {[$mrmlManager GetEnableTargetToTargetRegistration] } {
-            puts "TCL: ===> Register Target To Target "
+             $LOGIC PrintText "TCL: ===> Register Target To Target "
         } else {
-            puts "TCL: ===> Skipping Registration of Target To Target "
+             $LOGIC PrintText "TCL: ===> Skipping Registration of Target To Target "
         }
 
         # perfom "rigid registration" or "resample only"
@@ -369,7 +369,7 @@ namespace eval EMSegmenterPreProcessingTcl {
                         PrintError "Transform node is null"
                         return 1
                     }
-                    puts "TCL: === Just for debugging $transformNode [$transformNode GetName] [$transformNode GetID]"
+                     $LOGIC PrintText "TCL: === Just for debugging $transformNode [$transformNode GetName] [$transformNode GetID]"
                     set outputNode [vtkMRMLScalarVolumeDisplayNode New]
                     $outputNode SetName "blub1"
                     $SCENE AddNode $outputNode
@@ -406,9 +406,9 @@ namespace eval EMSegmenterPreProcessingTcl {
         variable subjectNode
         variable inputAtlasNode
         variable outputAtlasNode
-        puts "TCL: =========================================="
-        puts "TCL: == Skip Atlas Registration"
-        puts "TCL: =========================================="
+         $LOGIC PrintText "TCL: =========================================="
+         $LOGIC PrintText "TCL: == Skip Atlas Registration"
+         $LOGIC PrintText "TCL: =========================================="
 
         # This function makes sure that the "output atlas" is identically to the "input atlas".
         # Each volume of the "output atlas" will then be resampled to the resolution of the "fixed target volume"
@@ -420,12 +420,12 @@ namespace eval EMSegmenterPreProcessingTcl {
         #  makes sure that the "output atlas" is identically to the "input atlas"
         # ----------------------------------------------------------------
         if { $outputAtlasNode == "" } {
-            puts "TCL: Atlas was empty"
-            # puts "set outputAtlasNode \[$mrmlManager CloneAtlasNode $inputAtlasNode \"AlignedAtlas\"\] "
+             $LOGIC PrintText "TCL: Atlas was empty"
+            #  $LOGIC PrintText "set outputAtlasNode \[$mrmlManager CloneAtlasNode $inputAtlasNode \"AlignedAtlas\"\] "
             set outputAtlasNode [$mrmlManager CloneAtlasNode $inputAtlasNode "Aligned"]
             $workingDN SetAlignedAtlasNodeID [$outputAtlasNode GetID]
         } else {
-            puts "TCL: Atlas was just synchronized"
+             $LOGIC PrintText "TCL: Atlas was just synchronized"
             $mrmlManager SynchronizeAtlasNode $inputAtlasNode $outputAtlasNode AlignedAtlas
         }
 
@@ -448,7 +448,7 @@ namespace eval EMSegmenterPreProcessingTcl {
             $LOGIC StartPreprocessingResampleAndCastToTarget $movingVolumeNode $fixedTargetVolumeNode $outputVolumeNode
         }
 
-        puts "TCL: EMSEG: Atlas-to-target resampling complete."
+         $LOGIC PrintText "TCL: EMSEG: Atlas-to-target resampling complete."
         $workingDN SetAlignedAtlasNodeIsValid 1
         return 0
     }
@@ -467,9 +467,9 @@ namespace eval EMSegmenterPreProcessingTcl {
         variable subjectNode
         variable inputAtlasNode
         variable outputAtlasNode
-        puts "TCL: =========================================="
-        puts "TCL: == InitPreprocessing"
-        puts "TCL: =========================================="
+         $LOGIC PrintText "TCL: =========================================="
+         $LOGIC PrintText "TCL: == InitPreprocessing"
+         $LOGIC PrintText "TCL: =========================================="
 
         # -----------------------------------------------------------
         # Check and set valid variables
@@ -525,6 +525,7 @@ namespace eval EMSegmenterPreProcessingTcl {
 
     proc BRAINSResample { inputVolumeNode referenceVolumeNode outVolumeNode transformationNode backgroundLevel } {
         variable SCENE
+        variable LOGIC
 
         set  ValueList ""
 
@@ -586,9 +587,9 @@ namespace eval EMSegmenterPreProcessingTcl {
         lappend ValueList "String warpTransform [$transformationNode GetID]"
         lappend ValueList "String outputVolume [$outVolumeNode GetID]"
 
-        puts "TCL: =========================================="
-        puts "TCL: == Resample Image"
-        puts "TCL: =========================================="
+         $LOGIC PrintText "TCL: =========================================="
+         $LOGIC PrintText "TCL: == Resample Image"
+         $LOGIC PrintText "TCL: =========================================="
 
         $module Enter
 
@@ -617,9 +618,10 @@ namespace eval EMSegmenterPreProcessingTcl {
 
     proc BRAINSResampleCLI { inputVolumeNode referenceVolumeNode outVolumeNode transformationNode  ValueList } {
         variable SCENE
-        puts "TCL: =========================================="
-        puts "TCL: == Resample Image CLI"
-        puts "TCL: =========================================="
+        variable LOGIC
+         $LOGIC PrintText "TCL: =========================================="
+         $LOGIC PrintText "TCL: == Resample Image CLI"
+         $LOGIC PrintText "TCL: =========================================="
 
         set PLUGINS_DIR "$::env(Slicer3_HOME)/lib/Slicer3/Plugins"
         set CMD "${PLUGINS_DIR}/BRAINSResample "
@@ -649,9 +651,9 @@ namespace eval EMSegmenterPreProcessingTcl {
             set CMD "$CMD --[lindex $ATT 1] [lindex $ATT 2]"
         }
 
-        puts "TCL: Executing $CMD"
+         $LOGIC PrintText "TCL: Executing $CMD"
         catch { eval exec $CMD } errmsg
-        puts "TCL: $errmsg"
+         $LOGIC PrintText "TCL: $errmsg"
 
 
         # Write results back to scene
@@ -666,7 +668,7 @@ namespace eval EMSegmenterPreProcessingTcl {
 
     proc WaitForDataToBeRead { } {
         variable LOGIC
-        puts "TCL: Size of ReadDataQueue: $::slicer3::ApplicationLogic GetReadDataQueueSize [$::slicer3::ApplicationLogic GetReadDataQueueSize]"
+         $LOGIC PrintText "TCL: Size of ReadDataQueue: $::slicer3::ApplicationLogic GetReadDataQueueSize [$::slicer3::ApplicationLogic GetReadDataQueueSize]"
         set i 20
         while { [$::slicer3::ApplicationLogic GetReadDataQueueSize] && $i} {
             $LOGIC PrintText "Waiting for data to be read... [$::slicer3::ApplicationLogic GetReadDataQueueSize]"
@@ -686,7 +688,7 @@ namespace eval EMSegmenterPreProcessingTcl {
         set needToWait { "Idle" "Scheduled" "Running" }
 
         while {$waiting} {
-            puts "TCL: Waiting for task..."
+             $LOGIC PrintText "TCL: Waiting for task..."
             set waiting 0
             set status [$clmNode GetStatusString]
             $LOGIC PrintText "[$clmNode GetName] $status"
@@ -701,9 +703,10 @@ namespace eval EMSegmenterPreProcessingTcl {
     }
 
     proc Run { } {
-        puts "TCL: =========================================="
-        puts "TCL: == Preprocess Data"
-        puts "TCL: =========================================="
+         variable LOGIC
+         $LOGIC PrintText "TCL: =========================================="
+         $LOGIC PrintText "TCL: == Preprocess Data"
+         $LOGIC PrintText "TCL: =========================================="
         if {[InitPreProcessing]} { return 1}
         # Simply sets the given atlas (inputAtlasNode) to the output atlas (outputAtlasNode)
         SkipAtlasRegistration
@@ -787,125 +790,13 @@ namespace eval EMSegmenterPreProcessingTcl {
         return 1
     }
 
-
     proc BRAINSRegistration { fixedVolumeNode movingVolumeNode outVolumeNode backgroundLevel RegistrationType fastFlag} {
         variable SCENE
         variable LOGIC
-
-        set module ""
-        foreach gui [vtkCommandLineModuleGUI ListInstances] {
-            if { [$gui GetGUIName] == "BRAINSFit" } {
-                set module $gui
-                break
-            }
-        }
-        if { $module == "" } {
-            return [BRAINSRegistrationCLI $fixedVolumeNode $movingVolumeNode $outVolumeNode $backgroundLevel $RegistrationType $fastFlag]
-        }
-
-        puts "TCL: =========================================="
-        puts "TCL: == Image Alignment: $RegistrationType "
-        puts "TCL: =========================================="
-
-        $module Enter
-
-        set cmdNode [$::slicer3::MRMLScene CreateNodeByClass vtkMRMLCommandLineModuleNode]
-        $::slicer3::MRMLScene AddNode $cmdNode
-        $cmdNode SetModuleDescription "BRAINSFit"
-        $module SetCommandLineModuleNode $cmdNode
-        [$module GetLogic] SetCommandLineModuleNode $cmdNode
-
-        if { $fixedVolumeNode == "" || [$fixedVolumeNode GetImageData] == "" } {
-            PrintError "AlignInputImages: fixed volume node not correctly defined"
-            return ""
-        }
-        $cmdNode SetParameterAsString "fixedVolume" [$fixedVolumeNode GetID]
-
-        set fixedVolume [$fixedVolumeNode GetImageData]
-        set scalarType [$fixedVolume GetScalarTypeAsString]
-        switch -exact "$scalarType" {
-            "bit" { $cmdNode SetParameterAsString "outputVolumePixelType" "binary" }
-            "unsigned char" { $cmdNode SetParameterAsString "outputVolumePixelType" "uchar" }
-            "unsigned short" { $cmdNode SetParameterAsString "outputVolumePixelType" "ushort" }
-            "unsigned int" { $cmdNode SetParameterAsString "outputVolumePixelType" "uint" }
-            "short" -
-            "int" -
-            "float" { $cmdNode SetParameterAsString "outputVolumePixelType" "$scalarType" }
-            default {
-                PrintError "BRAINSRegistration: cannot resample a volume of type $scalarType"
-                return 1
-            }
-        }
-
-        if { $movingVolumeNode == "" || [$movingVolumeNode GetImageData] == "" } {
-            PrintError "AlignInputImages: moving volume node not correctly defined"
-            return ""
-        }
-        $cmdNode SetParameterAsString "movingVolume" [$movingVolumeNode GetID]
-
-        if { $outVolumeNode == "" } {
-            PrintError "AlignInputImages: output volume node not correctly defined"
-            return ""
-        }
-        $cmdNode SetParameterAsString "outputVolume" [$outVolumeNode GetID]
-
-        # Filter options - just set it here to make sure that if default values are changed this still works as it supposed to
-        $cmdNode SetParameterAsFloat "backgroundFillValue" $backgroundLevel
-        $cmdNode SetParameterAsString "interpolationMode" "Linear"
-        foreach TYPE $RegistrationType {
-            $cmdNode SetParameterAsBool "use${TYPE}" 1
-        }
-
-        if {$fastFlag} {
-            $cmdNode SetParameterAsInt "numberOfSamples" 1000
-        }
-
-
-        # Do no worry about fileExtensions=".mat" type="linear" reference="movingVolume"
-        # these are set in vtkCommandLineModuleLogic.cxx automatically
-        if { [lsearch $RegistrationType "BSpline"] > -1 } {
-            set transformNode [vtkMRMLBSplineTransformNode New]
-            $transformNode SetName "EMSegmentBSplineTransform"
-            $SCENE AddNode $transformNode
-            set transID [$transformNode GetID]
-            $transformNode Delete
-            $cmdNode SetParameterAsString "bsplineTransform" $transID
-        } else {
-            set transformNode [vtkMRMLLinearTransformNode New]
-            $transformNode SetName "EMSegmentLinearTransform"
-            $SCENE AddNode $transformNode
-            set transID [$transformNode GetID]
-            $transformNode Delete
-            $cmdNode SetParameterAsString "outputTransform" $transID
-        }
-
-        [$module GetLogic] LazyEvaluateModuleTarget $cmdNode
-        [$module GetLogic] ApplyAndWait $cmdNode
-
-        # Clean Up
-        $::slicer3::MRMLScene RemoveNode $cmdNode
-        DeleteCommandLine $cmdNode
-        $module Exit
-
-        # Remove Transformation from image
-        $movingVolumeNode SetAndObserveTransformNodeID ""
-        $::slicer3::MRMLScene Edited
-
-        # set reqSTNID [vtkStringArray New]
-        #$reqSTNID InsertNextValue "$movingVolumeNode SetAndObserveTransformNodeID \"\" ; $::slicer3::MRMLScene Edited"
-        # [$LOGIC GetApplicationLogic] RequestModified $reqSTNID
-        # $reqSTNID Delete
-
-        return [$SCENE GetNodeByID $transID]
-    }
-
-    proc BRAINSRegistrationCLI { fixedVolumeNode movingVolumeNode outVolumeNode backgroundLevel RegistrationType fastFlag} {
-        variable SCENE
-        variable LOGIC
         variable GUI
-        puts "TCL: =========================================="
-        puts "TCL: == Image Alignment CommandLine: $RegistrationType "
-        puts "TCL: =========================================="
+         $LOGIC PrintText "TCL: =========================================="
+         $LOGIC PrintText "TCL: == Image Alignment CommandLine: $RegistrationType "
+         $LOGIC PrintText "TCL: =========================================="
 
         set PLUGINS_DIR "$::env(Slicer3_HOME)/lib/Slicer3/Plugins"
         set CMD "${PLUGINS_DIR}/BRAINSFit "
@@ -957,9 +848,7 @@ namespace eval EMSegmenterPreProcessingTcl {
             set transID [$transformNode GetID]
             set outTransformFileName [CreateTemporaryFileName $transformNode]
             $transformNode Delete
-
-            set CMD "$CMD --bsplineTransform $outTransformFileName"
-
+            set CMD "$CMD --bsplineTransform $outTransformFileName --maxBSplineDisplacement 10.0"
         } else {
             set transformNode [vtkMRMLLinearTransformNode New]
             $transformNode SetName "EMSegmentLinearTransform"
@@ -994,6 +883,8 @@ namespace eval EMSegmenterPreProcessingTcl {
         # Filter options - just set it here to make sure that if default values are changed this still works as it supposed to
         set CMD "$CMD --backgroundFillValue $backgroundLevel"
         set CMD "$CMD --interpolationMode Linear"
+        set CMD "$CMD --maskProcessingMode  ROIAUTO --ROIAutoDilateSize 3.0"
+
         # might be still wrong
         foreach TYPE $RegistrationType {
             set CMD "$CMD --use${TYPE}"
@@ -1005,11 +896,11 @@ namespace eval EMSegmenterPreProcessingTcl {
             set CMD "$CMD --numberOfSamples 10000"
         }
 
-        set CMD "$CMD --numberOfIterations 1500 --minimumStepSize 0.005 --translationScale 1000.0 --reproportionScale 1.0 --skewScale 1.0 --splineGridSize 14,10,12 --maxBSplineDisplacement 0.0 --maskInferiorCutOffFromCenter 1000.0  --maskProcessingMode NOMASK --fixedVolumeTimeIndex 0 --movingVolumeTimeIndex 0 --medianFilterSize 0,0,0 --numberOfHistogramBins 50 --numberOfMatchPoints 10 --useCachingOfBSplineWeightsMode ON --useExplicitPDFDerivativesMode AUTO --ROIAutoDilateSize 0.0 --relaxationFactor 0.5 --maximumStepSize 0.2 --failureExitCode -1 --debugNumberOfThreads -1 --debugLevel 0 --costFunctionConvergenceFactor 1e+9 --projectedGradientTolerance 1e-5"
+        set CMD "$CMD --numberOfIterations 1500 --minimumStepSize 0.005 --translationScale 1000.0 --reproportionScale 1.0 --skewScale 1.0 --splineGridSize 14,10,12 --maskInferiorCutOffFromCenter 1000.0  --fixedVolumeTimeIndex 0 --movingVolumeTimeIndex 0 --medianFilterSize 0,0,0 --numberOfHistogramBins 50 --numberOfMatchPoints 10 --useCachingOfBSplineWeightsMode ON --useExplicitPDFDerivativesMode AUTO --relaxationFactor 0.5 --maximumStepSize 0.2 --failureExitCode -1 --debugNumberOfThreads -1 --debugLevel 0 --costFunctionConvergenceFactor 1e+9 --projectedGradientTolerance 1e-5"
 
-        puts "TCL: Executing $CMD"
+         $LOGIC PrintText "TCL: Executing $CMD"
         catch { eval exec $CMD } errmsg
-        puts "TCL: $errmsg"
+         $LOGIC PrintText "TCL: $errmsg"
 
 
         # Read results back to scene
@@ -1067,7 +958,7 @@ namespace eval EMSegmenterSimpleTcl {
     }
 
     proc PrintError { TEXT } {
-        puts stderr "TCL: ERROR:EMSegmenterSimpleTcl::${TEXT}"
+         puts stderr "TCL: ERROR:EMSegmenterSimpleTcl::${TEXT}"
     }
 
     # 0 = Do not create a check list for the simple user interface

@@ -88,6 +88,8 @@ private:
   int LoadDefaultTask(int index, bool warningFlag);
 
   void DefineDefaultTasksList();
+  void AddDefaultTasksToList(const char* FilePath);
+
   //BTX:
   std::vector<std::string> pssDefaultTasksName;
   std::vector<std::string> pssDefaultTasksFile;

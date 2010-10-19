@@ -65,7 +65,7 @@ install(
 )
 
 
-file(GLOB TASKFILES RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "Tasks/*.tcl" )
+file(GLOB TASKFILES RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "Tasks/*.tcl" "Tasks/*.mrml" )
 
 foreach(file ${TASKFILES})
  configure_file(
@@ -78,6 +78,12 @@ install(
   FILES ${TASKFILES}
   DESTINATION ${Slicer3_INSTALL_MODULES_SHARE_DIR}/${PROJECT_NAME}/Tasks
 )
+
+install(
+  FILES ${TASKFILES}
+  DESTINATION ${Slicer3_INSTALL_MODULES_SHARE_DIR}/${PROJECT_NAME}/Tasks
+)
+
 
 install(FILES 
   ${headers} 

@@ -585,21 +585,25 @@ void  vtkEMSegmentStep::VolumeMenuButtonCallback(vtkIdType buttonID, vtkIdType v
     }
 }
 
+vtkSlicerApplication* vtkEMSegmentStep::GetSlicerApplication()
+{
+  return this->GetGUI()->GetApplicationGUI()->GetSlicerApplication();
+}
+
 //----------------------------------------------------------------------------
 int vtkEMSegmentStep::SourceTclFile(const char *tclFile)
 {
-  //vtkSlicerApplication::SafeDownCast(this->GetApplication()),tclFile);
-  return this->GUI->GetLogic()->SourceTclFile(this->GetApplication(),tclFile);
+  return this->GUI->GetLogic()->SourceTclFile(this->GetSlicerApplication(),tclFile);
 }
 
 //----------------------------------------------------------------------------
 int vtkEMSegmentStep::SourceTaskFiles() 
 {
-  return this->GUI->GetLogic()->SourceTaskFiles(this->GetApplication());
+  return this->GUI->GetLogic()->SourceTaskFiles(this->GetSlicerApplication());
 }
 
 //----------------------------------------------------------------------------
 int vtkEMSegmentStep::SourcePreprocessingTclFiles() 
 {
-  return this->GUI->GetLogic()->SourcePreprocessingTclFiles(this->GetApplication());
+  return this->GUI->GetLogic()->SourcePreprocessingTclFiles(this->GetSlicerApplication());
 }

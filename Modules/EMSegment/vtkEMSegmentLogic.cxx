@@ -30,7 +30,7 @@
 #include "vtkBSplineRegistrator.h"
 #include "vtkTransformToGrid.h"
 #include "vtkIdentityTransform.h"
-#include "vtkKWApplication.h"
+#include "vtkSlicerApplication.h"
 #include "vtkKWTkUtilities.h"
 
 // needed to translate between enums
@@ -132,7 +132,7 @@ SaveIntermediateResults()
 // New Task Specific Pipeline
 //----------------------------------------------------------------------------
 
-int vtkEMSegmentLogic::SourceTclFile(vtkKWApplication*app,const char *tclFile)
+int vtkEMSegmentLogic::SourceTclFile(vtkSlicerApplication*app,const char *tclFile)
 {
   // Load Tcl File defining the setting
   if (!app->LoadScript(tclFile))
@@ -145,9 +145,9 @@ int vtkEMSegmentLogic::SourceTclFile(vtkKWApplication*app,const char *tclFile)
 
 //----------------------------------------------------------------------------
 
-int vtkEMSegmentLogic::SourceTaskFiles(vtkKWApplication* app) { 
-  vtksys_stl::string generalFile = this->DefineTclTaskFullPathName(vtkMRMLEMSNode::GetDefaultTclTaskFilename());
-  vtksys_stl::string specificFile = this->DefineTclTasksFileFromMRML();
+int vtkEMSegmentLogic::SourceTaskFiles(vtkSlicerApplication* app) { 
+  vtksys_stl::string generalFile = this->DefineTclTaskFullPathName(app, vtkMRMLEMSNode::GetDefaultTclTaskFilename());
+  vtksys_stl::string specificFile = this->DefineTclTaskFileFromMRML(app);
   cout << "Sourcing general Task file : " << generalFile.c_str() << endl;
   // Have to first source the default file to set up the basic structure"
   if (this->SourceTclFile(app,generalFile.c_str()))
@@ -164,7 +164,7 @@ int vtkEMSegmentLogic::SourceTaskFiles(vtkKWApplication* app) {
 }
 
 //----------------------------------------------------------------------------  
-int vtkEMSegmentLogic::SourcePreprocessingTclFiles(vtkKWApplication* app) 
+int vtkEMSegmentLogic::SourcePreprocessingTclFiles(vtkSlicerApplication* app) 
 {
   if (this->SourceTaskFiles(app))
     {
@@ -2311,12 +2311,12 @@ CopyTreeLeafDataToSegmenter(vtkImageEMLocalClass* node,
   for (unsigned int r = 0; r < numTargetImages; ++r)
     {
     node->SetLogMu(this->MRMLManager->
-                   GetTreeNodeDistributionLogMean(nodeID, r), r);
+                   GetTreeNodeDistributionLogMeanWithCorrection(nodeID, r), r);
 
     for (unsigned int c = 0; c < numTargetImages; ++c)
       {
       node->SetLogCovariance(this->MRMLManager->
-                             GetTreeNodeDistributionLogCovariance(nodeID,
+                             GetTreeNodeDistributionLogCovarianceWithCorrection(nodeID,
                                                                   r, c), 
                              r, c);
       }
@@ -2369,67 +2369,33 @@ ConvertGUIEnumToAlgorithmEnumInterpolationType(int guiEnumValue)
 vtksys_stl::string  vtkEMSegmentLogic::GetTclTaskDirectory()
 {
   // Later do automatically
-   vtksys_stl::string file_path = this->GetModuleShareDirectory();
-#ifdef _WIN32
-  file_path.append("\\Tasks\\");
-#else
-  file_path.append("/Tasks/");
-#endif
-  return file_path;
+  vtksys_stl::string file_path = this->GetModuleShareDirectory() + vtksys_stl::string("/Tasks");
+  return vtksys::SystemTools::ConvertToOutputPath(file_path.c_str());
 }
 
 //----------------------------------------------------------------------------
 vtksys_stl::string  vtkEMSegmentLogic::GetTclGeneralDirectory()
 {
   // Later do automatically
-   vtksys_stl::string file_path = this->GetModuleShareDirectory();
-#ifdef _WIN32
-  file_path.append("\\Tcl\\");
-#else
-  file_path.append("/Tcl/");
-#endif
-  return file_path;
-}
-
-
-
-//----------------------------------------------------------------------------
-vtksys_stl::string vtkEMSegmentLogic::DefineTclTaskFullPathName(const char* TclFileName)
-{
-  vtksys_stl::string full_file_path(this->GetTclTaskDirectory());
-  full_file_path.append(TclFileName);
-  return  full_file_path;
+  vtksys_stl::string file_path = this->GetModuleShareDirectory() +  vtksys_stl::string("/Tcl");
+  return vtksys::SystemTools::ConvertToOutputPath(file_path.c_str());
 }
 
 //----------------------------------------------------------------------------
-std::string vtkEMSegmentLogic::DefineTclTasksFileFromMRML()
+std::string vtkEMSegmentLogic::DefineTclTaskFileFromMRML(vtkSlicerApplication *app)
 {
-  //  cout << "-------- DefineDefaultTasksList Start" << endl;
-  // set define list of parameters 
-  std::string tclFile;
-  vtksys_stl::string FilePath =  this->GetTclTaskDirectory();
-  vtkDirectory *dir = vtkDirectory::New();
-  int flag = dir->Open(FilePath.c_str());
-  dir->Delete();
-
-  if (!flag)
-      {
-    vtkErrorMacro("Cannot open " << this->GetTclTaskDirectory());
-    // No special files 
-    return tclFile;
-      }
-  vtksys_stl::string tmpFile = this->MRMLManager->GetTclTaskFilename();
-  tclFile = FilePath + tmpFile; 
+  std::string tclFile("");
+  tclFile = this->DefineTclTaskFullPathName(app, this->MRMLManager->GetTclTaskFilename());
 
   if (vtksys::SystemTools::FileExists(tclFile.c_str()) && (!vtksys::SystemTools::FileIsDirectory(tclFile.c_str())) )
     {
       return tclFile;
     }
-   cout << "vtkEMSegmentLogic::DefineTclTasksFileFromMRML: " << tclFile.c_str() << " does not exist - using default file" << endl;
-  // If the file does not exists then just take the default ! 
-  tclFile = FilePath +  vtksys_stl::string(vtkMRMLEMSNode::GetDefaultTclTaskFilename());
-  return tclFile;
-  
+
+  cout << "vtkEMSegmentLogic::DefineTclTaskFileFromMRML: " << tclFile.c_str() << " does not exist - using default file" << endl;
+
+  tclFile = this->DefineTclTaskFullPathName(app, vtkMRMLEMSNode::GetDefaultTclTaskFilename()); 
+  return tclFile;  
 }
 
 void vtkEMSegmentLogic::TransferIJKToRAS(vtkMRMLVolumeNode* volumeNode, int ijk[3], double ras[3])
@@ -2535,13 +2501,13 @@ void vtkEMSegmentLogic::UpdateIntensityDistributionAuto(vtkKWApplication* app, v
   for (int r = 0; r < numTargetImages; ++r)
     {
       {
-    double value = atof(app->Script("expr $::EMSegment(GaussCurveCalc,Mean,%d)",r));
-    leafNode->SetAutoLogMean(r, value);
+        double value = atof(app->Script("expr $::EMSegment(GaussCurveCalc,Mean,%d)",r));
+        leafNode->SetLogMean(r, value);
       }
       for (int c = 0; c < numTargetImages; ++c)
       {
-    double value = atof(app->Script("expr $::EMSegment(GaussCurveCalc,Covariance,%d,%d)",r,c));
-    leafNode->SetAutoLogCovariance(r, c, value);
+        double value = atof(app->Script("expr $::EMSegment(GaussCurveCalc,Covariance,%d,%d)",r,c));
+        leafNode->SetLogCovariance(r, c, value);
       }
     }
 }
@@ -2567,4 +2533,51 @@ void  vtkEMSegmentLogic::AutoCorrectSpatialPriorWeight(vtkIdType nodeID)
     this->AutoCorrectSpatialPriorWeight(childID);
       }
    }
+}
+
+
+//----------------------------------------------------------------------------
+// cannot be moved to vtkEMSEgmentGUI bc of command line interface !
+vtksys_stl::string vtkEMSegmentLogic::GetTemporaryTaskDirectory(vtkSlicerApplication* app)
+{
+  std::string taskDir("");
+  if (!app)
+    {
+      return taskDir;
+    }
+
+  const char* tmpDir = app->GetTemporaryDirectory();
+  if (tmpDir)
+    {
+      std::string tmpTaskDir(std::string(tmpDir) + std::string("/EMSegmentTask"));
+      taskDir = vtksys::SystemTools::ConvertToOutputPath(tmpTaskDir.c_str());
+    }
+  else
+    {
+      vtkErrorMacro("GetTemporaryTaskDirectory:: Temporary Directory was not defined");
+    }
+  return taskDir;
+} 
+
+//----------------------------------------------------------------------------
+// cannot be moved to vtkEMSEgmentGUI bc of command line interface !
+std::string vtkEMSegmentLogic::DefineTclTaskFullPathName(vtkSlicerApplication* app, const char* TclFileName)
+{
+  vtksys_stl::string tmp_full_file_path = this->GetTclTaskDirectory() + vtksys_stl::string("/") + vtksys_stl::string(TclFileName);
+  vtksys_stl::string full_file_path = vtksys::SystemTools::ConvertToOutputPath(tmp_full_file_path.c_str());
+  if (vtksys::SystemTools::FileExists(full_file_path.c_str()))
+    {
+      return full_file_path;
+    }
+
+  tmp_full_file_path = this->GetTemporaryTaskDirectory(app) + vtksys_stl::string("/") + vtksys_stl::string(TclFileName);
+  full_file_path = vtksys::SystemTools::ConvertToOutputPath(tmp_full_file_path.c_str());
+  if (vtksys::SystemTools::FileExists(full_file_path.c_str()))
+    {
+       return full_file_path;
+    }
+
+  vtkErrorMacro("DefineTclTaskFullPathName : could not find tcl file with name  " << TclFileName ); 
+  full_file_path = vtksys_stl::string("");
+  return  full_file_path;
 }

@@ -15,6 +15,7 @@ class vtkKWFrameWithLabel;
 class vtkKWLabelWithLabel;
 class vtkKWMenuButtonWithLabel;
 class vtkKWEntryWithLabel;
+class vtkSlicerApplication;
 #include <vector>
 
 
@@ -58,6 +59,8 @@ public:
   const char* GetTextEntryValue(vtkIdType ID); 
 
   void SetButtonsFromMRML();
+
+  vtkSlicerApplication* GetSlicerApplication();
 
 protected:
   vtkEMSegmentStep();

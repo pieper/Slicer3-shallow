@@ -9,6 +9,7 @@ class vtkImageEMLocalSegmenter;
 class vtkImageEMLocalGenericClass;
 class vtkImageEMLocalSuperClass;
 class vtkImageEMLocalClass;
+class vtkSlicerApplication;
 class vtkKWApplication;
 
 class vtkGridTransform;
@@ -40,23 +41,21 @@ public:
   virtual void      StartSegmentation();
 
   // New Pipeline
-  virtual int       SourceTclFile(vtkKWApplication*app,const char *tclFile);
-  virtual int       SourceTaskFiles(vtkKWApplication* app);
-  virtual int       SourcePreprocessingTclFiles(vtkKWApplication* app); 
+  virtual int       SourceTclFile(vtkSlicerApplication*app,const char *tclFile);
+  virtual int       SourceTaskFiles(vtkSlicerApplication* app);
+  virtual int       SourcePreprocessingTclFiles(vtkSlicerApplication* app); 
   virtual int       StartSegmentationWithoutPreprocessing();
   int               ComputeIntensityDistributionsFromSpatialPrior(vtkKWApplication* app);
 
 
   //BTX
-  std::string DefineTclTaskFullPathName(const char* TclFileName);
   std::string GetTclTaskDirectory();
   std::string GetTclGeneralDirectory();
-  std::string DefineTclTasksFileFromMRML();
+  std::string DefineTclTaskFileFromMRML(vtkSlicerApplication *app);
+  std::string DefineTclTaskFullPathName(vtkSlicerApplication* app, const char* TclFileName);
+  std::string GetTemporaryTaskDirectory(vtkSlicerApplication* app);
   //ETX
   
-
-
-
   // Used within StartSegmentation to copy data from the MRMLManager
   // to the segmenter algorithm.  Possibly useful for research
   // purposes.

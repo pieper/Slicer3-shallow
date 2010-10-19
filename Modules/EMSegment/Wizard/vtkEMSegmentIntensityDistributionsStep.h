@@ -46,6 +46,7 @@ public:
     vtkObject *caller, unsigned long event, void *callData);
   
   virtual void PlotDistributionCallback(); 
+  virtual void ResetDistributionCallback(); 
 
 protected:
   vtkEMSegmentIntensityDistributionsStep();
@@ -64,6 +65,8 @@ protected:
   virtual void AddIntensityDistributionSamplePoint(double ras[3]);
 
   vtkKWPushButton           *ShowGraphButton;
+  vtkKWPushButton           *ResetIntensityButton;
+
   void RemovePlot();
   void RemoveResults() { this->RemovePlot(); }
 

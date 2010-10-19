@@ -58,23 +58,31 @@ public:
   virtual double GetLogCovariance(int row, int column) const;
   virtual void SetLogCovariance(int row, int column, double value);
 
-  virtual double GetAutoLogMean(int index) const;
-  virtual void SetAutoLogMean(int index, double value);
+  virtual double GetLogMeanCorrection(int index) const;
+  virtual void SetLogMeanCorrection(int index, double value);
 
-  virtual void CopyAutoLogMeanToLogMean();
-
-  virtual double GetAutoLogCovariance(int row, int column) const;
-  virtual void SetAutoLogCovariance(int row, int column, double value);
-
-  virtual void CopyAutoLogCovarianceToLogCovariance();
+  virtual double GetLogCovarianceCorrection(int row, int column) const;
+  virtual void SetLogCovarianceCorrection(int row, int column, double value);
 
   //BTX
+  // It makes a copy of it 
+  vtkstd::vector<vtkstd::vector<double> >  GetLogCovarianceCorrection()
+    {
+      return this->LogCovarianceCorrection;
+    }
+
+  vtkstd::vector<vtkstd::vector<double> >  GetLogCovariance()
+    {
+      return this->LogCovariance;
+    }
+
   enum
     {
     DistributionSpecificationManual = 0,
     DistributionSpecificationManuallySample,
     DistributionSpecificationAutoSample
     };
+
   //ETX
   vtkGetMacro(DistributionSpecificationMethod, int);
   vtkSetMacro(DistributionSpecificationMethod, int);
@@ -105,11 +113,11 @@ protected:
   vtkstd::vector<double>                        LogMean;
   vtkstd::vector<vtkstd::vector<double> >       LogCovariance;
 
-  // Automatically Generated Intensity distribution from Template
-  // This can be used in order to interpret the difference between LogX and AutoLogX 
-  // where LogX is the distribution defined by the user 
-  vtkstd::vector<double>                        AutoLogMean;
-  vtkstd::vector<vtkstd::vector<double> >       AutoLogCovariance;
+  // These values define the deviation from LogMean and LogCovariance 
+  // that way one can automatically compute Intensity distribution from Template and then might slight changes 
+  // the gui always shows the LogMean - LogMeanCorrection 
+  vtkstd::vector<double>                        LogMeanCorrection;
+  vtkstd::vector<vtkstd::vector<double> >       LogCovarianceCorrection;
   //ETX
 
   unsigned int                        NumberOfTargetInputChannels;

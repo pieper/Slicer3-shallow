@@ -49,6 +49,7 @@ vtkEMSegmentIntensityDistributionsStep::vtkEMSegmentIntensityDistributionsStep()
   this->ShowGraphButton = NULL;
   this->NodeParametersLabel = NULL;
   this->NodeParametersLabel2 = NULL;
+  this->ResetIntensityButton = NULL;
 }
 
 //----------------------------------------------------------------------------
@@ -105,6 +106,12 @@ vtkEMSegmentIntensityDistributionsStep::~vtkEMSegmentIntensityDistributionsStep(
     this->ShowGraphButton->Delete();
     this->ShowGraphButton = NULL;     
   }
+
+  if (this->ResetIntensityButton)
+    {
+      this->ResetIntensityButton->Delete();
+      this->ResetIntensityButton = NULL;
+    }
   this->RemovePlot();
 }
 
@@ -248,7 +255,7 @@ void vtkEMSegmentIntensityDistributionsStep::ShowUserInterface()
     {
     this->IntensityDistributionCovarianceMatrix->SetParent(intensity_page);
     this->IntensityDistributionCovarianceMatrix->Create();
-    this->IntensityDistributionCovarianceMatrix->SetLabelText("Covariance:");
+    this->IntensityDistributionCovarianceMatrix->SetLabelText("Log Covariance:");
 
     this->IntensityDistributionCovarianceMatrix->ExpandWidgetOff();
     this->IntensityDistributionCovarianceMatrix->GetLabel()->
@@ -267,6 +274,21 @@ void vtkEMSegmentIntensityDistributionsStep::ShowUserInterface()
   this->Script("pack %s -side top -expand n -fill x -padx 2 -pady 2",
                this->IntensityDistributionCovarianceMatrix->GetWidgetName());
   
+
+  if (!this->ResetIntensityButton )
+    {
+      this->ResetIntensityButton = vtkKWPushButton::New ();
+    } 
+
+  if (!this->ResetIntensityButton->IsCreated()) 
+    {
+      this->ResetIntensityButton->SetParent(intensity_page);
+      this->ResetIntensityButton->Create();
+      this->ResetIntensityButton->SetWidth(25);
+      this->ResetIntensityButton->SetText ("Reset Distribution");
+      this->ResetIntensityButton->SetCommand(this, "ResetDistributionCallback");
+    }
+  this->Script("pack %s -side top -padx 0 -pady 2", this->ResetIntensityButton->GetWidgetName());
 
   // Create a label to display selected node
 
@@ -476,8 +498,7 @@ vtkEMSegmentIntensityDistributionsStep::DisplaySelectedNodeIntensityDistribution
 
   if (this->IntensityDistributionMeanMatrix)
     {
-    vtkKWMatrixWidget *matrix = 
-      this->IntensityDistributionMeanMatrix->GetWidget();
+    vtkKWMatrixWidget *matrix = this->IntensityDistributionMeanMatrix->GetWidget();
     if (has_valid_selection)
       {
       this->IntensityDistributionMeanMatrix->SetEnabled(
@@ -494,7 +515,7 @@ vtkEMSegmentIntensityDistributionsStep::DisplaySelectedNodeIntensityDistribution
 
       for(col = 0; col < nb_of_target_volumes; col++)
         {
-        matrix->SetElementValueAsDouble(0, col, mrmlManager->GetTreeNodeDistributionMean(sel_vol_id, col));
+           matrix->SetElementValueAsDouble(0, col, mrmlManager->GetTreeNodeDistributionMeanWithCorrection(sel_vol_id, col));
         }
       }
     else
@@ -509,8 +530,7 @@ vtkEMSegmentIntensityDistributionsStep::DisplaySelectedNodeIntensityDistribution
 
   if (this->IntensityDistributionCovarianceMatrix)
     {
-    vtkKWMatrixWidget *matrix = 
-      this->IntensityDistributionCovarianceMatrix->GetWidget();
+    vtkKWMatrixWidget *matrix = this->IntensityDistributionCovarianceMatrix->GetWidget();
     if (has_valid_selection)
       {
       this->IntensityDistributionCovarianceMatrix->SetEnabled(
@@ -529,7 +549,7 @@ vtkEMSegmentIntensityDistributionsStep::DisplaySelectedNodeIntensityDistribution
         {
         for (col = 0; col < nb_of_target_volumes; col++)
           {
-          matrix->SetElementValueAsDouble(row, col, mrmlManager->GetTreeNodeDistributionCovariance(sel_vol_id, row, col));
+          matrix->SetElementValueAsDouble(row, col, mrmlManager->GetTreeNodeDistributionLogCovarianceWithCorrection(sel_vol_id, row, col));
           }
         }
       }
@@ -621,13 +641,14 @@ void vtkEMSegmentIntensityDistributionsStep::IntensityDistributionMeanChangedCal
                                               vtkIdType sel_vol_id, int vtkNotUsed(row), int col, const char *value)
 {
   // The distribution mean vector has changed because of user interaction
+  cout << "vtkEMSegmentIntensityDistributionsStep::IntensityDistributionMeanChangedCallback " << value << endl;
 
   vtkEMSegmentMRMLManager *mrmlManager = this->GetGUI()->GetMRMLManager();
   if (!mrmlManager)
     {
     return;
     }
-  mrmlManager->SetTreeNodeDistributionMean(sel_vol_id, col, atof(value));
+  mrmlManager->SetTreeNodeDistributionMeanWithCorrection(sel_vol_id, col, atof(value));
 }
 
 //---------------------------------------------------------------------------
@@ -636,13 +657,13 @@ vtkEMSegmentIntensityDistributionsStep::IntensityDistributionCovarianceChangedCa
   vtkIdType sel_vol_id, int row, int col, const char *value)
 {
   // The distribution covariance matrix has changed because of user interaction
-
+  // cout << "vtkEMSegmentIntensityDistributionsStep::IntensityDistributionCovarianceChangedCallback " << value << endl;
   vtkEMSegmentMRMLManager *mrmlManager = this->GetGUI()->GetMRMLManager();
   if (!mrmlManager)
     {
     return;
     }
-  mrmlManager->SetTreeNodeDistributionCovariance(sel_vol_id, row,col,atof(value));
+  mrmlManager->SetTreeNodeDistributionLogCovarianceWithCorrection(sel_vol_id, row,col,atof(value));
 }
 
 //----------------------------------------------------------------------------
@@ -930,26 +951,53 @@ void vtkEMSegmentIntensityDistributionsStep::RemovePlot()
 //---------------------------------------------------------------------------- 
 void vtkEMSegmentIntensityDistributionsStep::PlotDistributionCallback() 
 {
-
   const char* result = this->Script("info command %s", PLOT);
   if (result == NULL || !strcmp(result,"")) {
-      vtksys_stl::string tcl_dir = this->GetGUI()->GetLogic()->GetModuleShareDirectory();
-#ifdef _WIN32
-      tcl_dir.append("\\Tcl\\");
-#else
-      tcl_dir.append("/Tcl/");
-#endif
-      const char* sourceFiles[] = {"GenerateGraph.tcl", "Gui.tcl", "Graph.tcl", "Tooltips.tcl", "setget.tcl" };
-      for (int i = 0 ; i < 5 ; i++ ) { 
-    vtksys_stl::string file = tcl_dir + vtksys_stl::string(sourceFiles[i]);
-    if (this->SourceTclFile(file.c_str()))
-      {
-        return;
-      }
+    vtksys_stl::string tcl_dir = this->GetGUI()->GetLogic()->GetTclGeneralDirectory();
+    const char* sourceFiles[] = {"/GenerateGraph.tcl", "/Gui.tcl", "/Graph.tcl", "/Tooltips.tcl", "/setget.tcl" };
+    for (int i = 0 ; i < 5 ; i++ ) { 
+      vtksys_stl::string tmpFile = tcl_dir + vtksys_stl::string(sourceFiles[i]);
+      vtksys_stl::string file = vtksys::SystemTools::ConvertToOutputPath(tmpFile.c_str());
+        if (this->SourceTclFile(file.c_str()))
+        {
+          return;
+        }
       }
     }
   this->RemovePlot();
   this->Script("EMSegmenterGraph %s", PLOT);
   this->Script("%s CreateWindow",PLOT);
   this->Script("%s AssignDefaultVolumes",PLOT);
+}
+
+//---------------------------------------------------------------------------- 
+void vtkEMSegmentIntensityDistributionsStep::ResetDistributionCallback() 
+{
+  vtkEMSegmentMRMLManager *mrmlManager = this->GetGUI()->GetMRMLManager();
+  if (!mrmlManager)
+    {
+      return;
+    }
+
+  // Find current node 
+  vtkEMSegmentAnatomicalStructureStep *anat_step = this->GetGUI()->GetAnatomicalStructureStep();
+  if (!anat_step)
+    {
+    return;
+    }
+  vtkKWTree *tree = anat_step->GetAnatomicalStructureTree()->GetWidget();
+  if (!tree)
+    {
+      return;
+    }
+  vtksys_stl::string sel_node = tree->GetSelection();
+  int sel_vol_id = tree->GetNodeUserDataAsInt(sel_node.c_str());
+  
+  if (!mrmlManager->GetTreeNodeIsLeaf(sel_vol_id))
+    {
+      return;
+    }
+  mrmlManager->ResetTreeNodeDistributionLogMeanCorrection(sel_vol_id);
+  mrmlManager->ResetTreeNodeDistributionLogCovarianceCorrection(sel_vol_id);
+  this->DisplaySelectedNodeIntensityDistributionsCallback();
 }

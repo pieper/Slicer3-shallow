@@ -120,38 +120,17 @@ public:
   virtual void  SetTreeNodeDistributionSpecificationMethod(vtkIdType nodeID, 
                                                            int method);
   virtual void  ChangeTreeNodeDistributionsFromManualSamplingToManual();
+  virtual void  SetTreeNodeDistributionLogMean(vtkIdType nodeID, int volumeNumber, double value);
 
-  virtual double   GetTreeNodeDistributionLogMean(vtkIdType nodeID, 
-                                                  int volumeNumber);
-  virtual void     SetTreeNodeDistributionLogMean(vtkIdType nodeID, 
-                                                  int volumeNumber, 
-                                                  double value);
+  virtual double   GetTreeNodeDistributionLogMeanWithCorrection(vtkIdType nodeID, int volumeNumber);
 
-  virtual double   GetTreeNodeDistributionAutoLogMean(vtkIdType nodeID, 
-                                                  int volumeNumber);
-  virtual void     SetTreeNodeDistributionAutoLogMean(vtkIdType nodeID, 
-                                                  int volumeNumber, 
-                                                  double value);
-
-
-
-  virtual double   GetTreeNodeDistributionLogCovariance(vtkIdType nodeID, 
-                                                        int rowIndex,
-                                                        int columnIndex);
   virtual void     SetTreeNodeDistributionLogCovariance(vtkIdType nodeID, 
                                                         int rowIndex, 
                                                         int columnIndex,
                                                         double value);
 
-  virtual double   GetTreeNodeDistributionAutoLogCovariance(vtkIdType nodeID, 
-                                                        int rowIndex,
-                                                        int columnIndex);
-  virtual void     SetTreeNodeDistributionAutoLogCovariance(vtkIdType nodeID, 
-                                                        int rowIndex, 
-                                                        int columnIndex,
-                                                        double value);
-  virtual void CopyTreeNodeAutoLogDistToLogDist();
 
+  virtual double   GetTreeNodeDistributionLogCovarianceWithCorrection(vtkIdType nodeID, int rowIndex, int columnIndex);
 
   virtual int      GetTreeNodeDistributionNumberOfSamples(vtkIdType nodeID);
 
@@ -484,11 +463,12 @@ public:
   virtual void   SetTargetSelectedVolumeNthID(int n, vtkIdType newVolumeID); 
   virtual void SetTargetSelectedVolumeNthMRMLID(int n, const char* mrmlID); 
 
-  virtual double   GetTreeNodeDistributionMean(vtkIdType nodeID, int volumeNumber);
-  virtual void     SetTreeNodeDistributionMean(vtkIdType nodeID, int volumeNumber, double value);
+  virtual double   GetTreeNodeDistributionMeanWithCorrection(vtkIdType nodeID, int volumeNumber);
+  virtual void     SetTreeNodeDistributionMeanWithCorrection(vtkIdType nodeID, int volumeNumber, double value);
+  virtual void     ResetTreeNodeDistributionLogMeanCorrection(vtkIdType nodeID); 
 
-  virtual double   GetTreeNodeDistributionCovariance(vtkIdType nodeID, int rowIndex, int columnIndex);
-  virtual void     SetTreeNodeDistributionCovariance(vtkIdType nodeID, int rowIndex, int columnIndex, double value);
+  void ResetTreeNodeDistributionLogCovarianceCorrection(vtkIdType nodeID); 
+  void SetTreeNodeDistributionLogCovarianceWithCorrection(vtkIdType nodeID, int rowIndex, int columnIndex, double value);
 
   //
   // save parameters
@@ -592,6 +572,15 @@ public:
   virtual const char* GetTclTaskFilename();
   virtual void SetTclTaskFilename(const char* fileName);
 
+  void RemoveNodesFromMRMLScene(vtkMRMLNode* node);
+
+  void RemoveAllEMSNodes();
+  void RemoveAllEMSNodesButOne(vtkMRMLNode* saveNode);
+
+  //BTX
+  vtksys_stl::string TurnDefaultMRMLFileIntoTaskName(const char* fileName);
+  //ETX
+
 private:
   vtkEMSegmentMRMLManager();
   ~vtkEMSegmentMRMLManager();
@@ -662,6 +651,32 @@ private:
   VTKToMRMLMapType                                VTKNodeIDToMRMLNodeIDMap;
   typedef vtksys_stl::map<vtksys_stl::string, vtkIdType>  MRMLToVTKMapType;
   MRMLToVTKMapType                                MRMLNodeIDToVTKNodeIDMap;
+
+  vtkstd::vector<vtkstd::vector<double> > GetTreeNodeDistributionLogCovariance(vtkIdType nodeID);
+  vtkstd::vector<vtkstd::vector<double> > GetTreeNodeDistributionLogCovarianceCorrection(vtkIdType nodeID);
+
+
+   // Should Only be used in this function - bc only set through gui which calls DistributionMeanWithCorrection
+  virtual double   GetTreeNodeDistributionLogMeanCorrection(vtkIdType nodeID, 
+                                                  int volumeNumber);
+  virtual void     SetTreeNodeDistributionLogMeanCorrection(vtkIdType nodeID, 
+                                                  int volumeNumber, 
+                                                  double value);
+
+  // Functions should only call the corrected ones 
+  virtual double   GetTreeNodeDistributionLogMean(vtkIdType nodeID, int volumeNumber);
+
+  // Should Only be used in this function - bc only set through gui which calls DistributionLogCovarianceWithCorrection
+  virtual double   GetTreeNodeDistributionLogCovarianceCorrection(vtkIdType nodeID, int rowIndex, int columnIndex);
+
+  // virtual void     SetTreeNodeDistributionLogCovarianceCorrection(vtkIdType nodeID, vtkstd::vector<vtkstd::vector<double> > cov);
+
+    virtual double   GetTreeNodeDistributionLogCovariance(vtkIdType nodeID, 
+                                                        int rowIndex,
+                                                        int columnIndex);
+  int TreeNodeDistributionLogCovarianceCorrectionEnabled(vtkIdType nodeID);
+
+
   //ETX
 };
 

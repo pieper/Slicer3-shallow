@@ -48,7 +48,7 @@
 #include <algorithm>
 
 // need the ITK systemtools
-#include <itksys/SystemTools.hxx>
+// #include <vtksys/SystemTools.hxx>
 
 
 //----------------------------------------------------------------------------
@@ -222,21 +222,18 @@ void vtkEMSegmentParametersSetStep::UpdateTasksCallback()
   // ** PATH MANAGEMENT **
   //
   // we need the slicer application to query the $tmp_dir path
-  vtkSlicerApplication* app = vtkSlicerApplication::SafeDownCast(this->GetGUI()->GetApplicationGUI()->GetSlicerApplication());
-  
-  if (!app)
+  const char* tmpDir = this->GetSlicerApplication()->GetTemporaryDirectory();
+  if (!tmpDir)
     {
-    vtkErrorMacro("UpdateTasksCallback: Could not get Slicer application!")
-    return;
+      vtkErrorMacro("UpdateTasksCallback: Termporary directory is not defined!");
+      return;
     }
-  
-  // get the $tmpDir path
-  std::string tmpDir = app->GetTemporaryDirectory();
-  // and add the EmSegmentTask directory
-  std::string taskDir(tmpDir + std::string("/EMSegmentTask"));
   // also add the manifest filename
-  std::string manifestFilename(tmpDir + std::string("/EMSegmentTasksManifest.html"));
+  std::string tmpManifestFilename(std::string(tmpDir) + std::string("/EMSegmentTasksManifest.html"));
+  std::string manifestFilename = vtksys::SystemTools::ConvertToOutputPath(tmpManifestFilename.c_str());
 
+  // and add the EmSegmentTask directory
+  std::string taskDir = this->GetGUI()->GetLogic()->GetTemporaryTaskDirectory(this->GetSlicerApplication());
   //
   // ** HTTP ACCESS **
   //
@@ -266,7 +263,7 @@ void vtkEMSegmentParametersSetStep::UpdateTasksCallback()
   httpHandler->StageFileRead(taskRepository.c_str(),manifestFilename.c_str());
   
   // sanity checks: if manifestFilename does not exist or size<1, exit here before it is too late!
-  if (!itksys::SystemTools::FileExists(manifestFilename.c_str()) || itksys::SystemTools::FileLength(manifestFilename.c_str())<1)
+  if (!vtksys::SystemTools::FileExists(manifestFilename.c_str()) || vtksys::SystemTools::FileLength(manifestFilename.c_str())<1)
     {
     vtkErrorMacro("UpdateTasksCallback: Could not get the manifest! Try again later..")
     return;
@@ -363,7 +360,7 @@ void vtkEMSegmentParametersSetStep::UpdateTasksCallback()
     httpHandler->StageFileRead(currentTaskUrl.c_str(),currentTaskFilepath.c_str());
     
     // sanity checks: if the downloaded file does not exist or size<1, exit here before it is too late!
-    if (!itksys::SystemTools::FileExists(currentTaskFilepath.c_str()) || itksys::SystemTools::FileLength(currentTaskFilepath.c_str())<1)
+    if (!vtksys::SystemTools::FileExists(currentTaskFilepath.c_str()) || vtksys::SystemTools::FileLength(currentTaskFilepath.c_str())<1)
       {
       vtkErrorMacro("UpdateTasksCallback: At least one file was not downloaded correctly! Aborting.. *beepbeepbeep*")
       return;
@@ -382,9 +379,9 @@ void vtkEMSegmentParametersSetStep::UpdateTasksCallback()
   // 3) delete the $taskDir. and create it again. then, move our downloaded files to it
   
   // purge, NOW!! but only if the $taskDir exists..
-  if (itksys::SystemTools::FileExists(taskDir.c_str()))
+  if (vtksys::SystemTools::FileExists(taskDir.c_str()))
   {
-    if (!itksys::SystemTools::RemoveADirectory(taskDir.c_str()))
+    if (!vtksys::SystemTools::RemoveADirectory(taskDir.c_str()))
       {
       vtkErrorMacro("UpdateTasksCallback: Could not delete " << taskDir.c_str() << "! This is very bad, we abort the update..")
       return;
@@ -392,10 +389,10 @@ void vtkEMSegmentParametersSetStep::UpdateTasksCallback()
   }
   
   // check if the taskDir is gone now!
-  if (!itksys::SystemTools::FileExists(taskDir.c_str()))
+  if (!vtksys::SystemTools::FileExists(taskDir.c_str()))
     {
     // the $taskDir does not exist, so create it
-    bool couldCreateTaskDir = itksys::SystemTools::MakeDirectory(taskDir.c_str());
+    bool couldCreateTaskDir = vtksys::SystemTools::MakeDirectory(taskDir.c_str());
 
     // sanity checks: if the directory could not be created, something is wrong!
     if (!couldCreateTaskDir)
@@ -419,7 +416,7 @@ void vtkEMSegmentParametersSetStep::UpdateTasksCallback()
     // generate the destination filename of this task in $taskDir
     currentTaskDestinationFilepath = std::string(taskDir + std::string("/") + currentTaskName + std::string(".tcl"));    
     
-    if (!itksys::SystemTools::CopyFileAlways(currentTaskFilepath.c_str(),currentTaskDestinationFilepath.c_str()))
+    if (!vtksys::SystemTools::CopyFileAlways(currentTaskFilepath.c_str(),currentTaskDestinationFilepath.c_str()))
       {
       vtkErrorMacro("UpdateTasksCallback: Could not copy at least one downloaded task file. Everything is lost now! Sorry :(")
       return;
@@ -430,13 +427,10 @@ void vtkEMSegmentParametersSetStep::UpdateTasksCallback()
   this->UpdateTasksButton->SetText("Update completed!");
   this->UpdateTasksButton->SetEnabled(0);
   // TODO: Trigger the tasklist reload??
-    
+  this->UpdateLoadedParameterSets();  
   //
   // ** ALL DONE, NOW CLEANUP **
   //
-  
-  // destruct the application pointer
-  app = 0;
   
   // delete the HTTP handler
   httpHandler->Delete();
@@ -449,6 +443,7 @@ void vtkEMSegmentParametersSetStep::UpdateTasksCallback()
 }
 
 //----------------------------------------------------------------------------
+// defines the menu task list 
 void vtkEMSegmentParametersSetStep::PopulateLoadedParameterSets()
 {
   if (!this->ParameterSetMenuButton ||
@@ -505,6 +500,8 @@ void vtkEMSegmentParametersSetStep::PopulateLoadedParameterSets()
 }
 
 //----------------------------------------------------------------------------
+// same as this->PopulateLoadedParameterSets() however the selection is stored 
+
 void vtkEMSegmentParametersSetStep::UpdateLoadedParameterSets()
 {
   if(!this->ParameterSetMenuButton ||
@@ -578,6 +575,7 @@ SelectedDefaultTaskChangedCallback(int index, bool warningFlag)
   // Create New task 
   if (index ==  int(this->pssDefaultTasksName.size() -1))
     {   
+      mrmlManager->RemoveAllEMSNodes(); 
       mrmlManager->CreateAndObserveNewParameterSet();
       this->PopUpRenameEntry(mrmlManager->GetNumberOfParameterSets() - 1);
       return;
@@ -590,23 +588,36 @@ SelectedDefaultTaskChangedCallback(int index, bool warningFlag)
 void vtkEMSegmentParametersSetStep::
 SelectedPreprocessingChangedCallback(int index, bool warningFlag)
 {
-  if (index < 0 || index >  int(this->DefinePreprocessingTasksName.size() -1) )
+  if (index < -1 || index >  int(this->DefinePreprocessingTasksName.size() -1) )
     {
       vtkErrorMacro("Index is not defined");
       return;
     }
 
+
   vtkEMSegmentMRMLManager *mrmlManager = this->GetGUI()->GetMRMLManager();
 
-  size_t found;
-  cout << "Splitting: " << this->DefinePreprocessingTasksFile[index] << endl;
-  found = this->DefinePreprocessingTasksFile[index].find_last_of("/\\");
-  cout << " folder: " << this->DefinePreprocessingTasksFile[index].substr(0,found) << endl;
-  cout << " file: " << this->DefinePreprocessingTasksFile[index].substr(found+1) << endl;
+  if (index > -1) 
+    { 
+      size_t found;
+      cout << "Splitting: " << this->DefinePreprocessingTasksFile[index] << endl;
+      found = this->DefinePreprocessingTasksFile[index].find_last_of("/\\");
+      cout << " folder: " << this->DefinePreprocessingTasksFile[index].substr(0,found) << endl;
+      cout << " file: " << this->DefinePreprocessingTasksFile[index].substr(found+1) << endl;
+      mrmlManager->SetTclTaskFilename(this->DefinePreprocessingTasksFile[index].substr(found+1).c_str());
 
-  mrmlManager->SetTclTaskFilename(this->DefinePreprocessingTasksFile[index].substr(found+1).c_str());
+    } 
+  else 
+    {
+      mrmlManager->SetTclTaskFilename(vtkMRMLEMSNode::GetDefaultTclTaskFilename());
+    }
+
+
+
 }
 
+//----------------------------------------------------------------------------
+// function for renaming a member of the task list 
 void vtkEMSegmentParametersSetStep::UpdateTaskListIndex(int index) 
 {
   vtkEMSegmentMRMLManager *mrmlManager = this->GetGUI()->GetMRMLManager();
@@ -644,7 +655,17 @@ void vtkEMSegmentParametersSetStep::SelectedParameterSetChangedCallback(int inde
       return;
     }
 
-  mrmlManager->SetLoadedParameterSetIndex(index);
+  // Delete all other EMS nodes 
+  vtkMRMLNode* node =  mrmlManager->GetMRMLScene()->GetNthNodeByClass(index, "vtkMRMLEMSNode");
+  if (node == NULL)
+    {
+    vtkErrorMacro("Did not find nth template builder node in scene: " << index);
+    return;
+    }
+   // We have to do this bc otherwise strange things can happen when more then two emsnodes exist
+   mrmlManager->RemoveAllEMSNodesButOne(node);
+   // Now only one is left
+   mrmlManager->SetLoadedParameterSetIndex(0);
 
   vtkEMSegmentAnatomicalStructureStep *anat_step =
     this->GetGUI()->GetAnatomicalStructureStep();
@@ -656,7 +677,7 @@ void vtkEMSegmentParametersSetStep::SelectedParameterSetChangedCallback(int inde
     anat_step->GetAnatomicalStructureTree()->GetWidget()->DeleteAllNodes();
     }
 
-  std::string tclFileName = this->GetGUI()->GetLogic()->DefineTclTaskFullPathName(mrmlManager->GetTclTaskFilename());
+  std::string tclFileName = this->GetGUI()->GetLogic()->DefineTclTaskFullPathName(this->GetSlicerApplication(),mrmlManager->GetTclTaskFilename());
 
   this->SourceTclFile(tclFileName.c_str());
   if (flag && (!this->SettingSegmentationMode(0)))
@@ -818,6 +839,11 @@ void vtkEMSegmentParametersSetStep::PopUpRenameEntry(int index)
       preprocessing_menu->AddRadioButton(DefinePreprocessingTasksName[i].c_str(), this, buffer);
       }
 
+    sprintf(buffer, "SelectedPreprocessingChangedCallback %d 1", -1);
+    preprocessing_menu->AddRadioButton("None", this, buffer);
+
+
+
     app->Script ( "grid %s -row 1 -column 0 -padx 2 -pady 2", this->PreprocessingMenuButton->GetWidgetName() );
     popUpFrameP->Delete();
 
@@ -900,12 +926,9 @@ int vtkEMSegmentParametersSetStep::LoadDefaultTask(int index, bool warningFlag)
 }
 
 //----------------------------------------------------------------------------
-int vtkEMSegmentParametersSetStep::LoadDefaultData(const char *tclFile, bool warningFlag)
+int vtkEMSegmentParametersSetStep::LoadDefaultData(const char *mrmlFile, bool warningFlag)
 {
   
-  // Load Tcl File defining the setting
-  this->SourceTclFile(tclFile);
-
   this->GetGUI()->SetSegmentationModeToAdvanced();
   if (warningFlag)
     {
@@ -919,10 +942,11 @@ int vtkEMSegmentParametersSetStep::LoadDefaultData(const char *tclFile, bool war
   // Load MRML File whose location is defined in the tcl file 
   vtkEMSegmentMRMLManager *mrmlManager = this->GetGUI()->GetMRMLManager();
   vtkMRMLScene *scene = mrmlManager->GetMRMLScene();
-  vtksys_stl::string mrmlFile(vtkSlicerApplication::SafeDownCast(this->GetGUI()->GetApplication())->Script("::EMSegmenterParametersStepTcl::DefineMRMLFile"));
-  scene->SetURL(mrmlFile.c_str());
+  // vtksys_stl::string mrmlFile(vtkSlicerApplication::SafeDownCast(this->GetGUI()->GetApplication())->Script("::EMSegmenterParametersStepTcl::DefineMRMLFile"));
+  scene->SetURL(mrmlFile);
  
-  // if (!scene->Connect()) 
+  mrmlManager->RemoveAllEMSNodes();
+  // bc of task file cannot do a connect ! if (!scene->Connect()) - also not as user friendly bc otherwise data gets lost that was loaded in beforehand 
   if (!scene->Import()) 
     {
       vtksys_stl::string msg= vtksys_stl::string("Could not load mrml file ") +  mrmlFile  ;
@@ -947,6 +971,71 @@ int vtkEMSegmentParametersSetStep::LoadDefaultData(const char *tclFile, bool war
   return 0;
 }
 
+void vtkEMSegmentParametersSetStep::AddDefaultTasksToList(const char* FilePath)
+{
+  vtkDirectory *dir = vtkDirectory::New();
+  // Do not give out an error message here bc it otherwise comes up when loading slicer 
+  // the path might simply not be created !
+  if (!dir->Open(FilePath))
+    {
+      dir->Delete();
+      return;
+    }
+    
+  for (int i = 0; i < dir->GetNumberOfFiles(); i++)
+    {
+    vtksys_stl::string filename = dir->GetFile(i);
+    //skip ., ..,  if it is not a mrml extension, or a directory
+    if (strcmp(filename.c_str(), ".") == 0)
+      {
+      continue;
+      }
+    if (strcmp(filename.c_str(), "..") == 0)
+      {
+      continue;
+      }
+    if (strcmp(vtksys::SystemTools::GetFilenameExtension(filename.c_str()).c_str(), ".mrml") != 0)
+      {
+      continue;
+      }
+
+    //if (strcmp(filename.c_str(), vtkMRMLEMSNode::GetDefaultTclTaskFilename()) == 0)
+    //  {
+    //  continue;
+    //  }
+ 
+    vtksys_stl::string tmpFullFileName = vtksys_stl::string(FilePath) + vtksys_stl::string("/") + filename.c_str();
+    vtksys_stl::string fullFileName = vtksys::SystemTools::ConvertToOutputPath(tmpFullFileName.c_str());
+    if (vtksys::SystemTools::FileIsDirectory(fullFileName.c_str()))
+      {
+    continue;
+      }
+    
+    // Generate Name of Task from File name
+    vtksys_stl::string taskName = this->GetGUI()->GetMRMLManager()->TurnDefaultMRMLFileIntoTaskName(filename.c_str());
+
+    // make sure that file is not already in the list 
+    int existFlag = 0;
+    for (i=0; i < int(pssDefaultTasksName.size()); i++)
+      {
+    if (!this->pssDefaultTasksName[i].compare(taskName))
+      {
+        existFlag =1;
+      }
+      }
+    if (existFlag)
+      {
+    continue;
+      }
+    // Add to List
+    this->pssDefaultTasksFile.push_back(fullFileName);
+    this->pssDefaultTasksName.push_back(taskName);
+    this->DefinePreprocessingTasksFile.push_back(fullFileName);
+    this->DefinePreprocessingTasksName.push_back(taskName);
+    }
+  dir->Delete();
+}
+
 //-------------vtksys_stl::string ---------------------------------------------------------------
 void vtkEMSegmentParametersSetStep::DefineDefaultTasksList()
 {
@@ -957,57 +1046,12 @@ void vtkEMSegmentParametersSetStep::DefineDefaultTasksList()
   this->DefinePreprocessingTasksName.clear();
   this->DefinePreprocessingTasksFile.clear();
 
-  vtkDirectory *dir = vtkDirectory::New();
-  vtksys_stl::string FilePath =  this->GetGUI()->GetLogic()->GetTclTaskDirectory();
-  if (!dir->Open(FilePath.c_str()))
-    {
-    vtkErrorMacro("Cannot open " << this->GetGUI()->GetLogic()->GetTclTaskDirectory());
-    // No special files 
-    dir->Delete();
-    return;
-    }
-    
-  for (int i = 0; i < dir->GetNumberOfFiles(); i++)
-    {
-    vtksys_stl::string filename = dir->GetFile(i);
-    //skip ., ..,  and the default file
-    if (strcmp(filename.c_str(), ".") == 0)
-      {
-      continue;
-      }
-    if (strcmp(filename.c_str(), "..") == 0)
-      {
-      continue;
-      }
-
-    if (strcmp(filename.c_str(), vtkMRMLEMSNode::GetDefaultTclTaskFilename()) == 0)
-      {
-      continue;
-      }
+  this->AddDefaultTasksToList(this->GetGUI()->GetLogic()->GetTclTaskDirectory().c_str());
+  this->AddDefaultTasksToList(this->GetGUI()->GetLogic()->GetTemporaryTaskDirectory(this->GetSlicerApplication()).c_str());
  
-    vtksys_stl::string fullName = this->GetGUI()->GetLogic()->DefineTclTaskFullPathName(filename.c_str());
-      
-    if (strcmp(vtksys::SystemTools::
-               GetFilenameExtension(fullName.c_str()).c_str(), ".tcl") != 0)
-      {
-      continue;
-      }
-
-    if (!vtksys::SystemTools::FileIsDirectory(fullName.c_str()))
-      {
-      vtkstd::replace(filename.begin(), filename.end(), '-', ' ');
-      // Get Rid of extension
-      filename.resize(filename.size() - 4);
-      this->pssDefaultTasksFile.push_back(fullName);
-      this->pssDefaultTasksName.push_back(vtksys_stl::string(filename));
-      this->DefinePreprocessingTasksFile.push_back(fullName);
-      this->DefinePreprocessingTasksName.push_back(vtksys_stl::string(filename));
-      }
-    }
-  dir->Delete();
   if (!this->pssDefaultTasksFile.size()) 
     {
-    vtkWarningMacro("No default tasks found in " << this->GetGUI()->GetLogic()->GetTclTaskDirectory());
+    vtkWarningMacro("No default tasks found");
     }
   // The last one is always "Create New" 
   this->pssDefaultTasksFile.push_back(vtksys_stl::string(""));

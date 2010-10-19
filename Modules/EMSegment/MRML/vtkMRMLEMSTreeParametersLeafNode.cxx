@@ -44,6 +44,10 @@ vtkMRMLEMSTreeParametersLeafNode::vtkMRMLEMSTreeParametersLeafNode()
   this->PrintQuality                    = 0;
   this->IntensityLabel                  = 0;
   this->DistributionSpecificationMethod = 0;
+  this->LogMean.clear();
+  this->LogCovariance.clear();
+  this->LogMeanCorrection.clear();
+  this->LogCovarianceCorrection.clear();
 }
 
 //-----------------------------------------------------------------------------
@@ -70,10 +74,10 @@ void vtkMRMLEMSTreeParametersLeafNode::WriteXML(ostream& of, int nIndent)
     }
   of << "\" ";
 
-  of << indent << "AutoLogMean=\"";
+  of << indent << "LogMeanCorrection=\"";
   for (unsigned int i = 0; i < this->GetNumberOfTargetInputChannels(); ++i)
     {
-    of << this->AutoLogMean[i] << " ";
+    of << this->LogMeanCorrection[i] << " ";
     }
   of << "\" ";
 
@@ -93,12 +97,12 @@ void vtkMRMLEMSTreeParametersLeafNode::WriteXML(ostream& of, int nIndent)
     }
   of << "\" ";
 
-  of << indent << "AutoLogCovariance=\"";
+  of << indent << "LogCovarianceCorrection=\"";
   for (unsigned int r = 0; r < this->GetNumberOfTargetInputChannels(); ++r)
     {
     for (unsigned int c = 0; c < this->GetNumberOfTargetInputChannels(); ++c)  
       {
-      of << this->AutoLogCovariance[r][c] << " ";
+      of << this->LogCovarianceCorrection[r][c] << " ";
       }
     if (r < this->GetNumberOfTargetInputChannels() - 1)
       {
@@ -210,7 +214,7 @@ void vtkMRMLEMSTreeParametersLeafNode::ReadXMLAttributes(const char** attrs)
           }   
         }
       }
-    else if (!strcmp(key, "AutoLogMean"))
+    else if (!strcmp(key, "LogMeanCorrection"))
       {
       // read data into a temporary vector
       vtksys_stl::stringstream ss;
@@ -229,9 +233,9 @@ void vtkMRMLEMSTreeParametersLeafNode::ReadXMLAttributes(const char** attrs)
         }
       
       // copy data
-      vtksys_stl::copy(tmpVec.begin(), tmpVec.end(), this->AutoLogMean.begin());
+      vtksys_stl::copy(tmpVec.begin(), tmpVec.end(), this->LogMeanCorrection.begin());
       }
-    else if (!strcmp(key, "AutoLogCovariance"))
+    else if (!strcmp(key, "LogCovarianceCorrection"))
       {
       // remove visual row seperators
       std::string valStr(val);
@@ -267,7 +271,7 @@ void vtkMRMLEMSTreeParametersLeafNode::ReadXMLAttributes(const char** attrs)
         {
         for (unsigned int c = 0; c<this->GetNumberOfTargetInputChannels(); ++c)
           {
-          this->AutoLogCovariance[r][c] = tmpVec[i++];
+          this->LogCovarianceCorrection[r][c] = tmpVec[i++];
           }   
         }
       }
@@ -303,8 +307,8 @@ void vtkMRMLEMSTreeParametersLeafNode::Copy(vtkMRMLNode *rhs)
   this->SetIntensityLabel(node->IntensityLabel);
   this->LogMean = node->LogMean;
   this->LogCovariance = node->LogCovariance;
-  this->AutoLogMean = node->AutoLogMean;
-  this->AutoLogCovariance = node->AutoLogCovariance;
+  this->LogMeanCorrection = node->LogMeanCorrection;
+  this->LogCovarianceCorrection = node->LogCovarianceCorrection;
   this->SetDistributionSpecificationMethod
     (node->DistributionSpecificationMethod);
   this->DistributionSamplePointsRAS = node->DistributionSamplePointsRAS;
@@ -331,10 +335,10 @@ void vtkMRMLEMSTreeParametersLeafNode::PrintSelf(ostream& os,
     }
   os << "\n";
 
-  os << indent << "AutoLogMean: ";
+  os << indent << "LogMeanCorrection: ";
   for (unsigned int i = 0; i < this->GetNumberOfTargetInputChannels(); ++i)
     {
-    os << this->AutoLogMean[i] << " ";
+    os << this->LogMeanCorrection[i] << " ";
     }
   os << "\n";
 
@@ -348,12 +352,12 @@ void vtkMRMLEMSTreeParametersLeafNode::PrintSelf(ostream& os,
     }
   os << "\n";
 
-  os << indent << "AutoLogCovariance: ";
+  os << indent << "LogCovarianceCorrection: ";
   for (unsigned int r = 0; r < this->GetNumberOfTargetInputChannels(); ++r)
     {
     for (unsigned int c = 0; c < this->GetNumberOfTargetInputChannels(); ++c)
       {
-      os << this->AutoLogCovariance[r][c] << " ";
+      os << this->LogCovarianceCorrection[r][c] << " ";
       }
     }
   os << "\n";
@@ -407,18 +411,18 @@ SetNumberOfTargetInputChannels(unsigned int n)
     // resize LogMean, don\"t preserve data!
     this->LogMean.resize(n);
     vtksys_stl::fill(this->LogMean.begin(), this->LogMean.end(), 0.0);
-    this->AutoLogMean.resize(n);
-    vtksys_stl::fill(this->AutoLogMean.begin(), this->AutoLogMean.end(), 0.0);
+    this->LogMeanCorrection.resize(n);
+    vtksys_stl::fill(this->LogMeanCorrection.begin(), this->LogMeanCorrection.end(), 0.0);
 
     // resize LogCovariance, don't preserve data!
     this->LogCovariance.clear();
     this->LogCovariance.resize(n);
-    this->AutoLogCovariance.clear();
-    this->AutoLogCovariance.resize(n);
+    this->LogCovarianceCorrection.clear();
+    this->LogCovarianceCorrection.resize(n);
     for (unsigned int i = 0; i < n; ++i)
       {
       this->LogCovariance[i].resize(n, 0.0);
-      this->AutoLogCovariance[i].resize(n, 0.0);
+      this->LogCovarianceCorrection[i].resize(n, 0.0);
       }
     }
 
@@ -430,15 +434,15 @@ vtkMRMLEMSTreeParametersLeafNode::
 AddTargetInputChannel()
 {
   this->LogMean.push_back(0.0);
-  this->AutoLogMean.push_back(0.0);
+  this->LogMeanCorrection.push_back(0.0);
   for (unsigned int i = 0; i < this->NumberOfTargetInputChannels; ++i)
     {
     this->LogCovariance[i].push_back(0.0);
-    this->AutoLogCovariance[i].push_back(0.0);
+    this->LogCovarianceCorrection[i].push_back(0.0);
     }
   ++this->NumberOfTargetInputChannels; 
   this->LogCovariance.push_back(vtkstd::vector<double>(this->NumberOfTargetInputChannels, 0.0));
-  this->AutoLogCovariance.push_back(vtkstd::vector<double>(this->NumberOfTargetInputChannels, 0.0));
+  this->LogCovarianceCorrection.push_back(vtkstd::vector<double>(this->NumberOfTargetInputChannels, 0.0));
 }
 
 //-----------------------------------------------------------------------------
@@ -447,14 +451,14 @@ vtkMRMLEMSTreeParametersLeafNode::
 RemoveNthTargetInputChannel(int index)
 {
   this->LogMean.erase(this->LogMean.begin() + index);
-  this->AutoLogMean.erase(this->AutoLogMean.begin() + index);
+  this->LogMeanCorrection.erase(this->LogMeanCorrection.begin() + index);
   for (unsigned int i = 0; i < this->NumberOfTargetInputChannels; ++i)
     {
     this->LogCovariance[i].erase(this->LogCovariance[i].begin() + index);
-    this->AutoLogCovariance[i].erase(this->AutoLogCovariance[i].begin() + index);
+    this->LogCovarianceCorrection[i].erase(this->LogCovarianceCorrection[i].begin() + index);
     }
   this->LogCovariance.erase(this->LogCovariance.begin() + index);
-  this->AutoLogCovariance.erase(this->AutoLogCovariance.begin() + index);
+  this->LogCovarianceCorrection.erase(this->LogCovarianceCorrection.begin() + index);
   --this->NumberOfTargetInputChannels;
 }
 
@@ -467,9 +471,9 @@ MoveNthTargetInputChannel(int fromIndex, int toIndex)
   this->LogMean.erase(this->LogMean.begin() + fromIndex);
   this->LogMean.insert(this->LogMean.begin() + toIndex, movingParam);
 
-  movingParam = this->AutoLogMean[fromIndex];
-  this->AutoLogMean.erase(this->AutoLogMean.begin() + fromIndex);
-  this->AutoLogMean.insert(this->AutoLogMean.begin() + toIndex, movingParam);
+  movingParam = this->LogMeanCorrection[fromIndex];
+  this->LogMeanCorrection.erase(this->LogMeanCorrection.begin() + fromIndex);
+  this->LogMeanCorrection.insert(this->LogMeanCorrection.begin() + toIndex, movingParam);
 
   for (unsigned int i = 0; i < this->NumberOfTargetInputChannels; ++i)
     {
@@ -477,18 +481,18 @@ MoveNthTargetInputChannel(int fromIndex, int toIndex)
     this->LogCovariance[i].erase(this->LogCovariance[i].begin() + fromIndex);
     this->LogCovariance[i].insert(this->LogCovariance[i].begin() + toIndex, movingParam);
 
-    movingParam = this->AutoLogCovariance[i][fromIndex];
-    this->AutoLogCovariance[i].erase(this->AutoLogCovariance[i].begin() + fromIndex);
-    this->AutoLogCovariance[i].insert(this->AutoLogCovariance[i].begin() + toIndex, movingParam);
+    movingParam = this->LogCovarianceCorrection[i][fromIndex];
+    this->LogCovarianceCorrection[i].erase(this->LogCovarianceCorrection[i].begin() + fromIndex);
+    this->LogCovarianceCorrection[i].insert(this->LogCovarianceCorrection[i].begin() + toIndex, movingParam);
     }
 
   vtkstd::vector<double> movingVec = this->LogCovariance[fromIndex];
   this->LogCovariance.erase(this->LogCovariance.begin() + fromIndex);
   this->LogCovariance.insert(this->LogCovariance.begin() + toIndex, movingVec);
 
-  movingVec = this->AutoLogCovariance[fromIndex];
-  this->AutoLogCovariance.erase(this->AutoLogCovariance.begin() + fromIndex);
-  this->AutoLogCovariance.insert(this->AutoLogCovariance.begin() + toIndex, movingVec);
+  movingVec = this->LogCovarianceCorrection[fromIndex];
+  this->LogCovarianceCorrection.erase(this->LogCovarianceCorrection.begin() + fromIndex);
+  this->LogCovarianceCorrection.insert(this->LogCovarianceCorrection.begin() + toIndex, movingVec);
 }
 
 //-----------------------------------------------------------------------------
@@ -511,9 +515,9 @@ SetLogMean(int index, double value)
 
 
 //-----------------------------------------------------------------------------
-double vtkMRMLEMSTreeParametersLeafNode::GetAutoLogMean(int index) const
+double vtkMRMLEMSTreeParametersLeafNode::GetLogMeanCorrection(int index) const
 {
-  return this->AutoLogMean[index];
+  return this->LogMeanCorrection[index];
 }
 
 
@@ -521,11 +525,11 @@ double vtkMRMLEMSTreeParametersLeafNode::GetAutoLogMean(int index) const
 //-----------------------------------------------------------------------------
 void
 vtkMRMLEMSTreeParametersLeafNode::
-SetAutoLogMean(int index, double value)
+SetLogMeanCorrection(int index, double value)
 {
-  if (value != this->AutoLogMean[index] ) 
+  if (value != this->LogMeanCorrection[index] ) 
     {
-      this->AutoLogMean[index] = value;
+      this->LogMeanCorrection[index] = value;
       this->Modified();
     }
 }
@@ -553,51 +557,19 @@ SetLogCovariance(int row, int column, double value)
 //-----------------------------------------------------------------------------
 double
 vtkMRMLEMSTreeParametersLeafNode::
-GetAutoLogCovariance(int row, int column) const
+GetLogCovarianceCorrection(int row, int column) const
 {
-  return this->AutoLogCovariance[row][column];
+  return this->LogCovarianceCorrection[row][column];
 }
 
 //-----------------------------------------------------------------------------
 void
 vtkMRMLEMSTreeParametersLeafNode::
-SetAutoLogCovariance(int row, int column, double value)
+SetLogCovarianceCorrection(int row, int column, double value)
 {
-  if (value != this->AutoLogCovariance[row][column])
+  if (value != this->LogCovarianceCorrection[row][column])
     { 
-      this->AutoLogCovariance[row][column] = value;
-      this->Modified();
-    }
-}
-
-void vtkMRMLEMSTreeParametersLeafNode::CopyAutoLogCovarianceToLogCovariance()
-{
-  int diffFlag = 0;
-  if (this->AutoLogCovariance.size() != this->LogCovariance.size()) 
-    {
-      diffFlag = 1;
-      this->LogCovariance.resize(this->AutoLogCovariance.size());
-    } 
-
-  for (unsigned int r = 0; r < this->AutoLogCovariance.size(); ++r)
-    {
-      if (this->AutoLogCovariance[r] != this->LogCovariance[r]) 
-    {
-       diffFlag = 1;
-       this->LogCovariance[r] = this->AutoLogCovariance[r];
-    }
-    }
-  if (diffFlag) 
-    {
-      this->Modified();
-    }
-}
-
-void vtkMRMLEMSTreeParametersLeafNode::CopyAutoLogMeanToLogMean()
-{
-  if (this->AutoLogMean != this->LogMean) 
-    {
-      this->LogMean = this->AutoLogMean;
+      this->LogCovarianceCorrection[row][column] = value;
       this->Modified();
     }
 }

@@ -699,3 +699,4 @@ void vtkEMSegmentGUI::StartSegmentation()
       this->StartSegmentStep = NULL;
     }
   }
+

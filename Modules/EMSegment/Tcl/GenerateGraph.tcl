@@ -467,13 +467,13 @@ itcl::body EMSegmenterGraph::CreateGraphButton {Sclass Label Color {Above 0} {Up
       
         for {set y 0 } { $y < $EMSegment(Graph,$i,Dimension) } {incr y} {
         if {$SetFlag} {
-            lappend mean [$_mrmlManager GetTreeNodeDistributionLogMean $Sclass $NumIndex(y)] 
+            lappend mean [$_mrmlManager GetTreeNodeDistributionLogMeanWithCorrection $Sclass $NumIndex(y)]  
         } else {
             lappend mean 0.0
         }
         for {set x 0 } { $x < $EMSegment(Graph,$i,Dimension) } {incr x} {
            if {$SetFlag} {
-            lappend cov [$_mrmlManager GetTreeNodeDistributionLogCovariance $Sclass $NumIndex(y) $NumIndex(x)] 
+            lappend cov [$_mrmlManager GetTreeNodeDistributionLogCovarianceWithCovariance $Sclass $NumIndex(y) $NumIndex(x)] 
             } else {
             if {$y == $x} {lappend cov 1.0
                 } else { lappend cov 0.0}
@@ -566,9 +566,8 @@ itcl::body EMSegmenterGraph::PlotCurveRegion {numGraph} {
     # Update Classes
     foreach j $EMSegment(GlobalClassList) {
         if {$NumIndex > -1} {
-        EMSegment(Graph,$numGraph,Data,$j) SetMean        [$_mrmlManager GetTreeNodeDistributionLogMean $j $NumIndex] 0  
-        EMSegment(Graph,$numGraph,Data,$j) SetCovariance  [$_mrmlManager GetTreeNodeDistributionLogCovariance $j $NumIndex $NumIndex ] 0 0 
-        # puts "EMSegment(Graph,$numGraph,Data,$j) SetCovariance [$_mrmlManager GetTreeNodeDistributionLogMean $j $NumIndex] 0 0" 
+           EMSegment(Graph,$numGraph,Data,$j) SetMean        [$_mrmlManager GetTreeNodeDistributionLogMeanWithCorrection $j $NumIndex] 0  
+           EMSegment(Graph,$numGraph,Data,$j) SetCovariance  [$_mrmlManager GetTreeNodeDistributionLogCovarianceWithCorrection $j $NumIndex $NumIndex ] 0 0 
         }
         EMSegment(Graph,$numGraph,Data,$j) SetProbability [expr ($EMSegment(Graph,DisplayProb) > 0 ?  $EMSegment(Cattrib,$j,Prob) : 1.0)]
         EMSegment(Graph,$numGraph,Data,$j) Update
@@ -580,10 +579,9 @@ itcl::body EMSegmenterGraph::PlotCurveRegion {numGraph} {
     foreach j $EMSegment(GlobalClassList) {
         if {($NumIndex(0) > -1) && ($NumIndex(1) > -1)} {
         for {set y 0 } { $y < 2} {incr y} {
-            EMSegment(Graph,$numGraph,Data,$j) SetMean     [$_mrmlManager GetTreeNodeDistributionLogMean $j $NumIndex($y)]  $y
+            EMSegment(Graph,$numGraph,Data,$j) SetMean     [$_mrmlManager GetTreeNodeDistributionLogMeanWithCorrection $j $NumIndex($y)]  $y
             for {set x 0 } {$x < 2} {incr x} {
-            EMSegment(Graph,$numGraph,Data,$j) SetCovariance [$_mrmlManager GetTreeNodeDistributionLogCovariance $j $NumIndex($y) $NumIndex($x) ] $y $x 
-            # puts "EMSegment(Graph,$numGraph,Data,$j) SetCovariance [$_mrmlManager GetTreeNodeDistributionLogCovariance $j $NumIndex($y) $NumIndex($x) ] $y $x "
+            EMSegment(Graph,$numGraph,Data,$j) SetCovariance [$_mrmlManager GetTreeNodeDistributionLogCovarianceWithCorrection $j $NumIndex($y) $NumIndex($x) ] $y $x 
             }
         }
         } 
@@ -619,9 +617,9 @@ proc CalculateClassMeanCovariance { } {
 
     # don't use sample values
     for {set y 0} {$y < $EMSegment(NumInputChannel)} {incr y} {
-        set EMSegment(Cattrib,$ID,LogMean,$y)  [$_mrmlManager GetTreeNodeDistributionLogMean $ID $y]
+        set EMSegment(Cattrib,$ID,LogMean,$y)  [$_mrmlManager GetTreeNodeDistributionLogMeanWithCorrection $ID $y]
         for {set x 0} {$x < $EMSegment(NumInputChannel)} {incr x} { 
-        set EMSegment(Cattrib,$ID,LogCovariance,$y,$x)  [$_mrmlManager GetTreeNodeDistributionLogCovariance $ID $y $x ]
+        set EMSegment(Cattrib,$ID,LogCovariance,$y,$x)  [$_mrmlManager GetTreeNodeDistributionLogCovarianceWithCorrection $ID $y $x ]
         }
     }
 

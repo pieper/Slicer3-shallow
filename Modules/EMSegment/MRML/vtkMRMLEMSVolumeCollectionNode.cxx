@@ -4,7 +4,6 @@
 #include "vtkMRMLScene.h"
 #include <algorithm>
 #include "vtkMRMLScalarVolumeNode.h"
-
 #include <vtksys/stl/string>
 
 vtkMRMLEMSVolumeCollectionNode* 
@@ -209,6 +208,7 @@ AddVolume(const char* key, const char* volumeNodeID)
     this->KeyList.push_back(key);
     this->KeyToVolumeNodeIDMap[key] = volumeNodeID;
     this->VolumeNodeIDToKeyMap[volumeNodeID] = key;
+    // cout << "this->Scene->AddReferencedNodeID " << volumeNodeID << " " << this << endl;
     this->Scene->AddReferencedNodeID(volumeNodeID, this);
     return 1;
 }
@@ -221,6 +221,7 @@ SetNthVolumeNodeID(int n, const char* volumeNodeID)
   vtksys_stl::advance(i, n);
   this->KeyToVolumeNodeIDMap[*i] = volumeNodeID;
   this->Scene->AddReferencedNodeID(volumeNodeID, this);
+  // cout << "setnth this->Scene->AddReferencedNodeID " << volumeNodeID << " " << this << endl;
 }
 
 int
@@ -239,7 +240,12 @@ RemoveAllVolumes()
     {
     std::string volumeNodeID = this->KeyToVolumeNodeIDMap[*i];
     this->Scene->RemoveReferencedNodeID(volumeNodeID.c_str(), this);
+    // cout << "this->Scene->RemoveReferencedNodeID " << volumeNodeID << " " << this << endl;
     }
+ 
+  // vtkCollection* blub = this->Scene->GetReferencedNodes(this);
+  // vtkIndent t;
+  // blub->PrintSelf(cout,t);
 
   this->KeyList.clear();
   this->KeyToVolumeNodeIDMap.clear();

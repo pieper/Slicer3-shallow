@@ -235,12 +235,12 @@ int main(int vtkNotUsed(argc), char** argv)
                             vtkEMSegmentMRMLManager::
                             DistributionSpecificationManual, 
                             treeNodeID);
-    vtkTestSetGetMacroIndex2(pass, m, 
-                             TreeNodeDistributionLogMean, 
-                             MAGIC_DOUBLE, treeNodeID, 0);
-    vtkTestSetGetMacroIndex3(pass, m, 
-                             TreeNodeDistributionLogCovariance, 
-                             MAGIC_DOUBLE, treeNodeID, 0, 0);
+    //vtkTestSetGetMacroIndex2(pass, m, 
+    //                         TreeNodeDistributionLogMeanWithCorrection, 
+    //                         MAGIC_DOUBLE, treeNodeID, 0);
+    //vtkTestSetGetMacroIndex3(pass, m, 
+    //                         TreeNodeDistributionLogCovarianceWithCorrection, 
+    //                         MAGIC_DOUBLE, treeNodeID, 0, 0);
 
     std::cerr << "Testing sample point interface...";
     double p1[3] = {MAGIC_DOUBLE, MAGIC_DOUBLE2, MAGIC_DOUBLE3};
@@ -713,10 +713,10 @@ int main(int vtkNotUsed(argc), char** argv)
       // check that all is ok
       // we should have changed 0, 1, 2, 3, 4 to 4, 0, 3, 1
       std::cerr << "Checking that parameters moved ok...";
-      if (m->GetTreeNodeDistributionLogMean(treeNodeID, 0) != MAGIC_DOUBLE5 ||
-          m->GetTreeNodeDistributionLogMean(treeNodeID, 1) != MAGIC_DOUBLE ||
-          m->GetTreeNodeDistributionLogMean(treeNodeID, 2) != MAGIC_DOUBLE4 ||
-          m->GetTreeNodeDistributionLogMean(treeNodeID, 3) != MAGIC_DOUBLE2)
+      if (m->GetTreeNodeDistributionLogMeanWithCorrection(treeNodeID, 0) != MAGIC_DOUBLE5 ||
+          m->GetTreeNodeDistributionLogMeanWithCorrection(treeNodeID, 1) != MAGIC_DOUBLE ||
+          m->GetTreeNodeDistributionLogMeanWithCorrection(treeNodeID, 2) != MAGIC_DOUBLE4 ||
+          m->GetTreeNodeDistributionLogMeanWithCorrection(treeNodeID, 3) != MAGIC_DOUBLE2)
         {
         std::cerr << "Error moving log mean" << std::endl;
         std::cerr << "M1 " << MAGIC_DOUBLE << std::endl;
@@ -728,32 +728,32 @@ int main(int vtkNotUsed(argc), char** argv)
         std::cerr << "Expected order: M5 M1 M4 M2" << std::endl;
 
         std::cerr << "Found order: " 
-                  << m->GetTreeNodeDistributionLogMean(treeNodeID, 0) << " "
-                  << m->GetTreeNodeDistributionLogMean(treeNodeID, 1) << " "
-                  << m->GetTreeNodeDistributionLogMean(treeNodeID, 2) << " "
-                  << m->GetTreeNodeDistributionLogMean(treeNodeID, 3) 
+                  << m->GetTreeNodeDistributionLogMeanWithCorrection(treeNodeID, 0) << " "
+                  << m->GetTreeNodeDistributionLogMeanWithCorrection(treeNodeID, 1) << " "
+                  << m->GetTreeNodeDistributionLogMeanWithCorrection(treeNodeID, 2) << " "
+                  << m->GetTreeNodeDistributionLogMeanWithCorrection(treeNodeID, 3) 
                   << std::endl;
         pass = false;
         localPass = false;
         }
 
       if (
-          m->GetTreeNodeDistributionLogCovariance(treeNodeID, 0, 0) != 25 ||
-          m->GetTreeNodeDistributionLogCovariance(treeNodeID, 0, 1) != 21 ||
-          m->GetTreeNodeDistributionLogCovariance(treeNodeID, 0, 2) != 24 ||
-          m->GetTreeNodeDistributionLogCovariance(treeNodeID, 0, 3) != 22 ||
-          m->GetTreeNodeDistributionLogCovariance(treeNodeID, 1, 0) != 5 ||
-          m->GetTreeNodeDistributionLogCovariance(treeNodeID, 1, 1) != 1 ||
-          m->GetTreeNodeDistributionLogCovariance(treeNodeID, 1, 2) != 4 ||
-          m->GetTreeNodeDistributionLogCovariance(treeNodeID, 1, 3) != 2 ||
-          m->GetTreeNodeDistributionLogCovariance(treeNodeID, 2, 0) != 20 ||
-          m->GetTreeNodeDistributionLogCovariance(treeNodeID, 2, 1) != 16 ||
-          m->GetTreeNodeDistributionLogCovariance(treeNodeID, 2, 2) != 19 ||
-          m->GetTreeNodeDistributionLogCovariance(treeNodeID, 2, 3) != 17 ||
-          m->GetTreeNodeDistributionLogCovariance(treeNodeID, 3, 0) != 20 ||
-          m->GetTreeNodeDistributionLogCovariance(treeNodeID, 3, 1) != 6 ||
-          m->GetTreeNodeDistributionLogCovariance(treeNodeID, 3, 2) != 9 ||
-          m->GetTreeNodeDistributionLogCovariance(treeNodeID, 3, 3) != 7 
+          m->GetTreeNodeDistributionLogCovarianceWithCorrection(treeNodeID, 0, 0) != 25 ||
+          m->GetTreeNodeDistributionLogCovarianceWithCorrection(treeNodeID, 0, 1) != 21 ||
+          m->GetTreeNodeDistributionLogCovarianceWithCorrection(treeNodeID, 0, 2) != 24 ||
+          m->GetTreeNodeDistributionLogCovarianceWithCorrection(treeNodeID, 0, 3) != 22 ||
+          m->GetTreeNodeDistributionLogCovarianceWithCorrection(treeNodeID, 1, 0) != 5 ||
+          m->GetTreeNodeDistributionLogCovarianceWithCorrection(treeNodeID, 1, 1) != 1 ||
+          m->GetTreeNodeDistributionLogCovarianceWithCorrection(treeNodeID, 1, 2) != 4 ||
+          m->GetTreeNodeDistributionLogCovarianceWithCorrection(treeNodeID, 1, 3) != 2 ||
+          m->GetTreeNodeDistributionLogCovarianceWithCorrection(treeNodeID, 2, 0) != 20 ||
+          m->GetTreeNodeDistributionLogCovarianceWithCorrection(treeNodeID, 2, 1) != 16 ||
+          m->GetTreeNodeDistributionLogCovarianceWithCorrection(treeNodeID, 2, 2) != 19 ||
+          m->GetTreeNodeDistributionLogCovarianceWithCorrection(treeNodeID, 2, 3) != 17 ||
+          m->GetTreeNodeDistributionLogCovarianceWithCorrection(treeNodeID, 3, 0) != 20 ||
+          m->GetTreeNodeDistributionLogCovarianceWithCorrection(treeNodeID, 3, 1) != 6 ||
+          m->GetTreeNodeDistributionLogCovarianceWithCorrection(treeNodeID, 3, 2) != 9 ||
+          m->GetTreeNodeDistributionLogCovarianceWithCorrection(treeNodeID, 3, 3) != 7 
           )
         {
         std::cerr << "Error moving log covariance" << std::endl;
@@ -762,7 +762,7 @@ int main(int vtkNotUsed(argc), char** argv)
           {
           for (int c = 0; c < 4; ++c)
             {
-            std::cerr << m->GetTreeNodeDistributionLogCovariance(treeNodeID, r, c)
+            std::cerr << m->GetTreeNodeDistributionLogCovarianceWithCorrection(treeNodeID, r, c)
                       << " ";
             }
           std::cerr << std::endl;

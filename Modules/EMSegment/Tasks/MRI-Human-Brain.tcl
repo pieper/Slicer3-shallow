@@ -16,21 +16,6 @@ if {0} { ;# comment
 # namespace procs
 #
 
-# Remember to run make before executing script again so that this tcl script is copied over to slicer3-build directory
-namespace eval EMSegmenterParametersStepTcl {
-    proc DefineMRMLFile { } {
-        # Make sure that in the MRML file
-        # EMS id="vtkMRMLEMSNode1" name="MRI Human Brain"
-        # the name is the same as this tcl file name where the spaces are replaced with empty spaces
-
-        # return "http://xnd.slicer.org:8000/data/20100504T005942Z/MRIHumanBrain.mrml"
-        # return "http://xnd.slicer.org:8000/data/20100920T105925Z/MRIHumanBrain.mrml"
-        return "http://xnd.slicer.org:8000/data/20100924T095314Z/MRIHumanBrain.mrml"
-        # return "/data/EMSegment_DataSet/3.6/MRIHumanBrain/result/MRIHumanBrain.mrml"
-        # old one - did not work
-    }
-}
-
 #
 # Remember to source first GenericTask.tcl as it has all the variables/basic structure defined
 #
@@ -64,13 +49,15 @@ namespace eval EMSegmenterPreProcessingTcl {
         variable atlasAlignedFlagID
         variable iccMaskSelectID
         variable inhomogeneityCorrectionFlagID
+        variable LOGIC
 
-        puts "TCLMRI: Preprocessing MRI Human Brain - ShowUserInterface"
         # Always has to be done initially so that variables are correctly defined
         if { [InitVariables] } {
-            PrintError "ShowUserInterface: Not all variables are correctly defined!"
+            puts stderr "ERROR: MRI-HumanBrain: ShowUserInterface: Not all variables are correctly defined!"
             return 1
         }
+        $LOGIC PrintText  "TCLMRI: Preprocessing MRI Human Brain - ShowUserInterface"
+
         $preGUI DefineTextLabel "This task only applies to non-skull stripped scans! \n\nShould the EMSegmenter " 0
         $preGUI DefineCheckButton "- register the atlas to the input scan ?" 0 $atlasAlignedFlagID
         # $preGUI DefineCheckButton "Are the input scans skull stripped ?" 0 $skullStrippedFlagID
@@ -91,14 +78,15 @@ namespace eval EMSegmenterPreProcessingTcl {
         variable subjectNode
         variable inputAtlasNode
         variable mrmlManager
+    variable LOGIC
 
         variable atlasAlignedFlagID
         variable iccMaskSelectID
         variable inhomogeneityCorrectionFlagID
 
-        puts "TCLMRI: =========================================="
-        puts "TCLMRI: == Preprocress Data"
-        puts "TCLMRI: =========================================="
+         $LOGIC PrintText "TCLMRI: =========================================="
+         $LOGIC PrintText "TCLMRI: == Preprocress Data"
+         $LOGIC PrintText "TCLMRI: =========================================="
         # ---------------------------------------
         # Step 1 : Initialize/Check Input
         if {[InitPreProcessing]} { 
@@ -114,7 +102,7 @@ namespace eval EMSegmenterPreProcessingTcl {
         # [GetVolumeMenuButtonValueFromMRML $iccMaskSelectID]
         set inhomogeneityCorrectionFlag [GetCheckButtonValueFromMRML $inhomogeneityCorrectionFlagID]
 
-        puts "TCLMRI: ==> Preprocessing Setting: $atlasAlignedFlag $inhomogeneityCorrectionFlag"
+         $LOGIC PrintText "TCLMRI: ==> Preprocessing Setting: $atlasAlignedFlag $inhomogeneityCorrectionFlag"
 
         if { ($atlasAlignedFlag == 0) && ($skullStrippedFlag == 1) } {
             PrintError "Run: We currently cannot align the atlas to skull stripped image"
@@ -144,7 +132,7 @@ namespace eval EMSegmenterPreProcessingTcl {
                 return 1
             }
         } else {
-            # puts "TCLMRI: Skipping ICC Mask generation! - Not yet implemented"
+            #  $LOGIC PrintText "TCLMRI: Skipping ICC Mask generation! - Not yet implemented"
             set subjectICCMaskNode ""
         }
 
@@ -161,7 +149,7 @@ namespace eval EMSegmenterPreProcessingTcl {
                 return 1
             }
         } else {
-            puts "TCLMRI: Skipping intensity correction"
+             $LOGIC PrintText "TCLMRI: Skipping intensity correction"
         }
 
         # write results over to subjectNode
@@ -195,9 +183,10 @@ namespace eval EMSegmenterPreProcessingTcl {
     # otherwise returns nothing
     # -------------------------------------
     proc GenerateICCMask { inputAtlasVolumeNode inputAtlasICCMaskNode subjectVolumeNode } {
-        puts "TCLMRI: =========================================="
-        puts "TCLMRI: == Generate ICC MASK (not yet implemented)"
-        puts "TCLMRI: =========================================="
+        variable LOGIC
+         $LOGIC PrintText "TCLMRI: =========================================="
+         $LOGIC PrintText "TCLMRI: == Generate ICC MASK (not yet implemented)"
+         $LOGIC PrintText "TCLMRI: =========================================="
         set EXE_DIR "$::env(Slicer3_HOME)/bin"
         set PLUGINS_DIR "$::env(Slicer3_HOME)/lib/Slicer3/Plugins"
 
@@ -218,9 +207,9 @@ namespace eval EMSegmenterPreProcessingTcl {
         variable LOGIC
         variable subjectNode
         variable SCENE
-        puts "TCLMRI: =========================================="
-        puts "TCLMRI: == Intensity Correction "
-        puts "TCLMRI: =========================================="
+         $LOGIC PrintText "TCLMRI: =========================================="
+         $LOGIC PrintText "TCLMRI: == Intensity Correction "
+         $LOGIC PrintText "TCLMRI: =========================================="
         set n4Module ""
         foreach gui [vtkCommandLineModuleGUI ListInstances] {
             if { [$gui GetGUIName] == "N4ITK MRI Bias correction" } {
@@ -310,9 +299,9 @@ namespace eval EMSegmenterPreProcessingTcl {
     proc N4ITKBiasFieldCorrectionCLI { subjectNode subjectICCMaskNode } {
         variable SCENE
         variable LOGIC
-        puts "TCLMRI: =========================================="
-        puts "TCLMRI: ==     N4ITKBiasFieldCorrectionCLI      =="
-        puts "TCLMRI: =========================================="
+         $LOGIC PrintText "TCLMRI: =========================================="
+         $LOGIC PrintText "TCLMRI: ==     N4ITKBiasFieldCorrectionCLI      =="
+         $LOGIC PrintText "TCLMRI: =========================================="
 
         set PLUGINS_DIR "$::env(Slicer3_HOME)/lib/Slicer3/Plugins"
         set CMD "${PLUGINS_DIR}/N4ITKBiasFieldCorrection "
@@ -354,7 +343,7 @@ namespace eval EMSegmenterPreProcessingTcl {
             $outputVolume Delete
 
             set outVolumeFileName [ CreateTemporaryFileName $outVolumeNode ]
-            puts "$outVolumeFileName"
+             $LOGIC PrintText "$outVolumeFileName"
             if { $outVolumeFileName == "" } {
                 return 1
             }
@@ -371,9 +360,9 @@ namespace eval EMSegmenterPreProcessingTcl {
             # set CMD "$CMD --outputbiasfield $outbiasVolumeFileName"
 
             # execute algorithm
-            puts "TCLMRI: Executing $CMD"
+             $LOGIC PrintText "TCLMRI: Executing $CMD"
             catch { eval exec $CMD } errmsg
-            puts "TCLMRI: $errmsg"
+             $LOGIC PrintText "TCLMRI: $errmsg"
 
             # Read results back, we have to read 2 results
 
@@ -385,7 +374,7 @@ namespace eval EMSegmenterPreProcessingTcl {
 
             # still in for loop, create a list of Volumes
             set result "${result}$outVolumeNode "
-            puts "TCLMRI: List of volume nodes: $result"
+             $LOGIC PrintText "TCLMRI: List of volume nodes: $result"
         }
         # return a newSubjectVolumeNodeList
         return "$result"
@@ -403,15 +392,14 @@ namespace eval EMSegmenterPreProcessingTcl {
         variable LOGIC
         variable GUI
         variable mrmlManager
-        puts "TCLMRI: =========================================="
-        puts "TCLMRI: == Update Intensity Distribution "
-        puts "TCLMRI: =========================================="
+         $LOGIC PrintText "TCLMRI: =========================================="
+         $LOGIC PrintText "TCLMRI: == Update Intensity Distribution "
+         $LOGIC PrintText "TCLMRI: =========================================="
 
         # return [$mrmlManager ComputeIntensityDistributionsFromSpatialPrior [$LOGIC GetModuleShareDirectory] [$preGUI GetApplication]]
         if { [$LOGIC ComputeIntensityDistributionsFromSpatialPrior $GUI] } {
             return 1
         }
-        $mrmlManager CopyTreeNodeAutoLogDistToLogDist
         return 0
     }
 
@@ -435,21 +423,21 @@ namespace eval EMSegmenterPreProcessingTcl {
             return [SkipAtlasRegistration]
         }
 
-        puts "TCLMRI: =========================================="
-        puts "TCLMRI: == Register Atlas ($affineFlag / $bSplineFlag) "
-        puts "TCLMRI: =========================================="
+         $LOGIC PrintText "TCLMRI: =========================================="
+         $LOGIC PrintText "TCLMRI: == Register Atlas ($affineFlag / $bSplineFlag) "
+         $LOGIC PrintText "TCLMRI: =========================================="
 
 
         # ----------------------------------------------------------------
         # Setup
         # ----------------------------------------------------------------
         if { $outputAtlasNode == "" } {
-            puts "TCLMRI: Aligned Atlas was empty"
-            # puts "TCLMRI: set outputAtlasNode \[ $mrmlManager CloneAtlasNode $inputAtlasNode \"AlignedAtlas\"\] "
+             $LOGIC PrintText "TCLMRI: Aligned Atlas was empty"
+            #  $LOGIC PrintText "TCLMRI: set outputAtlasNode \[ $mrmlManager CloneAtlasNode $inputAtlasNode \"AlignedAtlas\"\] "
             set outputAtlasNode [ $mrmlManager CloneAtlasNode $inputAtlasNode "Aligned"]
             $workingDN SetAlignedAtlasNodeID [$outputAtlasNode GetID]
         } else {
-            puts "TCLMRI: Atlas was just synchronized"
+             $LOGIC PrintText "TCLMRI: Atlas was just synchronized"
             $mrmlManager SynchronizeAtlasNode $inputAtlasNode $outputAtlasNode "Aligned"
         }
 
@@ -494,13 +482,13 @@ namespace eval EMSegmenterPreProcessingTcl {
         set fixedRASToMovingRASTransformAffine [ vtkTransform New]
         set fixedRASToMovingRASTransformDeformable ""
 
-        puts "TCLMRI: ========== Info ========="
-        puts "TCLMRI: = Fixed:   [$fixedTargetVolumeNode GetName] "
-        puts "TCLMRI: = Moving:  [$movingAtlasVolumeNode GetName] "
-        puts "TCLMRI: = Affine:  $affineType"
-        puts "TCLMRI: = BSpline: $deformableType"
-        puts "TCLMRI: = Interp:  $interpolationType"
-        puts "TCLMRI: ========================="
+         $LOGIC PrintText "TCLMRI: ========== Info ========="
+         $LOGIC PrintText "TCLMRI: = Fixed:   [$fixedTargetVolumeNode GetName] "
+         $LOGIC PrintText "TCLMRI: = Moving:  [$movingAtlasVolumeNode GetName] "
+         $LOGIC PrintText "TCLMRI: = Affine:  $affineType"
+         $LOGIC PrintText "TCLMRI: = BSpline: $deformableType"
+         $LOGIC PrintText "TCLMRI: = Interp:  $interpolationType"
+         $LOGIC PrintText "TCLMRI: ========================="
 
         # ----------------------------------------------------------------
         # affine registration
@@ -508,17 +496,17 @@ namespace eval EMSegmenterPreProcessingTcl {
         # old Style
         if { 0 } {
             if { $affineType == [$mrmlManager GetRegistrationTypeFromString AtlasToTargetAffineRegistrationOff] } {
-                puts "TCLMRI: Skipping affine registration of atlas image."
+                 $LOGIC PrintText "TCLMRI: Skipping affine registration of atlas image."
             } else {
-                puts "TCLMRI: Registering atlas image rigid..."
+                 $LOGIC PrintText "TCLMRI: Registering atlas image rigid..."
                 $LOGIC SlicerRigidRegister $fixedTargetVolumeNode $movingAtlasVolumeNode "" $fixedRASToMovingRASTransformAffine $affineType $interpolationType 0
-                puts "TCLMRI: Atlas-to-target transform (fixedRAS -->> movingRAS): "
+                 $LOGIC PrintText "TCLMRI: Atlas-to-target transform (fixedRAS -->> movingRAS): "
                 for { set r 0 } { $r < 4 } { incr r } {
-                    puts -nonewline "    "
+                     $LOGIC PrintText -nonewline "    "
                     for { set c 0 } { $c < 4 } { incr c } {
-                        puts -nonewline "[[$fixedRASToMovingRASTransformAffine GetMatrix] GetElement $r $c]   "
+                         $LOGIC PrintText -nonewline "[[$fixedRASToMovingRASTransformAffine GetMatrix] GetElement $r $c]   "
                     }
-                    puts " "
+                     $LOGIC PrintText " "
                 }
             }
         }
@@ -531,21 +519,20 @@ namespace eval EMSegmenterPreProcessingTcl {
             # old Style
             set OffType [$mrmlManager GetRegistrationTypeFromString AtlasToTargetDeformableRegistrationOff]
 
-            puts "TCLMRI: Deformable registration $deformableType Off: $OffType"
+             $LOGIC PrintText "TCLMRI: Deformable registration $deformableType Off: $OffType"
             if { $deformableType == $OffType } {
-                puts "TCLMRI: Skipping deformable registration of atlas image"
+                 $LOGIC PrintText "TCLMRI: Skipping deformable registration of atlas image"
             } else {
-                puts "TCLMRI: Registering atlas image B-Spline..."
+                 $LOGIC PrintText "TCLMRI: Registering atlas image B-Spline..."
                 set fixedRASToMovingRASTransformDeformable [vtkGridTransform New]
                 $fixedRASToMovingRASTransformDeformable SetInterpolationModeToCubic
                 $LOGIC SlicerBSplineRegister $fixedTargetVolumeNode $movingAtlasVolumeNode "" $fixedRASToMovingRASTransformDeformable $fixedRASToMovingRASTransformAffine $deformableType $interpolationType 0
             }
         } else {
             # New type
-            set registrationType "CenterOfHeadAlign Rigid"
+            set registrationType "CenterOfHeadAlign Rigid  ScaleVersor3D ScaleSkewVersor3D Affine"
             set fastFlag 0
             if { $affineFlag } {
-                set registrationType "${registrationType} Affine"
                 if { $affineType == [$mrmlManager GetRegistrationTypeFromString AtlasToTargetAffineRegistrationRigidMMIFast] } {
                     set fastFlag 1
                 } else {
@@ -586,10 +573,10 @@ namespace eval EMSegmenterPreProcessingTcl {
                 PrintError "RegisterAtlas: Registration output is null, skipping: $i"
                 return 1
             }
-            puts "TCLMRI: Resampling atlas image $i ..."
+             $LOGIC PrintText "TCLMRI: Resampling atlas image $i ..."
 
             set backgroundLevel [$LOGIC GuessRegistrationBackgroundLevel $movingVolumeNode]
-            puts "TCLMRI: Guessed background level: $backgroundLevel"
+             $LOGIC PrintText "TCLMRI: Guessed background level: $backgroundLevel"
 
             if { 0 } {
                 # resample moving image
@@ -613,7 +600,7 @@ namespace eval EMSegmenterPreProcessingTcl {
             }
         }
 
-        puts "TCLMRI: Atlas-to-target registration complete."
+         $LOGIC PrintText "TCLMRI: Atlas-to-target registration complete."
         $workingDN SetAlignedAtlasNodeIsValid 1
         return 0
     }
