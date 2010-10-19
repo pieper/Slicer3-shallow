@@ -76,10 +76,6 @@ proc XnatXcatImport { xnatxcatFile } {
 
             #--- update main viewer and slice viewers
             $::slicer3::MRMLScene Modified
-            [$::slicer3::ApplicationGUI GetActiveViewerWidget ] RequestRender
-            [ [$::slicer3::ApplicationGUI GetMainSliceGUI "Red"] GetSliceViewer ]  RequestRender
-            [ [$::slicer3::ApplicationGUI GetMainSliceGUI "Yellow"] GetSliceViewer ]  RequestRender
-            [ [$::slicer3::ApplicationGUI GetMainSliceGUI "Green"] GetSliceViewer ]  RequestRender
         
             #--- clean up.
             $parser Delete
