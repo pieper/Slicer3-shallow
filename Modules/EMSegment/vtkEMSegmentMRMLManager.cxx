@@ -2706,7 +2706,7 @@ void
 vtkEMSegmentMRMLManager::
 SetRegistrationAtlasVolumeID(vtkIdType volumeID)
 {
-  cout << "SetRegistrationAtlasVolumeID " << volumeID << endl;
+  //  cout << "SetRegistrationAtlasVolumeID " << volumeID << endl;
 
   // for now there can be only one atlas image for registration
   vtksys_stl::string registrationVolumeName = "atlas_registration_image";
@@ -5214,6 +5214,23 @@ WritePackagedScene(vtkMRMLScene* scene)
     }  
 
   return allOK;
+}
+
+//----------------------------------------------------------------------------
+bool vtkEMSegmentMRMLManager::ExistRegistrationAtlasVolumeKey(vtkIdType inputID)
+{
+  if (!this->GetGlobalParametersNode())
+    {
+    vtkErrorMacro("GlobalParametersNode is NULL.");
+    return false;
+    }
+
+   const char* volumeName = this->GetGlobalParametersNode()->GetRegistrationAtlasVolumeKey(inputID);
+   if (volumeName == NULL || strlen(volumeName) == 0)
+     {
+       return false;
+     }
+   return true;
 }
 //----------------------------------------------------------------------------
 vtkIdType vtkEMSegmentMRMLManager::GetRegistrationAtlasVolumeID(vtkIdType inputID)

@@ -412,7 +412,12 @@ vtkEMSegmentIntensityDistributionsStep::DisplaySelectedNodeIntensityDistribution
     if (has_valid_selection)
       {
       this->NodeParametersLabel->SetEnabled(enabled);
-      std::string nodetext("Class: " + std::string(tree->GetNodeText(sel_node.c_str())) );
+      std::string nodetext("Class: ");
+      const char* name = tree->GetNodeText(sel_node.c_str()); 
+      if (name)
+    {      
+      nodetext.append(std::string(name));
+    }
       this->NodeParametersLabel->SetText( nodetext.c_str() );
       }
     else
@@ -428,7 +433,12 @@ vtkEMSegmentIntensityDistributionsStep::DisplaySelectedNodeIntensityDistribution
     if (has_valid_selection)
       {
       this->NodeParametersLabel2->SetEnabled(enabled);
-      std::string nodetext("Class: " + std::string(tree->GetNodeText(sel_node.c_str())) );
+      std::string nodetext("Class: ");
+      const char* name = tree->GetNodeText(sel_node.c_str()); 
+      if (name)
+    {      
+      nodetext.append(std::string(name));
+    }
       this->NodeParametersLabel2->SetText( nodetext.c_str() );
       }
     else

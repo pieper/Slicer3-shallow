@@ -224,6 +224,13 @@ void vtkEMSegmentStep::ShowUserInterface()
       this->NextStep->RemoveResults();
     } else {
   }
+  vtkKWWizardWidget *wizardWidget = this->GetGUI()->GetWizardWidget();
+  if (wizardWidget)
+    {
+      wizardWidget->SetCancelButtonVisibility(0);
+      wizardWidget->SetHelpButtonVisibility(0);
+    }
+
 }
 
 

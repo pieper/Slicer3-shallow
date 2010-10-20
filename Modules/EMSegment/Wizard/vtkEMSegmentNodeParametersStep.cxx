@@ -2159,7 +2159,7 @@ void vtkEMSegmentNodeParametersStep::Validate()
          << "; right now they sum to "
          << mrmlManager->GetTreeNodeChildrenSumClassProbability(firstBadTreeID)
          << ".  Please fix before continuing---"
-         << "you should edit the \"Global Prior\" fields for the"
+         << "you should edit the \"Class Weight\" fields for the"
          << " children nodes of "
          << mrmlManager->GetTreeNodeName(firstBadTreeID) << ".";
       
@@ -2229,6 +2229,12 @@ void vtkEMSegmentNodeParametersStep::ClassWeightChangedCallback(vtkIdType  sel_c
 
   // Define General Variables 
   vtkEMSegmentMRMLManager *mrmlManager = this->GetGUI()->GetMRMLManager();
+  // just check it so that you do not get an error message
+  if ( mrmlManager->GetTreeRootNodeID() == sel_class_id)
+    {
+      return ;
+    }
+
   vtkIdType parent = mrmlManager->GetTreeNodeParentNodeID(sel_class_id);
   if (!parent) {
     return;
@@ -2405,7 +2411,12 @@ void vtkEMSegmentNodeParametersStep::DefineClassOverviewWeightWindow(vtkIdType s
   assert(oldSize ==  int(this->NodeParametersClassOverviewWeightFrame.size()));
   assert(oldSize ==  int(this->NodeParametersClassOverviewWeightAuto.size()));
 
-  vtkIdType parent = mrmlManager->GetTreeNodeParentNodeID(sel_tree_class_id);
+  // to avoid errror messages;
+   vtkIdType parent = NULL;
+   if ( mrmlManager->GetTreeRootNodeID() != sel_tree_class_id)
+     {
+        parent = mrmlManager->GetTreeNodeParentNodeID(sel_tree_class_id);
+     }
   int newSize =0;
   if (parent)
     {

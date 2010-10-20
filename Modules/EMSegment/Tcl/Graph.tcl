@@ -494,6 +494,32 @@ proc GraphUpdateValues {varName path} {
        set localArray(Graph,$path,Title) $Graph(Title) 
        $localArray(Graph,$path,caTitle) itemconfigure  Title -text $Graph(Title)
    } 
+   # First check if entries are correct 
+   foreach axis "X Y" {
+       if {$localArray(Graph,$path,${axis}format) == "%d" } {
+          set TYPE integer
+       } else {
+          set TYPE double
+       }
+
+       if { [string is $TYPE -strict  $Graph(${axis}min) ] == 0 } {
+           set Graph(${axis}min) $localArray(Graph,$path,${axis}min)
+       } 
+
+       if { [string is $TYPE -strict  $Graph(${axis}max) ] == 0 } {
+           set Graph(${axis}max) $localArray(Graph,$path,${axis}max)
+       } 
+
+       if { [string is $TYPE -strict  $Graph(${axis}sca) ] == 0  } {
+           set Graph(${axis}sca) $localArray(Graph,$path,${axis}sca)
+       }    
+
+       if { [expr $Graph(${axis}min) >= $Graph(${axis}max) ] } {
+           set Graph(${axis}min) $localArray(Graph,$path,${axis}min)
+           set Graph(${axis}max) $localArray(Graph,$path,${axis}max)
+       }
+   }
+
    if {($Graph(Xmin) != $localArray(Graph,$path,Xmin)) || ($Graph(Xmax) != $localArray(Graph,$path,Xmax)) || ($Graph(Xsca) != $localArray(Graph,$path,Xsca))} {
         $localArray(this) _GraphRescaleAxis  $varName $path $Graph(Xmin) $Graph(Xmax) $Graph(Xsca) 0}
 

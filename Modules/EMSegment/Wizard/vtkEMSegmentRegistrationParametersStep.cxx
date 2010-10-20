@@ -486,7 +486,8 @@ void vtkEMSegmentRegistrationParametersStep::AssignAtlasScansToInputChannels(int
       setCmd << "RegistrationAtlasImageCallback " << i;
       this->PopulateMenuWithLoadedVolumes(this->RegistrationParametersAtlasImageMenuButton[i]->GetWidget()->GetMenu(), this,setCmd.str().c_str());
 
-      if(!mrmlManager->GetVolumeNumberOfChoices() || !this->SetMenuButtonSelectedItem(this->RegistrationParametersAtlasImageMenuButton[i]->GetWidget()->GetMenu(), mrmlManager->GetRegistrationAtlasVolumeID(i)))
+      
+      if(!mrmlManager->GetVolumeNumberOfChoices() ||  !mrmlManager->ExistRegistrationAtlasVolumeKey(i) || !this->SetMenuButtonSelectedItem(this->RegistrationParametersAtlasImageMenuButton[i]->GetWidget()->GetMenu(), mrmlManager->GetRegistrationAtlasVolumeID(i)))
     {
       this->RegistrationParametersAtlasImageMenuButton[i]->GetWidget()->SetValue("");
     }
@@ -499,10 +500,10 @@ void vtkEMSegmentRegistrationParametersStep::RegistrationAtlasImageCallback(vtkI
 {
   // The atlas image has changed because of user interaction
   vtkEMSegmentMRMLManager *mrmlManager = this->GetGUI()->GetMRMLManager();
-  if (mrmlManager)
+  if (mrmlManager && mrmlManager->IDMapContainsVTKNodeID(volume_id) )
     {
       mrmlManager->SetRegistrationAtlasVolumeID(input_id, volume_id);
-    }
+    } 
 }
 
 

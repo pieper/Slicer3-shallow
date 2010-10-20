@@ -459,6 +459,7 @@ public:
 
   virtual vtkIdType GetRegistrationAtlasVolumeID(vtkIdType inputID);
   virtual void      SetRegistrationAtlasVolumeID(vtkIdType inputID, vtkIdType volumeID);
+  virtual bool      ExistRegistrationAtlasVolumeKey(vtkIdType inputID);
 
   virtual void   SetTargetSelectedVolumeNthID(int n, vtkIdType newVolumeID); 
   virtual void SetTargetSelectedVolumeNthMRMLID(int n, const char* mrmlID); 
@@ -574,12 +575,23 @@ public:
 
   void RemoveNodesFromMRMLScene(vtkMRMLNode* node);
 
+  // Note, that this function is currently dangerous to call
+  // bc ReferencedNodeID stack is cleared when doing an import so that 
+  // that you can not rely on it anymore after import as they point to the wrong nodes which can cause a seg fault !   
   void RemoveAllEMSNodes();
+
+  // Note, that this function is currently dangerous to call
+  // bc ReferencedNodeID stack is cleared when doing an import so that 
+  // that you can not rely on it anymore after import as they point to the wrong nodes which can cause a seg fault !   
   void RemoveAllEMSNodesButOne(vtkMRMLNode* saveNode);
 
   //BTX
   vtksys_stl::string TurnDefaultMRMLFileIntoTaskName(const char* fileName);
   //ETX
+
+  virtual int          IDMapContainsMRMLNodeID(const char* MRMLNodeID);
+  virtual int          IDMapContainsVTKNodeID(vtkIdType id);
+
 
 private:
   vtkEMSegmentMRMLManager();
@@ -618,9 +630,6 @@ private:
                                        const char* MRMLNodeID);
   virtual void         IDMapRemovePair(vtkIdType vtkID);
   virtual void         IDMapRemovePair(const char* MRMLNodeID);
-
-  virtual int          IDMapContainsMRMLNodeID(const char* MRMLNodeID);
-  virtual int          IDMapContainsVTKNodeID(vtkIdType id);
 
   virtual void         UpdateMapsFromMRML();
 

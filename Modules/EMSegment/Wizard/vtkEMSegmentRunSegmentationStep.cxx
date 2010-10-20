@@ -521,24 +521,23 @@ void vtkEMSegmentRunSegmentationStep::SelectTemplateFileCallback()
 {
   // The template file has changed because of user interaction
 
-  if (this->RunSegmentationSaveTemplateButton && 
-      this->RunSegmentationSaveTemplateButton->IsCreated())
-    {
-    if (this->RunSegmentationSaveTemplateButton->GetLoadSaveDialog()->
-        GetStatus() == vtkKWDialog::StatusOK)
+  if (!this->RunSegmentationSaveTemplateButton ||  
+      !this->RunSegmentationSaveTemplateButton->IsCreated() || 
+      (this->RunSegmentationSaveTemplateButton->GetLoadSaveDialog()->GetStatus() != vtkKWDialog::StatusOK))
       {
-      this->RunSegmentationSaveTemplateButton->GetLoadSaveDialog()->
-        SaveLastPathToRegistry("OpenPath");
-      vtksys_stl::string filename = 
-        this->RunSegmentationSaveTemplateButton->GetFileName();
-      vtkEMSegmentMRMLManager *mrmlManager = this->GetGUI()->GetMRMLManager();
-      if (mrmlManager)
-        {
-        mrmlManager->SetSaveTemplateFilename(filename.c_str());
-    mrmlManager->CreateTemplateFile();
-        }
+        return;
       }
-    }
+
+    vtkKWMessageDialog::PopupMessage(this->GetApplication(),NULL,"Info About Template Generation", "The template generator only works correctly if no more than one scene were imported! Visit web site listed under Help for more info." , vtkKWMessageDialog::WarningIcon | vtkKWMessageDialog::InvokeAtPointer);
+
+   this->RunSegmentationSaveTemplateButton->GetLoadSaveDialog()->SaveLastPathToRegistry("OpenPath");
+   vtksys_stl::string filename = this->RunSegmentationSaveTemplateButton->GetFileName();
+   vtkEMSegmentMRMLManager *mrmlManager = this->GetGUI()->GetMRMLManager();
+   if (mrmlManager)
+        {
+          mrmlManager->SetSaveTemplateFilename(filename.c_str());
+          mrmlManager->CreateTemplateFile();
+        }
 }
 
 //----------------------------------------------------------------------------

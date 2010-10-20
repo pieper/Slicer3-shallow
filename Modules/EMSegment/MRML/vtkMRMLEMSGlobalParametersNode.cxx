@@ -95,7 +95,6 @@ UpdateReferenceID(const char* oldID, const char* newID)
       *i = newID;
       }
     }
-  this->InputChannelNames.clear();
 }
 
 //-----------------------------------------------------------------------------
@@ -338,8 +337,8 @@ void vtkMRMLEMSGlobalParametersNode::ReadXMLAttributes(const char** attrs)
         int index = 0;
         while (ss >> name)
          {
-       this->InputChannelNames.resize(index+1);
-       this->InputChannelNames[index] = name;
+           this->InputChannelNames.resize(index+1);
+           this->InputChannelNames[index] = name;
            index ++;
         }
       }
@@ -523,6 +522,7 @@ RemoveNthTargetInputChannel(int n)
     {
       this->InputChannelNames[i]  = this->InputChannelNames[i+1]; 
     }
+
   this->InputChannelNames.resize(this->NumberOfTargetInputChannels);
 }
 

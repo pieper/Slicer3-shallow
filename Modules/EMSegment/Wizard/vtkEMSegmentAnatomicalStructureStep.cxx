@@ -853,11 +853,6 @@ void vtkEMSegmentAnatomicalStructureStep::SelectedColorChangedCallback(vtkObject
     vtkDebugWithObjectMacro(self, 
       "No rows were selected, forcing selection of row " << row << ", numRows = " << numRows);
     } 
-  if (numRows != 1)
-    {
-    vtkWarningWithObjectMacro(self, 
-                  "\n============\nIgnore following error message\n============\nError in selection: "  << numRows << " selected, select just one and try again.\n============ End of ignore ============");
-    } 
 
   int rowInLabelEntry = self->AnatomicalNodeIntensityLabelEntry->GetWidget()->GetValueAsInt();
   int rowInColumnList = self->GetIntensityLabelEntryValueOfFirstSelectedRow();
@@ -1077,6 +1072,7 @@ void vtkEMSegmentAnatomicalStructureStep::PopulateAnatomicalStructureTree(
     }
   else
     {
+    // need to copy node otherwise the tree gets all messed up as node points to nodename !
     node << found;
     tree->SetNodeText(node.str().c_str(), nodename.c_str());
     }
@@ -1202,6 +1198,7 @@ void vtkEMSegmentAnatomicalStructureStep::AddChildNodeCallback(vtkIdType sel_vol
   sprintf(child_node, "node_%d", static_cast<int>(child_id));
   tree->AddNode(sel_node.c_str(), child_node, child_node);
   tree->SetNodeUserDataAsInt(child_node, child_id); 
+
   tree->OpenNode(sel_node.c_str());
   tree->SelectNode(child_node);
   this->SelectedAnatomicalNodeChangedCallback();
@@ -1223,6 +1220,7 @@ void vtkEMSegmentAnatomicalStructureStep::NodeParentChangedCallback(
     }
 }
 
+
 //----------------------------------------------------------------------------
 void vtkEMSegmentAnatomicalStructureStep::SelectedNodeNameChangedCallback(
   vtkIdType sel_vol_id, const char *value)
@@ -1231,19 +1229,41 @@ void vtkEMSegmentAnatomicalStructureStep::SelectedNodeNameChangedCallback(
 
   vtkEMSegmentMRMLManager *mrmlManager = this->GetGUI()->GetMRMLManager();
   vtkKWTree *tree = this->AnatomicalStructureTree->GetWidget();
-  const char *found_node = tree->FindNodeWithUserDataAsInt(NULL, sel_vol_id);
-  if (found_node)
-    {
-    vtksys_stl::string node(found_node);
-    tree->SetNodeText(node.c_str(), value);
-    if (mrmlManager)
+  const char* found_node = tree->FindNodeWithUserDataAsInt(NULL, sel_vol_id);
+  if (found_node && mrmlManager && value)
       {
-      mrmlManager->SetTreeNodeName(sel_vol_id, value);
+    vtksys_stl::string val_no_white(value); 
+    while (val_no_white.size() && !val_no_white.find(" "))
+      {
+        val_no_white.erase(0);
+      }
+
+      if (val_no_white.size())
+      {
+        mrmlManager->SetTreeNodeName(sel_vol_id, value);
+            // if you do not copy the node id then you get wired errors
+            vtksys_stl::string node(found_node);
+        tree->SetNodeText(node.c_str(), value);
+      } 
+    else 
+      {
+        this->AnatomicalNodeAttributeNameEntry->GetWidget()->SetValue(mrmlManager->GetTreeNodeName(sel_vol_id));
       }
     }
 }
 
 //----------------------------------------------------------------------------
+template<typename T, typename P>
+T remove_if(T beg, T end, P pred)
+{
+    T dest = beg;
+    for (T itr = beg;itr != end; ++itr)
+        if (!pred(*itr))
+            *(dest++) = *itr;
+    return dest;
+}
+
+
 void vtkEMSegmentAnatomicalStructureStep::SelectedNodeIntensityLabelChangedCallback(
   vtkIdType sel_vol_id, int value)
 {
@@ -1254,7 +1274,6 @@ void vtkEMSegmentAnatomicalStructureStep::SelectedNodeIntensityLabelChangedCallb
   const char *found_node = tree->FindNodeWithUserDataAsInt(NULL, sel_vol_id);
   if (found_node)
     {
-    vtksys_stl::string node(found_node);
     if (mrmlManager)
       {
       mrmlManager->SetTreeNodeIntensityLabel(sel_vol_id, value);

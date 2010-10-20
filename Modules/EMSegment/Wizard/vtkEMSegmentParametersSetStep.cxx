@@ -690,7 +690,8 @@ SelectedDefaultTaskChangedCallback(int index, bool warningFlag)
   // Create New task 
   if (index ==  int(this->pssDefaultTasksName.size() -1))
     {   
-      mrmlManager->RemoveAllEMSNodes(); 
+      // Do not do it - it is dangerous 
+      // mrmlManager->RemoveAllEMSNodes(); 
       mrmlManager->CreateAndObserveNewParameterSet();
       this->PopUpRenameEntry(mrmlManager->GetNumberOfParameterSets() - 1);
       return;
@@ -777,10 +778,12 @@ void vtkEMSegmentParametersSetStep::SelectedParameterSetChangedCallback(int inde
     vtkErrorMacro("Did not find nth template builder node in scene: " << index);
     return;
     }
-   // We have to do this bc otherwise strange things can happen when more then two emsnodes exist
-   mrmlManager->RemoveAllEMSNodesButOne(node);
+   // Do not delete nodes here bc ReferencedNodeID stack is emptied when doing an import so that 
+   // that you can not rely on it anymore after import as they point to the wrong nodes which can cause a seg fault !   
+   //  mrmlManager->RemoveAllEMSNodesButOne(node);
+
    // Now only one is left
-   mrmlManager->SetLoadedParameterSetIndex(0);
+   mrmlManager->SetLoadedParameterSetIndex(index);
 
   vtkEMSegmentAnatomicalStructureStep *anat_step =
     this->GetGUI()->GetAnatomicalStructureStep();
@@ -1060,7 +1063,8 @@ int vtkEMSegmentParametersSetStep::LoadDefaultData(const char *mrmlFile, bool wa
   // vtksys_stl::string mrmlFile(vtkSlicerApplication::SafeDownCast(this->GetGUI()->GetApplication())->Script("::EMSegmenterParametersStepTcl::DefineMRMLFile"));
   scene->SetURL(mrmlFile);
  
-  mrmlManager->RemoveAllEMSNodes();
+  // Dangerous after import see text in vtkMRMLManager.h 
+  //  mrmlManager->RemoveAllEMSNodes();
   // bc of task file cannot do a connect ! if (!scene->Connect()) - also not as user friendly bc otherwise data gets lost that was loaded in beforehand 
   if (!scene->Import()) 
     {
