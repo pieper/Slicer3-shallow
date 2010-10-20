@@ -777,6 +777,7 @@ proc CropVolumeApply {this} {
   $outVolumeNode SetLabelMap [$volumeNode GetLabelMap]
 
   $outVolumeNode Modified
+  $outVolumeNode SetModifiedSinceRead 1
 
   $reslicer Delete
   $changeInf Delete
@@ -859,6 +860,7 @@ proc CropVolumeUpdateLabelMap {this} {
   
   $::CropVolume($this,roilabelNode) SetIJKToRASMatrix $outputIJKToRAS
   $::CropVolume($this,roilabelNode) Modified
+  $::CropVolume($this,roilabelNode) SetModifiedSinceRead 1
 
   $outputIJKToRAS Delete
   $roiXform Delete
