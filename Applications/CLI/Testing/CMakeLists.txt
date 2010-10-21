@@ -823,6 +823,15 @@ add_test(ModelMakerLabelsTest ${Launcher_Command} ${TestLocation}ModelMakerTest
     --modelSceneFile ${TEMP}/ModelMakerTest.mrml\#vtkMRMLModelHierarchyNode1
     ${MRML_TEST_DATA}/helixMask3Labels.nrrd
   )
+# make sure that a left over label doesn't interfere with generate all and joint smoothing
+add_test(ModelMakerJointSmoothTest ${Launcher_Command} ${TestLocation}ModelMakerTest
+  ModelMakerTest
+    --labels 3
+    --generateAll
+    --jointsmooth
+    --modelSceneFile ${TEMP}/ModelMakerTest.mrml\#vtkMRMLModelHierarchyNode1
+    ${MRML_TEST_DATA}/helixMask3Labels.nrrd
+  )
 set (CLP ModelMaker)
 add_executable(${CLP}Test ${CLP}Test.cxx)
 add_dependencies(${CLP}Test ${CLP})

@@ -226,7 +226,12 @@ int main(int argc, char * argv[])
     int labelsMin = 0, labelsMax = 0;
 
     // figure out if we're making multiple models
-    if (Labels.size() > 0)
+    if (GenerateAll)
+      {
+      makeMultiple = true;
+      if (debug) { std::cout << "GenerateAll! set make mult to true" << std::endl; }
+      }
+    else if (Labels.size() > 0)
       {
       if (Labels.size() == 1)
         {
@@ -246,11 +251,6 @@ int main(int argc, char * argv[])
           cout << "Set labels min to " << labelsMin << ", labels max = " << labelsMax << ", labels vector size = " << Labels.size() << endl;
           }
         }
-      }    
-    else if (GenerateAll)
-      {
-      makeMultiple = true;
-      if (debug) { std::cout << "GenerateAll! set make mult to true" << std::endl; }
       }
     else if (EndLabel >= StartLabel && (EndLabel != -1 && StartLabel != -1))
       {
@@ -899,6 +899,11 @@ int main(int argc, char * argv[])
         if (debug)
           {
           watchThreshold.QuietOn();
+          }
+        if (smoother == NULL)
+          {
+          std::cerr << "\nERROR smoothing filter is null for joint smoothing!" << std::endl;
+          return EXIT_FAILURE;
           }
         threshold->SetInput(smoother->GetOutput());
         // In VTK 5.0, this is deprecated - the default behaviour seems to
