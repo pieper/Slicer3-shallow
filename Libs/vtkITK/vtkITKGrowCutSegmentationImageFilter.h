@@ -49,8 +49,8 @@ public:
 
   // Methods to set/get contrastNoiseRatioThreshold 
   // cnrThreshold
-  vtkSetMacro(CnrThreshold, double);
-  vtkGetMacro(CnrThreshold, double);
+  //vtkSetMacro(CnrThreshold, double);
+  //vtkGetMacro(CnrThreshold, double);
 
   // Methods to set/get priorSegmentConfidence
   vtkSetMacro(PriorSegmentConfidence, double);
@@ -81,7 +81,7 @@ public:
   // optional : contrastNoiseRatio Threshold. Use this for producing 
   // output with values over the threshold in the final segmentation
   // not implemented yet 
-  double CnrThreshold; 
+  //double CnrThreshold; 
 
 
 protected:
