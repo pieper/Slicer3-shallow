@@ -1767,7 +1767,7 @@ void vtkSlicerSlicesControlGUI::BuildCrossHairMenu ( )
   item = this->CrossHairButton->GetMenu()->AddCheckButton("Navigator");
   this->CrossHairButton->GetMenu()->SetItemGroupName(item, "CrosshairNavigation" );
 
-  this->CrossHairButton->GetMenu()->SelectItem ("Navigator");
+  this->CrossHairButton->GetMenu()->DeselectItem ("Navigator");
 
   this->CrossHairButton->GetMenu()->AddSeparator();
 
