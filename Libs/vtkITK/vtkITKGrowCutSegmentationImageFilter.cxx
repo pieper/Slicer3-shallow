@@ -153,20 +153,20 @@ void vtkITKImageGrowCutExecute3D(vtkImageData *inData,
   if(PriorSegmentStrength > 1.0)
     PriorSegmentStrength /= 100.0;
 
-  vtkIdType ngestures = GestureColors->GetNumberOfPoints();
-  typename OutImageType::PixelType backgroundColor = 0;
+  //vtkIdType ngestures = GestureColors->GetNumberOfPoints();
+  //typename OutImageType::PixelType backgroundColor = 0;
 
   // debugger<<" number of gestures "<<ngestures<<std::endl;
   //  std::cout<<" number of gestures "<<ngestures<<std::endl;
 
-  for (vtkIdType i = 0; i < ngestures; i++)
-  {
-    double *p = GestureColors->GetPoint(i);
+  //for (vtkIdType i = 0; i < ngestures; i++)
+ // {
+  //  double *p = GestureColors->GetPoint(i);
     //debugger<<" Gesture Color "<<i<<" : "<<p[0]<<std::endl;
     //    std::cout<<" Gesture Color "<<i<<" : "<<p[0]<<std::endl;
-    if(p[0] > backgroundColor)
-      backgroundColor = (typename OutImageType::PixelType)p[0];
-  }
+   // if(p[0] > backgroundColor)
+   //   backgroundColor = (typename OutImageType::PixelType)p[0];
+ // }
 
   //debugger<<" Background Label Color "<<backgroundColor<<std::endl;
   //  std::cout<<" Background Label Color "<<backgroundColor<<std::endl;
@@ -253,11 +253,11 @@ void vtkITKImageGrowCutExecute3D(vtkImageData *inData,
 vtkITKGrowCutSegmentationImageFilter::vtkITKGrowCutSegmentationImageFilter()
 {
   //MaxIterations = 5;
-  ObjectSize = 10;
+  ObjectSize = 20;
   GestureColors = NULL;
   ContrastNoiseRatio = 1.0;
-  CnrThreshold = 0.0;
-  PriorSegmentConfidence = 0.0000001;
+  //  CnrThreshold = 0.0;
+  PriorSegmentConfidence = 0.003;
   
 }
 
@@ -310,11 +310,13 @@ void ExecuteGrowCut( vtkITKGrowCutSegmentationImageFilter *self,
 
   if(input2->GetScalarType() != input3->GetScalarType() ) {
     
-    //    double inputRange2[2];
+    double inputRange2[2];
     //double inputRange3[2];
     
-    //vtkDataArray *tmpArray2;
-    //input2->GetArrayPointerForExtent(tmpArray2, outExt);
+    vtkDataArray *tmpArray2;
+    input2->GetArrayPointerForExtent(tmpArray2, outExt);
+    tmpArray2->GetRange( inputRange2 );
+    std::cout<<" data range "<<inputRange2[0]<<" "<<inputRange2[1]<<std::endl;
     //vtkDataArray *tmpArray3;
     //input3->GetArrayPointerForExtent(tmpArray3, outExt);
     
