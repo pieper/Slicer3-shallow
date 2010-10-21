@@ -666,66 +666,69 @@ vtkMRMLTimeSeriesBundleNode* vtkFourDImageLogic::LoadImagesByList(const char* bu
     statusMessage.progress = (double)i / (double)nVolumes;
     this->InvokeEvent ( vtkFourDImageLogic::ProgressDialogEvent, &statusMessage);
 
-    vtkMRMLScalarVolumeNode *volumeNode = vtkMRMLScalarVolumeNode::New();
-    vtkMRMLVolumeArchetypeStorageNode*storageNode = vtkMRMLVolumeArchetypeStorageNode::New();
-    vtkMRMLScalarVolumeDisplayNode* displayNode = vtkMRMLScalarVolumeDisplayNode::New();
-
-    //storageNode->SetFileName(filename);
-    char nodeName[128];
-    std::cerr << "filename = " << fileNamesContainerList[i][0].c_str() << std::endl;
-    ReaderType::FileNamesContainer::iterator fnciter;
-    storageNode->SetFileName(fileNamesContainerList[i][0].c_str());
-    storageNode->ResetFileNameList();
-    for (fnciter = fileNamesContainerList[i].begin(); fnciter != fileNamesContainerList[i].end(); fnciter ++)
+    if (fileNamesContainerList[i].size() > 0)
       {
-      storageNode->AddFileName(fnciter->c_str());
+      vtkMRMLScalarVolumeNode *volumeNode = vtkMRMLScalarVolumeNode::New();
+      vtkMRMLVolumeArchetypeStorageNode*storageNode = vtkMRMLVolumeArchetypeStorageNode::New();
+      vtkMRMLScalarVolumeDisplayNode* displayNode = vtkMRMLScalarVolumeDisplayNode::New();
+      
+      //storageNode->SetFileName(filename);
+      char nodeName[128];
+      std::cerr << "filename = " << fileNamesContainerList[i][0].c_str() << std::endl;
+      ReaderType::FileNamesContainer::iterator fnciter;
+      storageNode->SetFileName(fileNamesContainerList[i][0].c_str());
+      storageNode->ResetFileNameList();
+      for (fnciter = fileNamesContainerList[i].begin(); fnciter != fileNamesContainerList[i].end(); fnciter ++)
+        {
+        storageNode->AddFileName(fnciter->c_str());
+        }
+      storageNode->SetSingleFile(0);
+      //storageNode->AddObserver(vtkCommand::ProgressEvent,  this->LogicCallbackCommand);
+      storageNode->ReadData(volumeNode);
+      
+      sprintf(nodeName, "Vol_%03d", i);
+      volumeNode->SetName(nodeName);
+      
+      volumeNode->SetScene(scene);
+      storageNode->SetScene(scene);
+      displayNode->SetScene(scene);
+      
+      double range[2];
+      volumeNode->GetImageData()->GetScalarRange(range);
+      /*
+        range[0] = 0.0;
+        range[1] = 256.0;
+      */
+      if (range[0] < rangeLower) rangeLower = range[0];
+      if (range[1] > rangeUpper) rangeUpper = range[1];
+      displayNode->SetAutoWindowLevel(0);
+      displayNode->SetAutoThreshold(0);
+      displayNode->SetLowerThreshold(range[0]);
+      displayNode->SetUpperThreshold(range[1]);
+      displayNode->SetWindow(range[1] - range[0]);
+      displayNode->SetLevel(0.5 * (range[1] + range[0]) );
+      vtkSlicerColorLogic *colorLogic = vtkSlicerColorLogic::New();
+      displayNode->SetAndObserveColorNodeID(colorLogic->GetDefaultVolumeColorNodeID());
+      colorLogic->Delete();
+      
+      scene->AddNode(displayNode);  
+      scene->AddNode(storageNode);  
+      volumeNode->SetAndObserveStorageNodeID(storageNode->GetID());
+      volumeNode->SetAndObserveDisplayNodeID(displayNode->GetID());
+      scene->AddNode(volumeNode);  
+      this->FrameNodeVector.push_back(std::string(volumeNode->GetID()));
+      
+      // Add to 4D bundle
+      volumeNode->SetAndObserveTransformNodeID(bundleNode->GetID());
+      volumeNode->InvokeEvent(vtkMRMLTransformableNode::TransformModifiedEvent);
+      bundleNode->AddFrame(volumeNode->GetID());
+      bundleNode->SetTimeStamp(i, &ts);
+      ts.second += fps;
+      
+      volumeNode->Delete();
+      storageNode->Delete();
+      displayNode->Delete();
       }
-    storageNode->SetSingleFile(0);
-    //storageNode->AddObserver(vtkCommand::ProgressEvent,  this->LogicCallbackCommand);
-    storageNode->ReadData(volumeNode);
-
-    sprintf(nodeName, "Vol_%03d", i);
-    volumeNode->SetName(nodeName);
-
-    volumeNode->SetScene(scene);
-    storageNode->SetScene(scene);
-    displayNode->SetScene(scene);
-
-    double range[2];
-    volumeNode->GetImageData()->GetScalarRange(range);
-    /*
-      range[0] = 0.0;
-      range[1] = 256.0;
-    */
-    if (range[0] < rangeLower) rangeLower = range[0];
-    if (range[1] > rangeUpper) rangeUpper = range[1];
-    displayNode->SetAutoWindowLevel(0);
-    displayNode->SetAutoThreshold(0);
-    displayNode->SetLowerThreshold(range[0]);
-    displayNode->SetUpperThreshold(range[1]);
-    displayNode->SetWindow(range[1] - range[0]);
-    displayNode->SetLevel(0.5 * (range[1] + range[0]) );
-    vtkSlicerColorLogic *colorLogic = vtkSlicerColorLogic::New();
-    displayNode->SetAndObserveColorNodeID(colorLogic->GetDefaultVolumeColorNodeID());
-    colorLogic->Delete();
-
-    scene->AddNode(displayNode);  
-    scene->AddNode(storageNode);  
-    volumeNode->SetAndObserveStorageNodeID(storageNode->GetID());
-    volumeNode->SetAndObserveDisplayNodeID(displayNode->GetID());
-    scene->AddNode(volumeNode);  
-    this->FrameNodeVector.push_back(std::string(volumeNode->GetID()));
-
-    // Add to 4D bundle
-    volumeNode->SetAndObserveTransformNodeID(bundleNode->GetID());
-    volumeNode->InvokeEvent(vtkMRMLTransformableNode::TransformModifiedEvent);
-    bundleNode->AddFrame(volumeNode->GetID());
-    bundleNode->SetTimeStamp(i, &ts);
-    ts.second += fps;
-
-    volumeNode->Delete();
-    storageNode->Delete();
-    displayNode->Delete();
     }
 
   if (bundleNode && bundleNode->GetDisplayBufferNode(0) == NULL)
