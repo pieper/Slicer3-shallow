@@ -481,10 +481,9 @@ proc EditorCreateLabelVolume {this} {
     return;
   }
 
-   set name "[$volumeNode GetName]-label"
+  set name "[$volumeNode GetName]-label"
 
   set scene [[$this GetLogic] GetMRMLScene]
-
   set volumesLogic [$::slicer3::VolumesGUI GetLogic]
   set labelNode [$volumesLogic CreateLabelVolume $scene $volumeNode $name]
 
@@ -733,37 +732,74 @@ proc EditorGestureCheckPoint {} {
    #
    # Create a new gesture map for the corresponding label layer 
    #
-   
+
    puts "Editor Gesture Check Point"
+
    catch {
    set sliceLogic [$::slicer3::ApplicationLogic GetSliceLogic "Red"]
    set layerLogic [$sliceLogic GetLabelLayer]
    set labelNode [$layerLogic GetVolumeNode]
+
+   #
+   # Check if the size of the label layer image data and the input image data match 
+   #
+
+   set backgroundLogic [$sliceLogic GetBackgroundLayer]
+   set backgroundNode [$backgroundLogic GetVolumeNode]
+  
+   set labelImage [$labelNode GetImageData]
+   set backgroundImage [$backgroundNode GetImageData]
+
+   set labelDim [$labelImage GetDimensions]
+   set backgroundDim [$backgroundImage GetDimensions]
    
-   set labelID [$labelNode GetID]
+   set lx [lindex $labelDim 0]
+   set ly [lindex $labelDim 1]
+   set lz [lindex $labelDim 2]
+
+
+   set bx [lindex $backgroundDim 0]
+   set by [lindex $backgroundDim 1]
+   set bz [lindex $backgroundDim 2]
+
+   puts "label Dimensions :  $lx $ly $lz  Background Dimensions : $bx $by $bz "
+
+   if { $lx != $bx || $ly != $by || $lz != $bz } {
+    
+    EditorErrorDialog "Label Image and Intensity Image Dimensions Don't Match. Select another Label Image. All the previous Gestures will be lost."
+   }
+   
+   set labelname [$labelNode GetName]
+   set name "[$labelNode GetName]-gesture"
+
+   set GestureID ""
 
    #
    # Check if we have a node corresponding to the label node
    #
-   set name "[$labelNode GetID]-gesture"
-  # puts "name : $name"
+   #set name "[$labelNode GetID]-gesture"
+   # puts "name : $name"
    set nodes [$::slicer3::MRMLScene GetNodesByName $name]
 
-  # puts "number of items : [$nodes GetNumberOfItems]"
+   #puts "number of items : [$nodes GetNumberOfItems]"
 
    if { [$nodes GetNumberOfItems] == 0 } {
 
-   #   puts "adding a new volume to MRML Scene $name"
+      puts "adding a new volume to MRML Scene $name"
       set volumesLogic [$::slicer3::VolumesGUI GetLogic]
       set gestureNode [$volumesLogic CreateLabelVolume $::slicer3::MRMLScene $labelNode $name]
       set ID [$gestureNode GetID]
+      set GestureID [$gestureNode GetID]
+      puts "creating a gesture node $GestureID"
+      
       catch {
         set node [EditorGetGestureParameterNode $ID]
       } check1
       #if { $check1 != ""} { puts " foo check $check1" }
 
   } else {
-  # puts "node of $name exists... "
+   
+    #puts "node of $name exists... "
     set nScriptedNodes [$::slicer3::MRMLScene GetNumberOfNodesByClass "vtkMRMLScriptedModuleNode"]
 
     set nNodes [$nodes GetNumberOfItems]
@@ -778,6 +814,8 @@ proc EditorGestureCheckPoint {} {
 
      if {$testname == $name } {
         set foundnode $testId
+        set GestureID [$testvol GetID]
+       # puts "Found node $GestureID"
         break
      }
    }
@@ -787,7 +825,11 @@ proc EditorGestureCheckPoint {} {
      set volumesLogic [$::slicer3::VolumesGUI GetLogic]
      set gestureNode [$volumesLogic CreateLabelVolume $::slicer3::MRMLScene $labelNode $name]
      set ID [$gestureNode GetID]
-#     puts "creating a new node for $ID" 
+
+     set GestureID [$gestureNode GetID]
+
+     puts "creating a new node for $GestureID" 
+     
      set node [EditorGetGestureParameterNode $ID]
     } else {
  #     puts "setting the volume ids.. "
@@ -795,7 +837,22 @@ proc EditorGestureCheckPoint {} {
     }
   }
 
- } check
+ } checkstr
+ 
+ if {$checkstr != "" } { puts "error in setting up the gesture image $checkstr " }
+  puts "setting the label map opacities..."
+   set numCnodes [$::slicer3::MRMLScene GetNumberOfNodesByClass "vtkMRMLSliceCompositeNode"]
+   for { set j 0 } { $j < $numCnodes } { incr j } {
+
+       set cnode [$::slicer3::MRMLScene GetNthNodeByClass $j "vtkMRMLSliceCompositeNode"]
+       $cnode SetReferenceLabelVolumeID [$labelNode GetID]
+       $cnode SetLabelOpacity 0.6
+       
+       $cnode SetReferenceForegroundVolumeID $GestureID
+       puts "Setting the foreground volume id to $GestureID"
+       $cnode SetForegroundOpacity 0.4
+   }
+
 }
 
 
