@@ -326,7 +326,8 @@ void vtkSlicerDiffusionWeightedVolumeDisplayWidget::ProcessMRMLEvents ( vtkObjec
 
   vtkMRMLVolumeNode *volumeNode = vtkMRMLVolumeNode::SafeDownCast(caller);
   if (volumeNode == curVolumeNode && 
-      volumeNode != NULL && event == vtkCommand::ModifiedEvent)
+      volumeNode != NULL && volumeNode->GetImageData() &&
+      event == vtkCommand::ModifiedEvent)
     {
     this->WindowLevelThresholdEditor->SetImageData(volumeNode->GetImageData());
     this->DiffusionSelectorWidget->GetScale()->SetRange(0,volumeNode->GetImageData()->GetNumberOfScalarComponents()-1);
