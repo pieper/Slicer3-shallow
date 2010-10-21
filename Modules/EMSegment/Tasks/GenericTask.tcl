@@ -623,7 +623,7 @@ namespace eval EMSegmenterPreProcessingTcl {
          $LOGIC PrintText "TCL: == Resample Image CLI"
          $LOGIC PrintText "TCL: =========================================="
 
-        set PLUGINS_DIR "$::env(Slicer3_HOME)/lib/Slicer3/Plugins"
+        set PLUGINS_DIR "$::env(Slicer3_PLUGINS_DIR)"
         set CMD "${PLUGINS_DIR}/BRAINSResample "
 
         set tmpFileName [WriteDataToTemporaryDir $inputVolumeNode Volume]
@@ -798,7 +798,7 @@ namespace eval EMSegmenterPreProcessingTcl {
          $LOGIC PrintText "TCL: == Image Alignment CommandLine: $RegistrationType "
          $LOGIC PrintText "TCL: =========================================="
 
-        set PLUGINS_DIR "$::env(Slicer3_HOME)/lib/Slicer3/Plugins"
+        set PLUGINS_DIR "$::env(Slicer3_PLUGINS_DIR)"
         set CMD "${PLUGINS_DIR}/BRAINSFit "
 
         if { $fixedVolumeNode == "" || [$fixedVolumeNode GetImageData] == "" } {
