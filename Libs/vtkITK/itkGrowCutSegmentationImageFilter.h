@@ -389,6 +389,8 @@ template<class TInputImage,
   bool InitializeStateImage( OutputImageType *state );
 
   void InitializeDistancesImage( TInputImage *input, WeightImageType *distance);
+
+  //void GetRegionOfInterest();
   
   //OutputIndexType GetSeed( OutputImageType *state, vcl_vector< OutputIndexType> &prevSeeds, OutputPixelType labelType); 
 
