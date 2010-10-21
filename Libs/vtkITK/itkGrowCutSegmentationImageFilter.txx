@@ -414,7 +414,7 @@ InitializeStateImage( OutputImageType *stateImage)
 
   
   bool setStart = false;
-  bool setEnd = false;
+  //  bool setEnd = false;
   
   typename OutputImageType::Pointer labelImage = OutputImageType::New();
   labelImage->Graft(this->GetInput(1));
@@ -427,110 +427,77 @@ InitializeStateImage( OutputImageType *stateImage)
   ImageRegionIterator< OutputImageType > state( stateImage, 
             stateImage->GetBufferedRegion());
 
+  
+
   for (unsigned i = 0; i < labelImage->GetImageDimension(); i++){
     m_roiStart[i] = 0;
     m_roiEnd[i] = 0;
   }
 
-
+  bool foundLabels = false;
+  
   for (label.GoToBegin(), state.GoToBegin(); !label.IsAtEnd(); 
        ++label, ++state)
     {
       if(label.Get() != m_UnknownLabel)
       {
+  foundLabels = true;
         OutputIndexType idx = label.GetIndex();
-   
+  
         if(!setStart)
         {
           m_roiStart = idx;
-          setStart = true;
+    m_roiEnd = idx;
+    setStart = true;
         }
         else
         {
-          for (unsigned i = 0; i < labelImage->GetImageDimension(); i++)
-          {
-            if(idx[i] < m_roiStart[i])
-            {
-              m_roiStart[i] = idx[i];
-     }
-   }
- }
+    for (unsigned i = 0; i < labelImage->GetImageDimension(); i++)
+      {
+        if(idx[i] <= m_roiStart[i])
+    {
+      m_roiStart[i] = idx[i];
+    }
+        if(idx[i] >= m_roiEnd[i])
+    {
+      m_roiEnd[i] = idx[i];
+    }
+      }
+  }
    
-        if(!setEnd)
-        {
-          m_roiEnd = idx;
-          setEnd = true;
- }
-        else
-        { 
-          for (unsigned i = 0; i < labelImage->GetImageDimension(); i++)
-          {
-            if(idx[i] > m_roiEnd[i])
-            {
-              m_roiEnd[i] = idx[i]; 
-     }
-   }
- }
-   
-        state.Set(static_cast< OutputPixelType>(LABELED));
+  state.Set(static_cast< OutputPixelType>(LABELED));
       }
     }
-
-     std::cout<<" ROI before adding the object Radius "<<m_ObjectRadius<<std::endl;
-     std::cout<< " ROI start ";
-
-     bool foundLabels = false;
-     for (unsigned i = 0; i < labelImage->GetImageDimension(); i++)
-     {
-       foundLabels = (m_roiEnd[i] - m_roiStart[i] != 0);
-        std::cout<<m_roiStart[i]<<" ";
-     }
-
-     if(!foundLabels)
-       return true;
-
-     std::cout<<" ROI end ";
-     for (unsigned i = 0; i < labelImage->GetImageDimension(); i++)
-     {
-       std::cout<<m_roiEnd[i]<<" ";
-     }
-     std::cout<<std::endl;
   
-     OutputIndexType midROI;
-     for(unsigned i = 0; i < labelImage->GetImageDimension(); i++)
-     {
-       midROI[i] = (m_roiStart[i]+m_roiEnd[i])/2;
-     }
-  
-  
-     for (unsigned i = 0; i < labelImage->GetImageDimension(); i++)
-     {
-        m_roiStart[i] = (midROI[i]-m_ObjectRadius >=0 && midROI[i]-m_ObjectRadius <= m_roiStart[i]) ? 
-   (midROI[i]-m_ObjectRadius) : 0; //m_roiStart[i];
-        m_roiEnd[i] = (midROI[i]+m_ObjectRadius < (unsigned)lsize[i] && midROI[i]+m_ObjectRadius >= m_roiEnd[i]) ?
-   (midROI[i]+m_ObjectRadius) : lsize[i]-1; //m_roiEnd[i];
-      /*      m_roiStart[i] = (m_roiStart[i] - m_ObjectRadius >= 0) ? 
- (m_roiStart[i] - m_ObjectRadius) : 0;
-
-      m_roiEnd[i] = (static_cast<unsigned int>(m_roiEnd[i] + m_ObjectRadius) < lsize[i]) ? 
- (m_roiEnd[i] + m_ObjectRadius) : lsize[i]-1;
+  for (unsigned i = 0; i < labelImage->GetImageDimension(); i++)
+    {
+      /* m_roiStart[i] = (midROI[i]-m_ObjectRadius >=0 && midROI[i]-m_ObjectRadius <= m_roiStart[i]) ? 
+  (midROI[i]-m_ObjectRadius) : 0; //m_roiStart[i];
+  m_roiEnd[i] = (midROI[i]+m_ObjectRadius < (unsigned)lsize[i] && midROI[i]+m_ObjectRadius >= m_roiEnd[i]) ?
+  (midROI[i]+m_ObjectRadius) : lsize[i]-1; //m_roiEnd[i];
       */
+    
+      m_roiStart[i] = (m_roiStart[i] - m_ObjectRadius >= 0)? (m_roiStart[i] - m_ObjectRadius) : 0;
+      m_roiEnd[i] = (static_cast<unsigned int>(m_roiEnd[i] + m_ObjectRadius) < lsize[i]) ? 
+  (m_roiEnd[i] + m_ObjectRadius) : lsize[i]-1;
     }
   
-
-    std::cout<< " ROI start ";
-    for (unsigned int i = 0; i < labelImage->GetImageDimension(); i++)
+  if(!foundLabels)
+    return true;
+  
+  std::cout<< " ROI start ";
+  for (unsigned int i = 0; i < labelImage->GetImageDimension(); i++)
     {
       std::cout<<m_roiStart[i]<<" ";
     }
-    std::cout<<" ROI end ";
-    for (unsigned int i = 0; i < labelImage->GetImageDimension(); i++)
+  std::cout<<" ROI end ";
+  for (unsigned int i = 0; i < labelImage->GetImageDimension(); i++)
     {
       std::cout<<m_roiEnd[i]<<" ";
     }
-    std::cout<<std::endl;
-
-    return false;
+  std::cout<<std::endl;
+  
+  return false;
   
 }
 
@@ -595,14 +562,23 @@ MaskSegmentedImageByWeight( float confThresh)
 
   weight.GoToBegin(); 
   label.GoToBegin();
-
+  //  unsigned int numInPixels = 0;
+  //unsigned int numOutPixels = 0;
+  
   for(;!weight.IsAtEnd(); ++weight, ++label)
   {
     if(weight.Get() < confThresh)
     {
       label.Set(static_cast< OutputPixelType > (0));
+      //  ++numOutPixels;
     }
+    //else 
+    // {
+    //  ++numInPixels;
+    // }
   }
+  
+  //return (numInPixels > numOutPixels);
 
 }
 
@@ -826,35 +802,35 @@ GrowCutSegmentationImageFilter<TInputImage, TOutputImage, TWeightPixelType>
       //pixelStateImage = singleIteration->GetStateImage();
             
       unsigned changeablePix = 
- singleIteration->GetLabeled();//updateFilter->GetNumLabeledPixels();
+  singleIteration->GetLabeled();//updateFilter->GetNumLabeledPixels();
       unsigned currLocallySaturatedPix = 
- singleIteration->GetLocallySaturated();//updateFilter->GetNumLocallySaturatedPixels();
+  singleIteration->GetLocallySaturated();//updateFilter->GetNumLocallySaturatedPixels();
       unsigned currSaturatedPix = 
- singleIteration->GetSaturated();//updateFilter->GetNumSaturatedPixels();
+  singleIteration->GetSaturated();//updateFilter->GetNumSaturatedPixels();
 
       unsigned unlabeled = (changeablePix + currLocallySaturatedPix + currSaturatedPix <= totalROIVolume) ? 
- (static_cast<unsigned > (totalROIVolume) -(currLocallySaturatedPix + 
-         currSaturatedPix + changeablePix)) : 0;
+  (static_cast<unsigned > (totalROIVolume) -(currLocallySaturatedPix + 
+               currSaturatedPix + changeablePix)) : 0;
       
       converged = (unlabeled/totalROIVolume < threshUnchanged && 
-     ((currSaturatedPix+currLocallySaturatedPix)/totalROIVolume > threshSaturation));
+       ((currSaturatedPix+currLocallySaturatedPix)/totalROIVolume > threshSaturation));
       
       
-      if(iter % 40 == 0 || converged)
- {
-   std::cout<<" ITER "<<iter<<std::endl;
-         std::cout<<" saturated Pixels "<<currSaturatedPix<<"( "<<
-          totalROIVolume<<") %"<<currSaturatedPix/totalROIVolume<<std::endl;
-         std::cout<<" locally saturated Pixels "<<currLocallySaturatedPix<<" %"<<
-         currLocallySaturatedPix/totalROIVolume<<std::endl;
-         std::cout<<"Number of Labeled Pixels "<<changeablePix<<" %"<<
-         changeablePix/totalROIVolume<<std::endl;
-   
-         std::cout<<"Unlabeled pixels "<<unlabeled<<" %"<<
-           unlabeled/totalROIVolume<<std::endl;
-         if(converged)
-           std::cout<<" converged...."<<std::endl;
- }
+      if((iter % 40 == 0) || converged)
+  {
+    std::cout<<" ITER "<<iter<<std::endl;
+    std::cout<<" saturated Pixels "<<currSaturatedPix<<"( "<<
+      totalROIVolume<<") %"<<currSaturatedPix/totalROIVolume<<std::endl;
+    std::cout<<" locally saturated Pixels "<<currLocallySaturatedPix<<" %"<<
+      currLocallySaturatedPix/totalROIVolume<<std::endl;
+    std::cout<<"Number of Labeled Pixels "<<changeablePix<<" %"<<
+      changeablePix/totalROIVolume<<std::endl;
+    
+    std::cout<<"Unlabeled pixels "<<unlabeled<<" %"<<
+      unlabeled/totalROIVolume<<std::endl;
+    if(converged)
+      std::cout<<" converged...."<<std::endl;
+  }
       
 
       // swap the weights and labels
@@ -870,30 +846,29 @@ GrowCutSegmentationImageFilter<TInputImage, TOutputImage, TWeightPixelType>
       m_WeightImage = singleIteration->GetUpdatedStrengthImage();
 
       if(!converged)
- {
-   // assign the old output as input
-   //OutputImagePointer labelImage = singleIteration->GetOutput();
-   //m_LabelImage = singleIteration->GetOutput();
-   //output = singleIteration->GetOutput();
-
-   m_WeightImage->DisconnectPipeline();
-   //m_LabelImage->DisconnectPipeline();
-   
-   singleIteration->SetStrengthImage(m_WeightImage);
-   //singleIteration->SetLabelImage(m_LabelImage);
-   singleIteration->GetOutput()->
-     SetBufferedRegion(output->GetBufferedRegion() );
- }
+  {
+    // assign the old output as input
+    //OutputImagePointer labelImage = singleIteration->GetOutput();
+    //m_LabelImage = singleIteration->GetOutput();
+    //output = singleIteration->GetOutput();
+    
+    m_WeightImage->DisconnectPipeline();
+    //m_LabelImage->DisconnectPipeline();
+    
+    singleIteration->SetStrengthImage(m_WeightImage);
+    //singleIteration->SetLabelImage(m_LabelImage);
+    singleIteration->GetOutput()->
+      SetBufferedRegion(output->GetBufferedRegion() );
+  }
 
       this->UpdateProgress((currSaturatedPix+currLocallySaturatedPix)/totalROIVolume);
     }
   
-  
+    
   this->UpdateProgress(1.0);
-
   m_WeightImage = singleIteration->GetUpdatedStrengthImage() ;
   m_LabelImage = singleIteration->GetOutput();
-    
+  
   /*
   // walk the output of the singleIteration
   ImageRegionIterator<TOutputImage> singleIt(singleIteration->GetOutput(),
@@ -914,7 +889,7 @@ GrowCutSegmentationImageFilter<TInputImage, TOutputImage, TWeightPixelType>
   */
 
   this->MaskSegmentedImageByWeight(m_ConfThresh);
-
+    
   this->GraftOutput(m_LabelImage);
   
   time(&end);
@@ -1123,106 +1098,124 @@ GrowCutSegmentationImageFilter<TInputImage, TOutputImage, TWeightPixelType>
       for (; !inputIt.IsAtEnd(); ++inputIt, ++oldLabelIt, 
       ++newLabelIt, ++oldWeightIt, ++newWeightIt, 
       ++stateIt, ++distancesIt, ++maxSatIt) // ++newstateIt;
- {
-   
-   OutputPixelType s_center = stateIt.GetCenterPixel();
-   OutputPixelType l_center = oldLabelIt.GetCenterPixel();
-   WeightPixelType w_center = oldWeightIt.GetCenterPixel();
-   
-   if(s_center == SATURATED)
-     {
-       //newstateIt.Set(s_center);
-       newLabelIt.Set(l_center);
-       newWeightIt.Set(w_center);
-       continue;
-     }
-     
-   InputPixelType f_center = inputIt.GetCenterPixel();            
-   
-   OutputPixelType winnerLabel = l_center;
-   WeightPixelType winnerWeight = w_center;
-   
-   WeightPixelType maxDist = distancesIt.Get();
-   
-   unsigned int countSaturatedLinks = 0;
-   unsigned int countLocalSaturatedLinks = 0;
-   
-   bool modified = false;
-   WeightPixelType maxWt = 0.0;
-   
-   unsigned int nlinks = 0;
-   
-   for (unsigned k = 0; k < inputIt.Size(); k++) 
-     {
-       
-       InputPixelType f = inputIt.GetPixel(k);            
-       WeightPixelType w = oldWeightIt.GetPixel(k);
-       
-       
-       if(f == minI && w == minW)
-  {
-    continue;
-  }
-       
-       OutputPixelType s = stateIt.GetPixel(k);
-       OutputPixelType l = oldLabelIt.GetPixel(k);
-       
-       
-       ++nlinks;
-       
-       WeightPixelType attackWeight = (f_center - f)*(f_center - f);
-       attackWeight = (maxDist > 0) ? (1.0 - attackWeight/maxDist) : 1.0;
-       
-       
-       WeightPixelType maxAttackWeight = 0.0; // attackWeight*maxSatIt.GetPixel(k);
-       WeightPixelType msat = maxSatIt.GetPixel(k);
-       
-       maxAttackWeight = (s == UNLABELED) ? 0.0 : 
-  ((msat == 0.0) ? (attackWeight * this->GetSeedStrength()) : 
-   ((s == SATURATED) ? attackWeight * w : attackWeight*msat ) );
-       
-       attackWeight *= w;
-       
-       maxWt = (maxWt < maxAttackWeight) ? maxAttackWeight : maxWt;
-       
-       
-       if(s_center != UNLABELED)
-  {
-    countSaturatedLinks += (maxAttackWeight <= w_center) ? 1 : 0;
-    countLocalSaturatedLinks += (attackWeight <= w_center) ? 1 : 0;
-  }
-       
-       if(s != UNLABELED && attackWeight > winnerWeight)
   {
     
-    winnerWeight = attackWeight;
-    winnerLabel = l;
-    modified = true;
+    OutputPixelType s_center = stateIt.GetCenterPixel();
+    OutputPixelType l_center = oldLabelIt.GetCenterPixel();
+    WeightPixelType w_center = oldWeightIt.GetCenterPixel();
     
-    stateIt.SetCenterPixel(LABELED);
-    //newstateIt.Set(LABELED);
+    if(s_center == SATURATED)
+      {
+        //newstateIt.Set(s_center);
+        newLabelIt.Set(l_center);
+        newWeightIt.Set(w_center);
+        continue;
+      }
+    
+    InputPixelType f_center = inputIt.GetCenterPixel();            
+    
+    OutputPixelType winnerLabel = l_center;
+    WeightPixelType winnerWeight = w_center;
+    
+    WeightPixelType maxDist = distancesIt.Get();
+    
+    unsigned int countSaturatedLinks = 0;
+    unsigned int countLocalSaturatedLinks = 0;
+    
+    bool modified = false;
+    WeightPixelType maxWt = 0.0;
+    
+    unsigned int nlinks = 0;
+    
+    for (unsigned k = 0; k < inputIt.Size(); k++) 
+      {
+        
+        InputPixelType f = inputIt.GetPixel(k);            
+        WeightPixelType w = oldWeightIt.GetPixel(k);
+        
+       
+        if(f == minI && w == minW)
+         {
+             continue;
+         }
+        
+        OutputPixelType s = stateIt.GetPixel(k);
+        OutputPixelType l = oldLabelIt.GetPixel(k);
+        
+        
+        ++nlinks;
+        
+        WeightPixelType attackWeight = (f_center - f)*(f_center - f);
+        attackWeight = (maxDist > 0) ? (1.0 - attackWeight/maxDist) : 1.0;
+        
+        
+        WeightPixelType maxAttackWeight = 0.0; // attackWeight*maxSatIt.GetPixel(k);
+        WeightPixelType msat = maxSatIt.GetPixel(k);
+        
+        maxAttackWeight = (s == UNLABELED) ? 0.0 : 
+    ((msat == 0.0) ? (attackWeight * this->GetSeedStrength()) : 
+     ((s == SATURATED) ? attackWeight * w : attackWeight*msat ) );
+        
+        attackWeight *= w;
+        
+        maxWt = (maxWt < maxAttackWeight) ? maxAttackWeight : maxWt;
+        
+        
+        if(s_center != UNLABELED)
+    {
+      countSaturatedLinks += (maxAttackWeight <= w_center) ? 1 : 0;
+      countLocalSaturatedLinks += (attackWeight <= w_center) ? 1 : 0;
+    }
+        
+        if(s != UNLABELED && attackWeight > winnerWeight)
+    {
+      
+      winnerWeight = attackWeight;
+      winnerLabel = l;
+      modified = true;
+      
+      stateIt.SetCenterPixel(LABELED);
+      //newstateIt.Set(LABELED);
+    }
+      }
+    
+    if(nlinks > 0)
+      {
+              if(countSaturatedLinks == nlinks && winnerLabel != m_UnknownLabel)
+              {
+          stateIt.SetCenterPixel(SATURATED);
+              }
+             else{
+               if (countLocalSaturatedLinks == nlinks && winnerLabel != m_UnknownLabel) 
+               {
+                 stateIt.SetCenterPixel(LOCALLY_SATURATED);
+               }
+               else if (stateIt.GetCenterPixel() != UNLABELED && !modified) 
+               {
+                 stateIt.SetCenterPixel(LOCALLY_SATURATED);
+               }
+             }
+      }
+    
+          //if(nlinks > 0 && countSaturatedLinks == nlinks && winnerLabel != m_UnknownLabel)
+     // {
+     //   stateIt.SetCenterPixel(SATURATED);
+     //   //newstateIt.Set(SATURATED);
+     // }
+    //else if((winnerLabel != m_UnknownLabel) && 
+  //    ((nlinks > 0) && 
+//       (countLocalSaturatedLinks == nlinks)) || 
+//      ((stateIt.GetCenterPixel() != UNLABELED) && 
+//       !modified))
+//      {
+//        stateIt.SetCenterPixel(LOCALLY_SATURATED);
+//        //newstateIt.Set(LOCALLY_SATURATED);
+//      }
+    
+    maxSatIt.SetCenterPixel(maxWt);
+    newLabelIt.Set(winnerLabel);
+    newWeightIt.Set(winnerWeight);
   }
-     }
-   
-   if(nlinks > 0 && countSaturatedLinks == nlinks && winnerLabel != m_UnknownLabel)
-     {
-       stateIt.SetCenterPixel(SATURATED);
-       //newstateIt.Set(SATURATED);
-     }
-   else if((winnerLabel != m_UnknownLabel) && 
-     ((nlinks > 0) && 
-            (countLocalSaturatedLinks == nlinks)) || 
-     ((stateIt.GetCenterPixel() != UNLABELED) && 
-      !modified))
-     {
-       stateIt.SetCenterPixel(LOCALLY_SATURATED);
-       //newstateIt.Set(LOCALLY_SATURATED);
-     }
-   
-   maxSatIt.SetCenterPixel(maxWt);
-   newLabelIt.Set(winnerLabel);
-   newWeightIt.Set(winnerWeight);
- }
     }
 
   //std::cout<<" done in thread "<<threadId<<std::endl;
@@ -1246,22 +1239,24 @@ GrowCutSegmentationImageFilter<TInputImage, TOutputImage, TWeightPixelType>
   stateImage->Graft(this->ProcessObject::GetInput(3) );
     
   ImageRegionIterator< OutputImageType > state(stateImage, stateImage->GetBufferedRegion());
+  ImageRegionIterator< WeightImageType > weight(m_WeightImage, m_WeightImage->GetBufferedRegion());
   
-  for(state.GoToBegin(); !state.IsAtEnd(); ++state)
+  
+  for(state.GoToBegin(), weight.GoToBegin(); !state.IsAtEnd(); ++state, ++weight)
     {
       
       if(state.Get() == LABELED)
- {
-   ++m_Labeled;
- }
-      if(state.Get() == LOCALLY_SATURATED)
- {
-   ++m_LocallySaturated;
- }
-      if(state.Get() == SATURATED)
- {
-   ++m_Saturated;
- }
+  {
+    ++m_Labeled;
+  }
+      if(state.Get() == LOCALLY_SATURATED && weight.Get() >= m_ConfThresh)
+  {
+    ++m_LocallySaturated;
+  }
+      if(state.Get() == SATURATED && weight.Get() > m_ConfThresh)
+  {
+    ++m_Saturated;
+  }
 
     }
 }
