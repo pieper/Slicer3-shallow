@@ -76,6 +76,7 @@ CREATE_TEST_SOURCELIST(Tests ${KIT}CxxTests.cxx
   vtkMRMLVectorVolumeNodeTest1.cxx
   vtkMRMLViewNodeTest1.cxx
   vtkMRMLVolumeArchetypeStorageNodeTest1.cxx
+  vtkMRMLVolumeArchetypeStorageNodeTest2.cxx
   vtkMRMLVolumeDisplayNodeTest1.cxx
   vtkMRMLVolumeHeaderlessStorageNodeTest1.cxx
   vtkMRMLVolumeNodeTest1.cxx
@@ -185,6 +186,8 @@ SIMPLE_TEST( vtkMRMLVolumePropertyNodeTest1 )
 SIMPLE_TEST( vtkMRMLVolumePropertyStorageNodeTest1 )
 SIMPLE_TEST( vtkMRMLXYPlotManagerNodeTest1 )
 SIMPLE_TEST( vtkObserverManagerTest1 )
+
+ADD_TEST( vtkMRMLVolumeArchetypeStorageNodeTest2 ${LAUNCH_EXE} ${MRMLLib_TESTS} vtkMRMLVolumeArchetypeStorageNodeTest2 ${Slicer3_SOURCE_DIR}/Testing/Data/Input/DCE_single_serie)
 
 MACRO( TEST_SCENE  SCENENAME )
 ADD_TEST( vtkMRMLSceneTest2_${SCENENAME} 
