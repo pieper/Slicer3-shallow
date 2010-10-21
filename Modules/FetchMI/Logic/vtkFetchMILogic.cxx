@@ -458,6 +458,7 @@ bool vtkFetchMILogic::CheckConnectionAndServer ( )
 
 
 
+
 //----------------------------------------------------------------------------
 const char *vtkFetchMILogic::GetServiceTypeForServer ( const char *svc )
 {
@@ -2241,7 +2242,6 @@ const char *vtkFetchMILogic::GetTemporaryResponseFileName ( )
 
 
 
-
 //----------------------------------------------------------------------------
 void vtkFetchMILogic::QueryServerForTags ( )
 {
@@ -2299,7 +2299,7 @@ void vtkFetchMILogic::QueryServerForTags ( )
   const char *svctype = this->GetCurrentWebService()->GetServiceType();          
   if ( svrName == NULL || !(strcmp(svrName, "") ) )
     {
-    vtkErrorMacro ("QueryServerForTags:: Null or empty server name." );
+    vtkErrorMacro ("QueryServerForTags: Null or empty server name." );
     std::string msg = "Remote IO got a null server name. Server can not be queried" ;
     this->FetchMINode->SetErrorMessage (msg.c_str() );
     this->FetchMINode->InvokeEvent ( vtkMRMLFetchMINode::RemoteIOErrorEvent );
@@ -2404,7 +2404,7 @@ void vtkFetchMILogic::QueryServerForTagValues ( )
     }
   if ( this->GetServerCollection() == NULL )
     {
-    vtkErrorMacro ( "QueryServerForTagsValues: FetchMINode is NULL.");
+    vtkErrorMacro ( "QueryServerForTagValues: FetchMINode is NULL.");
     std::string msg = "Error in query configuration. Server was not queried.";
     this->FetchMINode->SetErrorMessage (msg.c_str() );
     this->FetchMINode->InvokeEvent ( vtkMRMLFetchMINode::RemoteIOErrorEvent );
@@ -4805,7 +4805,7 @@ void vtkFetchMILogic::SetURIHandlerOnSelectedResources(vtkURIHandler *handler)
       {
       storageNode = storableNode->GetNthStorageNode(i);
       if ( storageNode )
-        { 
+        {
         if ( handler != NULL && storageNode->GetURIHandler() != handler )
           {
           storageNode->SetURIHandler(handler);
