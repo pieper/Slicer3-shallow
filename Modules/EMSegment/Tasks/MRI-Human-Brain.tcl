@@ -491,8 +491,10 @@ namespace eval EMSegmenterPreProcessingTcl {
         set deformableType [ $mrmlManager GetRegistrationDeformableType ]
         set interpolationType [ $mrmlManager GetRegistrationInterpolationType ]
 
-        set fixedRASToMovingRASTransformAffine [ vtkTransform New]
-        set fixedRASToMovingRASTransformDeformable ""
+        if { 0 } {
+            set fixedRASToMovingRASTransformAffine [ vtkTransform New]
+            set fixedRASToMovingRASTransformDeformable ""
+        }
 
          $LOGIC PrintText "TCLMRI: ========== Info ========="
          $LOGIC PrintText "TCLMRI: = Fixed:   [$fixedTargetVolumeNode GetName] "
