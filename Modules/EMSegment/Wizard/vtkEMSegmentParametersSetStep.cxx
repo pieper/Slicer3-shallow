@@ -1109,11 +1109,10 @@ void vtkEMSegmentParametersSetStep::AddDefaultTasksToList(const char* FilePath)
     
     vtksys_stl::string filename = dir->GetFile(i);
     
-    // do nothing if file is ".", ".." or does not have a .mrml extension
-    if (strcmp(filename.c_str(), ".") && strcmp(filename.c_str(), "..") && !strcmp(vtksys::SystemTools::GetFilenameExtension(filename.c_str()).c_str(), ".mrml"))
+    // do nothing if file is ".", ".." 
+    if (strcmp(filename.c_str(), ".") && strcmp(filename.c_str(), ".."))
       {
 
-      //if (strcmp(filename.c_str(), vtkMRMLEMSNode::GetDefaultTclTaskFilename()) == 0)
       //  {
       //  continue;
       //  }
@@ -1124,31 +1123,52 @@ void vtkEMSegmentParametersSetStep::AddDefaultTasksToList(const char* FilePath)
       // if it has a .mrml extension but is a directory, do nothing
       if (!vtksys::SystemTools::FileIsDirectory(fullFileName.c_str()))
         {
-      
-        // Generate Name of Task from File name
-        vtksys_stl::string taskName = this->GetGUI()->GetMRMLManager()->TurnDefaultMRMLFileIntoTaskName(filename.c_str());
-
-        // make sure that file is not already in the list
-        // we loop through the list and set existFlag to 1 if it exists already 
-        int existFlag = 0;
-        
-        // we need a new index for this inner loop *grrrrr took me long to find this one
-        for (int j=0; j < int(pssDefaultTasksName.size()); j++)
-          {
-          if (!this->pssDefaultTasksName[j].compare(taskName))
-            {
-              existFlag =1;
-            }
-          }
-          
-        if (!existFlag)
-          {
-          // Add to List if it does not exist
-          this->pssDefaultTasksFile.push_back(fullFileName);
-          this->pssDefaultTasksName.push_back(taskName);
-          this->DefinePreprocessingTasksFile.push_back(fullFileName);
-          this->DefinePreprocessingTasksName.push_back(taskName);
-          }
+     
+      if (!strcmp(vtksys::SystemTools::GetFilenameExtension(filename.c_str()).c_str(), ".mrml"))
+        {
+              // Generate Name of Task from File name
+              vtksys_stl::string taskName = this->GetGUI()->GetMRMLManager()->TurnDefaultMRMLFileIntoTaskName(filename.c_str());
+              // make sure that file is not already in the list
+              // we loop through the list and set existFlag to 1 if it exists already 
+              int existFlag = 0;
+              // we need a new index for this inner loop *grrrrr took me long to find this one
+              for (int j=0; j < int(pssDefaultTasksName.size()); j++)
+              {
+                 if (!this->pssDefaultTasksName[j].compare(taskName))
+                 { 
+                   existFlag =1;
+                 }
+              }
+              if (!existFlag)
+               {
+                 // Add to List if it does not exist
+                 this->pssDefaultTasksFile.push_back(fullFileName);
+                 this->pssDefaultTasksName.push_back(taskName);
+           }
+        }
+      else if ((!strcmp(vtksys::SystemTools::GetFilenameExtension(filename.c_str()).c_str(), ".tcl")) && (filename.compare(0,1,"_") ) 
+                    && strcmp(filename.c_str(), vtkMRMLEMSNode::GetDefaultTclTaskFilename()))
+        {
+              // Generate Name of Task from File name
+              vtksys_stl::string taskName = this->GetGUI()->GetMRMLManager()->TurnDefaultTclFileIntoPreprocessingName(filename.c_str());
+              // make sure that file is not already in the list
+              // we loop through the list and set existFlag to 1 if it exists already 
+              int existFlag = 0;
+              // we need a new index for this inner loop *grrrrr took me long to find this one
+              for (int j=0; j < int(this->DefinePreprocessingTasksName.size()); j++)
+              {
+                 if (!this->DefinePreprocessingTasksName[j].compare(taskName))
+                 { 
+                   existFlag =1;
+                 }
+              }
+              if (!existFlag)
+               {
+                 // Add to List if it does not exist
+             this->DefinePreprocessingTasksFile.push_back(fullFileName);
+             this->DefinePreprocessingTasksName.push_back(taskName);
+           }
+        }
           
         } // check if it is not a directory
         

@@ -60,6 +60,8 @@ public:
 
   void SetButtonsFromMRML();
 
+  void PopUpWarningWindow(const char *);
+
   vtkSlicerApplication* GetSlicerApplication();
 
 protected:

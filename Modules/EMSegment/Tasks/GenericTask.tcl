@@ -926,7 +926,36 @@ namespace eval EMSegmenterPreProcessingTcl {
         return [$SCENE GetNodeByID $transID]
     }
 
+    proc CheckAndCorrectClassCovarianceMatrix {parentNodeID } {
+    variable mrmlManager
+        variable LOGIC
+    set n [$mrmlManager GetTreeNodeNumberOfChildren $parentNodeID ]
+    set failedList ""
+    for {set i 0 } { $i < $n  } { incr i } {
+        set id [ $mrmlManager GetTreeNodeChildNodeID $parentNodeID $i ] 
+        if { [ $mrmlManager GetTreeNodeIsLeaf $id ] } {
+        if { [$mrmlManager IsTreeNodeDistributionLogCovarianceWithCorrectionInvertableAndSemiDefinite $id ] == 0 } {
+            # set the off diagonal to zeo 
+            $LOGIC PrintText "TCL:CheckAndCorrectClassCovarianceMatrix: Set off diagonal of the LogCovariance of [ $mrmlManager GetTreeNodeName $id] to zero - otherwise matrix not convertable and semidefinite"
+            $mrmlManager SetTreeNodeDistributionLogCovarianceOffDiagonal $id  0
+            # if it still fails then add to list 
+            if { [$mrmlManager IsTreeNodeDistributionLogCovarianceWithCorrectionInvertableAndSemiDefinite $id ] == 0 } {
+            set failedList "${failedList}$id "
+            }
+        }
+        } else {
+        set failedList "${failedList}[CheckAndCorrectClassCovarianceMatrix $id]"
+        }
+    }
+    return "$failedList"
+    }
+   
 
+    proc CheckAndCorrectTreeCovarianceMatrix { } {
+    variable mrmlManager
+    set rootID [$mrmlManager GetTreeRootNodeID]
+    return "[CheckAndCorrectClassCovarianceMatrix $rootID]"
+    }
 }
 
 namespace eval EMSegmenterSimpleTcl {

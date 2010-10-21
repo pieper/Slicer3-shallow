@@ -78,7 +78,7 @@ namespace eval EMSegmenterPreProcessingTcl {
         variable subjectNode
         variable inputAtlasNode
         variable mrmlManager
-    variable LOGIC
+        variable LOGIC
 
         variable atlasAlignedFlagID
         variable iccMaskSelectID
@@ -169,6 +169,18 @@ namespace eval EMSegmenterPreProcessingTcl {
             PrintError "Run: Could not automatically compute intensity distribution !"
             return 1
         }
+
+        # -------------------------------------
+        # Step 7: Check validity of Distributions 
+        set failedIDList [CheckAndCorrectTreeCovarianceMatrix]
+        if { $failedIDList != "" } {
+        set MSG "Log Covariance matrices for the following classes seemed incorrect:\n "
+        foreach ID $failedIDList {
+        set MSG "${MSG}[$mrmlManager GetTreeNodeName $ID]\n"
+        }
+        set MSG "${MSG}This can cause failure of the automatic segmentation. To address the issue, please visit the web site listed under Help"
+        $preGUI PopUpWarningWindow "$MSG"
+    }
 
         return 0
     }

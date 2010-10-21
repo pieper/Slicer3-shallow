@@ -614,3 +614,7 @@ int vtkEMSegmentStep::SourcePreprocessingTclFiles()
 {
   return this->GUI->GetLogic()->SourcePreprocessingTclFiles(this->GetSlicerApplication());
 }
+void vtkEMSegmentStep::PopUpWarningWindow(const char * msg)
+{
+ vtkKWMessageDialog::PopupMessage(this->GetApplication(),NULL,"Warning", msg , vtkKWMessageDialog::WarningIcon | vtkKWMessageDialog::InvokeAtPointer);
+}

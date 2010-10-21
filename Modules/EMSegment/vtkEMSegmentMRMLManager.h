@@ -132,6 +132,8 @@ public:
 
   virtual double   GetTreeNodeDistributionLogCovarianceWithCorrection(vtkIdType nodeID, int rowIndex, int columnIndex);
 
+  virtual bool   IsTreeNodeDistributionLogCovarianceWithCorrectionInvertableAndSemiDefinite(vtkIdType nodeID);
+
   virtual int      GetTreeNodeDistributionNumberOfSamples(vtkIdType nodeID);
 
   // send RAS coordinates
@@ -587,10 +589,15 @@ public:
 
   //BTX
   vtksys_stl::string TurnDefaultMRMLFileIntoTaskName(const char* fileName);
+  vtksys_stl::string TurnDefaultTclFileIntoPreprocessingName(const char* fileName);
   //ETX
 
   virtual int          IDMapContainsMRMLNodeID(const char* MRMLNodeID);
   virtual int          IDMapContainsVTKNodeID(vtkIdType id);
+
+  void  SetTreeNodeDistributionLogCovarianceOffDiagonal(vtkIdType nodeID, double value);
+
+
 
 
 private:
@@ -620,6 +627,9 @@ private:
   // Update intensity statistics for a particular tissue type.
   virtual void      UpdateIntensityDistributionFromSample(vtkIdType nodeID);
 
+  //BTX
+  vtksys_stl::string TurnDefaultFileIntoName(vtksys_stl::string taskName);
+ //ETX
 
   //
   // convenience functions for managing ID mapping (mrml id <-> vtkIdType)
@@ -655,6 +665,7 @@ private:
   //
 
   vtkIdType NextVTKNodeID;
+
   //BTX
   typedef vtksys_stl::map<vtkIdType, vtksys_stl::string>  VTKToMRMLMapType;
   VTKToMRMLMapType                                VTKNodeIDToMRMLNodeIDMap;
@@ -663,7 +674,6 @@ private:
 
   vtkstd::vector<vtkstd::vector<double> > GetTreeNodeDistributionLogCovariance(vtkIdType nodeID);
   vtkstd::vector<vtkstd::vector<double> > GetTreeNodeDistributionLogCovarianceCorrection(vtkIdType nodeID);
-
 
    // Should Only be used in this function - bc only set through gui which calls DistributionMeanWithCorrection
   virtual double   GetTreeNodeDistributionLogMeanCorrection(vtkIdType nodeID, 

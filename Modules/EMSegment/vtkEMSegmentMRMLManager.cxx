@@ -16,6 +16,7 @@
 #include "vtkMRMLEMSWorkingDataNode.h"
 #include "vtkMRMLEMSIntensityNormalizationParametersNode.h"
 #include "vtkMRMLEMSClassInteractionMatrixNode.h"
+#include "vtkImageEMGeneral.h"
 
 #include "vtkMatrix4x4.h"
 #include "vtkMath.h"
@@ -5673,11 +5674,26 @@ void vtkEMSegmentMRMLManager::RemoveAllEMSNodesButOne(vtkMRMLNode* saveNode)
 }
 
 //----------------------------------------------------------------------------
-                   
+vtksys_stl::string vtkEMSegmentMRMLManager::TurnDefaultTclFileIntoPreprocessingName(const char* fileName)
+{
+  vtksys_stl::string taskName(fileName);
+  taskName.resize(taskName.size() -  4);
+
+  return TurnDefaultFileIntoName(taskName);
+}
+
+//----------------------------------------------------------------------------
 vtksys_stl::string vtkEMSegmentMRMLManager::TurnDefaultMRMLFileIntoTaskName(const char* fileName)
 {
   vtksys_stl::string taskName(fileName);
-  taskName.resize(taskName.size() - 5);
+  taskName.resize(taskName.size() -  5);
+
+  return TurnDefaultFileIntoName(taskName);
+}
+
+//----------------------------------------------------------------------------
+vtksys_stl::string vtkEMSegmentMRMLManager::TurnDefaultFileIntoName(vtksys_stl::string taskName  )
+{
 
   size_t found=taskName.find_first_of("-");
   while (found!=vtksys_stl::string::npos)
@@ -5686,10 +5702,87 @@ vtksys_stl::string vtkEMSegmentMRMLManager::TurnDefaultMRMLFileIntoTaskName(cons
     found=taskName.find_first_of("-",found+1);
   }
 
-  // taskName.replace(taskName.begin(), taskName.end(), '-', ' ');
-  // --- Get Rid of extension
-
-
   return taskName;
+}         
 
+void  vtkEMSegmentMRMLManager::SetTreeNodeDistributionLogCovarianceOffDiagonal(vtkIdType nodeID, double value)
+{
+ vtkMRMLEMSTreeParametersLeafNode* node = this->GetTreeParametersLeafNode(nodeID);
+  if (!node)
+    {
+    vtkErrorMacro("Leaf parameters node is null for nodeID: " << nodeID);
+    return ;
+     }
+
+  int correctFlag = this->TreeNodeDistributionLogCovarianceCorrectionEnabled(nodeID);
+  int n = this->GetTargetNumberOfSelectedVolumes(); 
+
+ 
+  for (int i = 0 ; i < n; i++)
+    {
+      for (int j = 0 ; j < n; j++)
+    {
+      if ( i != j) {
+        if (correctFlag)
+          {
+        node->SetLogCovarianceCorrection(i,j,value);
+          }
+        else 
+        {
+          node->SetLogCovariance(i,j,value);
+        }
+      }
+    }
+    }
 }
+
+
+
+bool vtkEMSegmentMRMLManager::IsTreeNodeDistributionLogCovarianceWithCorrectionInvertableAndSemiDefinite(vtkIdType nodeID)
+{
+ vtkMRMLEMSTreeParametersLeafNode* node = this->GetTreeParametersLeafNode(nodeID);
+  if (!node)
+    {
+    vtkErrorMacro("Leaf parameters node is null for nodeID: " << nodeID);
+    return 0;
+    }
+
+  int correctFlag = this->TreeNodeDistributionLogCovarianceCorrectionEnabled(nodeID);
+  int n = this->GetTargetNumberOfSelectedVolumes(); 
+
+ 
+  double** matrix = new double*[n];
+  double** invMatrix = new double*[n];
+  for (int i = 0 ; i < n; i++)
+    {
+      invMatrix[i] = new double[n];
+      matrix[i] = new double[n];
+      for (int j = 0 ; j < n; j++)
+    {
+      if (correctFlag)
+        {
+          matrix[i][j] =  node->GetLogCovarianceCorrection(i,j);
+        }
+      else 
+        {
+          matrix[i][j] =  node->GetLogCovariance(i,j);
+              // cout << nodeID << "  "<<  matrix[i][j] << endl;
+        }
+    }
+    }
+  int flag = vtkImageEMGeneral::InvertMatrix(matrix,invMatrix,n);
+  // Check if semidefinite 
+  if (flag) 
+    {
+      flag = (vtkImageEMGeneral::determinant(matrix,n) >0.00001);
+    }
+  for (int i = 0 ; i < n; i++)
+    {
+      delete[] invMatrix[i];
+      delete[] matrix[i];
+    }
+  delete[] invMatrix;
+  delete[] matrix;
+  return flag;
+}
+
