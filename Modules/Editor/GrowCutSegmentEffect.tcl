@@ -25,29 +25,23 @@ if { [itcl::find class GrowCutSegmentEffect] == "" } {
 
     itcl::class GrowCutSegmentEffect {
 
-  #inherit EffectSWidget
   inherit PaintEffect 
 
   constructor {sliceGUI} {PaintEffect::constructor $sliceGUI} {}
   destructor {}
   
-#  public variable maxIterations 1
-  public variable objectSize 100
+  public variable objectSize 10
   public variable contrastNoiseRatio 0.8
-  public variable priorStrength 0.0003
-  public variable overlay 0
+  public variable priorStrength 0.003
   public variable segmented 2
-  
 
-  variable _foundPainted 0
-  variable _maxObjectSize 0
   variable _segmentedImage ""
   variable _gestureImage ""
-  variable _inputImage ""
+  variable _foregroundID ""
+  variable _labelID ""
+  variable _foundPainted 0
+  variable _maxObjectSize 0
   
-  variable _labelColors ""
-
-  variable _setGestures 0
   variable _changedImage 0
   variable _iterations 0
 
@@ -55,9 +49,6 @@ if { [itcl::find class GrowCutSegmentEffect] == "" } {
   variable _imageSpacing ""
   variable _activeColoring 0
 
-
- 
-  # methods
   method processEvent {{caller ""} {event ""} } {}
   method buildOptions {} {}
   method tearDownOptions {} {}
@@ -66,9 +57,6 @@ if { [itcl::find class GrowCutSegmentEffect] == "" } {
   method updateGUIFromMRML {} {}
   method apply {} {} 
   method initialize {} {}
-  method setLabelMapToGestures {} {}
-  method setLabelMapToSegmented {} {}
-  method createGestureNode {} {}
 }
 }
 
@@ -80,10 +68,9 @@ itcl::body GrowCutSegmentEffect::constructor {sliceGUI} {
    $this configure -sliceGUI $sliceGUI
 
    puts "GrowCutSegmentEffect"
-   
+
    set _segmentedImage [vtkNew vtkImageData]
    set _gestureImage [vtkNew vtkImageData]
-   set _inputImage [vtkNew vtkImageData]
 
    set _imageDimension [[$this getInputLabel] GetDimensions]
    
@@ -99,8 +86,8 @@ itcl::body GrowCutSegmentEffect::constructor {sliceGUI} {
 
    $this initialize
   
-   $this createGestureNode
 }
+
 
 
 itcl::body GrowCutSegmentEffect::destructor {} {
@@ -122,8 +109,6 @@ itcl::body GrowCutSegmentEffect::destructor {} {
       $_renderer RemoveActor2D $a
     }
   }
-
-  
 }
 
 
@@ -131,40 +116,19 @@ itcl::body GrowCutSegmentEffect::destructor {} {
 #                             METHODS
 # ------------------------------------------------------------------
 
-
-itcl::body GrowCutSegmentEffect::createGestureNode {} {
-
-  puts "creating gesture node..."
-  set name "gestureid"
-  set nNodes [$::slicer3::MRMLScene GetNumberOfNodesByClass "vtkMRMLScriptedModuleNode"]
-  for {set i 0} {$i < $nNodes} {incr i} {
-    set n [$::slicer3::MRMLScene GetNthNodeByClass $i "vtkMRMLScriptedModuleNode"]
-    if { [$n GetModuleName] == "Editor" } {
-       set nodeID [$n GetParameter $name]
-       if { $nodeID != "" } {
-          puts "nodeID $nodeID"
-          set volumenode [$::slicer3::MRMLScene GetNodeByID $nodeID]
-          set _gestureImage [$volumenode GetImageData]
-          set _setGestures 1
-
-   break
-       }
-     }
-  }
- puts "done creating..."
-}
-
-
-
 itcl::body GrowCutSegmentEffect::initialize {} {
     
-    #puts "Initializing... "
+    set numCnodes [$::slicer3::MRMLScene GetNumberOfNodesByClass "vtkMRMLSliceCompositeNode"]
+    set j 0
+    set cnode [$::slicer3::MRMLScene GetNthNodeByClass $j "vtkMRMLSliceCompositeNode"]
+    set _foregroundID [$cnode GetForegroundVolumeID]
+    set _labelID [$cnode GetLabelVolumeID]
 
     set dim [[$this getInputLabel] GetDimensions]
     set x [lindex $dim 0]
     set y [lindex $dim 1]
     set z [lindex $dim 2]
-    
+
     set extent [[$this getInputLabel] GetExtent]
     set origin [[$this getInputLabel] GetOrigin]
     set spacing [[$this getInputLabel] GetSpacing]
@@ -173,89 +137,29 @@ itcl::body GrowCutSegmentEffect::initialize {} {
     $_segmentedImage SetExtent [lindex $extent 0] [lindex $extent 1] \
   [lindex $extent 2] [lindex $extent 3] \
   [lindex $extent 4] [lindex $extent 5]
-    
+
     $_segmentedImage SetOrigin [lindex $origin 0] [lindex $origin 1] [lindex $origin 2]
     $_segmentedImage SetSpacing [lindex $spacing 0] [lindex $spacing 1] [lindex $spacing 2]
     $_segmentedImage SetScalarType [[$this getInputLabel] GetScalarType]
     $_segmentedImage AllocateScalars
     $_segmentedImage DeepCopy [$this getInputLabel]
- 
 
     $_gestureImage SetDimensions $x $y $z
     $_gestureImage SetExtent [lindex $extent 0] [lindex $extent 1] \
   [lindex $extent 2] [lindex $extent 3] \
   [lindex $extent 4] [lindex $extent 5]
-    
+
     $_gestureImage SetOrigin [lindex $origin 0] [lindex $origin 1] [lindex $origin 2]
     $_gestureImage SetSpacing [lindex $spacing 0] [lindex $spacing 1] [lindex $spacing 2]
     $_gestureImage SetScalarType [[$this getInputLabel] GetScalarType]
     $_gestureImage AllocateScalars
-
-
-    $_inputImage SetDimensions $x $y $z
-    $_inputImage SetExtent [lindex $extent 0] [lindex $extent 1] \
-  [lindex $extent 2] [lindex $extent 3] \
-  [lindex $extent 4] [lindex $extent 5]
-    
-    $_inputImage SetOrigin [lindex $origin 0] [lindex $origin 1] [lindex $origin 2]
-    $_inputImage SetSpacing [lindex $spacing 0] [lindex $spacing 1] [lindex $spacing 2]
-    $_inputImage SetScalarType [[$this getInputLabel] GetScalarType]
-    $_inputImage AllocateScalars
-    $_inputImage DeepCopy $_gestureImage
-
+    $_gestureImage DeepCopy [$this getInputForeground]
    puts "Done Initializing"
 }
 
 # ------------------------------------------------------------------
 #                             HELPER METHODS
 # ------------------------------------------------------------------
-
-
-#itcl::body GrowCutSegmentEffect::extractGestures {} {
-    
-#    puts "extracting gestures..."
-    # method to get the gestures alone
-#    catch {
-#     set imageLogic [vtkNew vtkITKLogicImageFilter]
-#     $imageLogic SetInput1 [$this getInputLabel]
-#     $imageLogic SetInput2 $_segmentedImage
-#     $imageLogic SetOperationToXor
-
-#     $imageLogic Update
-    
-#  puts " doing an OR operation for copying the gestures alone"
-#     catch {
-#       set imageLogic1 [vtkNew vtkITKLogicImageFilter]
-#       $imageLogic1 SetInput1 [$imageLogic GetOutput]
-#       $imageLogic1 SetInput2 $_gestureImage
-#       $imageLogic1 SetOperationToOr
-#       $imageLogic1 Update
-#       catch { $_gestureImage DeepCopy [$imageLogic1 GetOutput] } err3
-#      if { $err3 != "" } { puts "error in copying gesture image : $err3" }
-
-#     } err2
-#     if { $err2 != "" } {puts "error in extracting gestures 2: $err2" }
-#    } err1  
-#    if { $err1 != "" } {puts "error in extracting gestures: $err1" }
-
-#}
-
-
-itcl::body GrowCutSegmentEffect::setLabelMapToGestures {} {
-
-   puts "setting the label map to gestures "
-   $_layers(label,node) SetAndObserveImageData $_gestureImage
-   $_layers(label,node) Modified
-}
-
-
-itcl::body GrowCutSegmentEffect::setLabelMapToSegmented {} {
-
-  puts "setting the label map to segmented "
-  $_layers(label,node) SetAndObserveImageData $_segmentedImage
-  $_layers(label,node) Modified 
-}
-
 
 itcl::body GrowCutSegmentEffect::processEvent { {caller ""} {event ""} } {
 
@@ -280,75 +184,37 @@ itcl::body GrowCutSegmentEffect::processEvent { {caller ""} {event ""} } {
     return 
  }
 
- if { [info exists o(overlay)] } {
-   if { $overlay } {
-     if { $_changedImage } {
-   puts "overlaying gestures "
-
-        $this setLabelMapToGestures 
-   set segmented 1
-   set _changedImage 0
-     }
-   } else {
-       if { $segmented == 1} {
-     puts "segmented is : $segmented"
-     $this setLabelMapToSegmented
-     set segmented 0
-     set _changedImage 1
-       }
-   }
- }
-  
 
  set event [$sliceGUI GetCurrentGUIEvent] 
-
   switch $event {
     "LeftButtonPressEvent" {
-       
-       $this setLabelMapToGestures
-
-       set _activeColoring 1
-       set _changedImage 1
+         puts "swapping foreground to gestures..."
+         $this swapInputForegroundLabel $_foregroundID $_labelID
+  
+        set _changedImage 1
 
        foreach {x y} [$_interactor GetEventPosition] {}              
        if { $smudge } {
          continue
        } else {
-     set activeColor [EditorGetPaintLabel]
-     if { $activeColor != 0 } {
-         if { [lsearch $_labelColors $activeColor] == -1 } {
-       lappend _labelColors $activeColor
-       puts "length of label Colors is : [llength $_labelColors]"
-         }
-     }
+        set activeColor [EditorGetPaintLabel]
+         }   
        }
     }
-    "LeaveEvent" {
-        if { $_activeColoring == 1} {
-      $this setLabelMapToSegmented
-      set _activeColoring 0
-      
-        }
-    }
-  }
-
-#  $this highlight
-#  $this positionActors
-#  [$sliceGUI GetSliceViewer] RequestRender
-
-#  puts "Done process event"
 }
 
 
 itcl::body GrowCutSegmentEffect::apply {} {
 
     puts "in Apply method"
+
     set grabID [$sliceGUI GetGrabID]
     if { ($grabID != "") && ($grabID != $this) } {
   return
     }
 
-    set _changedImage 1
+    #$this swapInputForegroundLabel $_labelID $_foregroundID
+    
     if { [$this getInputLabel] == "" || [$this getInputBackground] == "" } {
        $this flashCursor 3
        return
@@ -361,55 +227,26 @@ itcl::body GrowCutSegmentEffect::apply {} {
   set o(growCutFilter) [vtkNew vtkITKGrowCutSegmentationImageFilter]
     }
 
-    $this setProgressFilter $o(growCutFilter) "GrowCutSegment Filter"
-    
-    set gestureColors [vtkPoints New]
-
-
-    for { set i 0 } {$i < [llength $_labelColors]} {incr i} {
-       set j [expr $i + 1]
-       set t 1
-       set l [lindex $_labelColors $i]
-       $gestureColors InsertNextPoint $l $j $t
+   $this setProgressFilter $o(growCutFilter) "GrowCutSegment Filter"
+   set numCnodes [$::slicer3::MRMLScene GetNumberOfNodesByClass "vtkMRMLScalarVolumeNode"]
+   for { set j 0 } { $j < $numCnodes } { incr j } {
+    set vnode [$::slicer3::MRMLScene GetNthNodeByClass $j "vtkMRMLScalarVolumeNode"]
+    set vID [$vnode GetID]
+    if { $vID == $_labelID } {
+      $_segmentedImage DeepCopy [$vnode GetImageData]
+    } 
+    if { $vID == $_foregroundID } {
+      $_gestureImage DeepCopy [$vnode GetImageData]
     }
-
-    set dims [$_gestureImage GetDimensions]
-#    set _foundPainted 0
-    
-    for {set z 0} {$_foundPainted == 0 && $z < [lindex $dims 2]} {incr z} {
-  for {set y 0} {$_foundPainted == 0 && $y < [lindex $dims 1]} {incr y} {
-      for {set x 0} {$_foundPainted == 0 && $x < [lindex $dims 0]} {incr x} {
-    set v [$_gestureImage GetScalarComponentAsDouble $x $y $z 0]
-    if { $v > 0 } {
-                  set _foundPainted 1
-    }
-            }
-        }
-    }
-
-    puts "paintedValue is $_foundPainted"
-    if { $_foundPainted == 1 } {
-     puts "already painted on..."  
-     $_inputImage DeepCopy $_gestureImage
-    } else {
-     puts "not painted already... $_foundPainted"
-     $_inputImage DeepCopy $_segmentedImage
-     $_segmentedImage DeepCopy $_gestureImage
-     $_gestureImage DeepCopy $_inputImage
-     set _foundPainted 1  
-    }
-
-    puts "$_labelColors"
+   
+   }
+  # $_segmentedImage DeepCopy [$this getInputLabel]
+  # $_gestureImage DeepCopy [$this getInputForeground] 
+    puts "setting inputs for the grow cut filter ... "
     $o(growCutFilter) SetInput 0 [$this getInputBackground] 
-    if { $_setGestures } {
-  $o(growCutFilter) SetInput 1 $_inputImage 
-  $o(growCutFilter) SetInput 2 $_segmentedImage 
-    } else {
-  $o(growCutFilter) SetInput 1 [$this getInputLabel]
-  $o(growCutFilter) SetInput 2 [$this getInputLabel]
-    }
+    $o(growCutFilter) SetInput 1 $_gestureImage 
+    $o(growCutFilter) SetInput 2 $_segmentedImage 
     
-    # convert mL to voxel
     set voxelnumber [ConversiontoVoxels $this $objectSize]
     set cubeIndex [expr 1.0/3.0]
     
@@ -417,35 +254,27 @@ itcl::body GrowCutSegmentEffect::apply {} {
     
     $o(growCutFilter) SetObjectSize $objectSize
     $o(growCutFilter) SetContrastNoiseRatio $contrastNoiseRatio
-    $o(growCutFilter) SetGestureColors $gestureColors
+    #$o(growCutFilter) SetGestureColors $gestureColors
     $o(growCutFilter) SetPriorSegmentConfidence  $priorStrength 
     $o(growCutFilter) SetNumberOfThreads 1 
-    
-    #set gfilter $o(growCutFilter)
-
-#    $this setLabelMapToSegmented    
-#    $_layers(label,node) SetAndObserveImageData [$o(growCutFilter) GetOutput]
-#    $_layers(label,node) Modified
     puts "updating grow cut filter "
     $o(growCutFilter) Update
-    
     $_segmentedImage DeepCopy [$o(growCutFilter) GetOutput]
-    #$_segmentedImage DeepCopy [$this getInputLabel]
+   # $_layers(label,node) SetAndObserveImageData [$o(growCutFilter) GetOutput]
+   # $_layers(label,node) Modified
+   $this setInputImageData $_segmentedImage $_labelID
+#    $_layers(label,node) SetAndObserveImageData [$o(growCutFilter) GetOutput]
+#    $_layers(label,node) Modified
     puts "done grow cut..."
 
-    $this setLabelMapToSegmented
-
-    set _setGestures 1
-
-  $gestureColors Delete
+    $this swapInputForegroundLabel $_labelID $_foregroundID
   
 }
+
 
 itcl::body GrowCutSegmentEffect::buildOptions {} {
    
 
-  #puts "Build options before chaining"
- 
 #  call superclass version of buildOptions
   chain
 
@@ -465,20 +294,20 @@ itcl::body GrowCutSegmentEffect::buildOptions {} {
   puts "max Object Size : $_maxObjectSize"
 
 #  catch {
-  set o(objectSize) [vtkKWThumbWheel New]
-  $o(objectSize) SetParent [$this getOptionsFrame]
-  $o(objectSize) PopupModeOn
-  $o(objectSize) Create
-  $o(objectSize) DisplayEntryAndLabelOnTopOn
-  $o(objectSize) DisplayEntryOn
-  $o(objectSize) DisplayLabelOn
-  $o(objectSize) SetResolution 1
-  $o(objectSize) SetMinimumValue 0
-  $o(objectSize) SetClampMinimumValue 0
-  $o(objectSize) SetValue 0
-  [$o(objectSize) GetLabel] SetText "Target segmented volume (mL):"
-  $o(objectSize) SetBalloonHelpString "Overestimate of the segmented structure volume"
-  pack [$o(objectSize) GetWidgetName] -side top -anchor e -padx 2 -pady 2
+#  set o(objectSize) [vtkKWThumbWheel New]
+#  $o(objectSize) SetParent [$this getOptionsFrame]
+#  $o(objectSize) PopupModeOn
+#  $o(objectSize) Create
+#  $o(objectSize) DisplayEntryAndLabelOnTopOn
+#  $o(objectSize) DisplayEntryOn
+#  $o(objectSize) DisplayLabelOn
+#  $o(objectSize) SetResolution 1
+#  $o(objectSize) SetMinimumValue 0
+#  $o(objectSize) SetClampMinimumValue 0
+#  $o(objectSize) SetValue 0
+#  [$o(objectSize) GetLabel] SetText "ROI volume to expand from gestures (mL):"
+#  $o(objectSize) SetBalloonHelpString "How much should the ROI be expanded from the overlaid gestures"
+#  pack [$o(objectSize) GetWidgetName] -side top -anchor e -padx 2 -pady 2
 
 #  } test0
   
@@ -487,16 +316,16 @@ itcl::body GrowCutSegmentEffect::buildOptions {} {
 
 #    set the contrast noise ratio for the selected class 
 #  catch {
-  set o(contrastNoiseRatio) [vtkKWScaleWithEntry New]
-  $o(contrastNoiseRatio) SetParent [$this getOptionsFrame]
-  $o(contrastNoiseRatio) PopupModeOn
-  $o(contrastNoiseRatio) Create
-  $o(contrastNoiseRatio) SetRange 0.0 1.0
-  $o(contrastNoiseRatio) SetResolution 0.01
-  $o(contrastNoiseRatio) SetLabelText "Contrast Ratio: " 
-  $o(contrastNoiseRatio) SetValue $contrastNoiseRatio    
- $o(contrastNoiseRatio) SetBalloonHelpString "Set the relative contrast between foreground class and its surrounding background \[0 to 1\]."
-  pack [$o(contrastNoiseRatio) GetWidgetName] \
+#  set o(contrastNoiseRatio) [vtkKWScaleWithEntry New]
+#  $o(contrastNoiseRatio) SetParent [$this getOptionsFrame]
+#  $o(contrastNoiseRatio) PopupModeOn
+#  $o(contrastNoiseRatio) Create
+#  $o(contrastNoiseRatio) SetRange 0.0 1.0
+#  $o(contrastNoiseRatio) SetResolution 0.01
+#  $o(contrastNoiseRatio) SetLabelText "Contrast Ratio: " 
+#  $o(contrastNoiseRatio) SetValue $contrastNoiseRatio    
+# $o(contrastNoiseRatio) SetBalloonHelpString "Set the relative contrast between foreground class and its surrounding background \[0 to 1\]."
+#  pack [$o(contrastNoiseRatio) GetWidgetName] \
      -side top -anchor e -fill x -padx 2 -pady 2 
 #  } test1
 
@@ -508,24 +337,24 @@ itcl::body GrowCutSegmentEffect::buildOptions {} {
   # set the prior strength if using a segmented label image to start segmentation
   #
 # catch {
- set o(priorStrength) [vtkNew vtkKWThumbWheel]
- $o(priorStrength) SetParent [$this getOptionsFrame]
- $o(priorStrength) PopupModeOn
- $o(priorStrength) Create
- $o(priorStrength) DisplayEntryAndLabelOnTopOn
- $o(priorStrength) DisplayEntryOn
- $o(priorStrength) DisplayLabelOn
- $o(priorStrength) SetValue [[EditorGetParameterNode] GetParameter GrowCutSegment,priorStrength] 
- $o(priorStrength) SetMinimumValue 0
- $o(priorStrength) SetMaximumValue 1
- $o(priorStrength) ClampMinimumValueOn
- $o(priorStrength) ClampMaximumValueOn
- [$o(priorStrength) GetLabel] SetText "Prev Segment Confidence: "
- $o(priorStrength) SetBalloonHelpString "Set the confidence in the initial segmentation if using an existing segmentation for correction \[0 to 1\]."
- pack [$o(priorStrength) GetWidgetName] \
+# set o(priorStrength) [vtkNew vtkKWThumbWheel]
+# $o(priorStrength) SetParent [$this getOptionsFrame]
+# $o(priorStrength) PopupModeOn
+# $o(priorStrength) Create
+# $o(priorStrength) DisplayEntryAndLabelOnTopOn
+# $o(priorStrength) DisplayEntryOn
+# $o(priorStrength) DisplayLabelOn
+# $o(priorStrength) SetValue [[EditorGetParameterNode] GetParameter GrowCutSegment,priorStrength] 
+# $o(priorStrength) SetMinimumValue 0
+# $o(priorStrength) SetMaximumValue 1
+# $o(priorStrength) ClampMinimumValueOn
+# $o(priorStrength) ClampMaximumValueOn
+# [$o(priorStrength) GetLabel] SetText "Prev Segment Confidence: "
+# $o(priorStrength) SetBalloonHelpString "Set the confidence in the initial segmentation if using an existing segmentation for correction \[0 to 1\]."
+# pack [$o(priorStrength) GetWidgetName] \
      -side top -anchor e -fill x -padx 2 -pady 2 
 
-  puts "prior Strength "
+#  puts "prior Strength "
 
 # } testPrior
 # if { $testPrior != ""} { puts " after priorStrength: $testPrior" }
@@ -534,13 +363,13 @@ itcl::body GrowCutSegmentEffect::buildOptions {} {
   # set display to overlay gestures
   #
 #  catch {
-  set o(overlay) [vtkKWCheckButtonWithLabel New]
-  $o(overlay) SetParent [$this getOptionsFrame]
-  $o(overlay) Create
-  $o(overlay) SetLabelText "Overlay Gestures: "
-  $o(overlay) SetBalloonHelpString "Set the Gestures input from previous interactions to be overlayed on the segmented label map. You may add additional gestures to correct segmentation."
-  [$o(overlay) GetWidget] SetSelectedState [[EditorGetParameterNode] GetParameter GrowCutSegment,overlay] 
-  pack [$o(overlay) GetWidgetName] \
+#  set o(overlay) [vtkKWCheckButtonWithLabel New]
+#  $o(overlay) SetParent [$this getOptionsFrame]
+#  $o(overlay) Create
+#  $o(overlay) SetLabelText "Overlay Gestures: "
+#  $o(overlay) SetBalloonHelpString "Set the Gestures input from previous interactions to be overlayed on the segmented label map. You may add additional gestures to correct segmentation."
+#  [$o(overlay) GetWidget] SetSelectedState [[EditorGetParameterNode] GetParameter GrowCutSegment,overlay] 
+#  pack [$o(overlay) GetWidgetName] \
     -side top -anchor e -fill x -padx 2 -pady 2 
 #  } testOverlay
 #  if { $testOverlay != "" } {puts " after overlay : $testOverlay" }
@@ -553,8 +382,7 @@ itcl::body GrowCutSegmentEffect::buildOptions {} {
   $o(help) SetParent [$this getOptionsFrame]
   $o(help) Create
   $o(help) SetHelpTitle "Grow Cut Segmentation"
-  $o(help) SetHelpText "Use this tool to interactively segment the object of interest. \nFirst select the number of classes. \nThen select each class 1 to N, then paint strokes on the region corresponding to that label. \nOptionally, edit an already existing segmentation by loading a label map, and editing that map. To segment, 
-add gestures or draw inside regions of interest. Place background gestures anywhere around object. Paint objects with the lower paint values and use highest paint value for background. Ex if 1,2,3 are object paints, 4 or higher is background."
+  $o(help) SetHelpText "This tool enables to interactively segment a region of interest. For operation, this tool requires the user to specify at least an 'in-region' and an 'out-region' marked using different colors. To specify 'in-region', select a color from the Label and paint a stroke (gesture) inside the region of interest. Repeat the same with a different label color for the 'out-region'. To correct a segmentation, simply paint on some areas that need correction with the appropriate label color. The tool automatically picks a region of interest (ROI) based on the gestures painted by the user. To extend the ROI, paint on the areas that need to be segmented. This tool also supports 'n-class' segmentation. For faster segmentation, optionally use the CropVolume tool to crop the region of interest and use this tool."
   $o(help) SetBalloonHelpString "Bring up help window."
   pack [$o(help) GetWidgetName] \
     -side right -anchor sw -padx 2 -pady 2 
@@ -590,17 +418,17 @@ add gestures or draw inside regions of interest. Place background gestures anywh
 
   #
   # event observers - TODO: if there were a way to make these more specific, I would...
-  set tag [$o(objectSize) AddObserver AnyEvent "after idle $this updateMRMLFromGUI"]
-  lappend _observerRecords "$o(objectSize) $tag"
+#  set tag [$o(objectSize) AddObserver AnyEvent "after idle $this updateMRMLFromGUI"]
+#  lappend _observerRecords "$o(objectSize) $tag"
   
-  set tag [$o(contrastNoiseRatio) AddObserver AnyEvent "after idle $this updateMRMLFromGUI"]
-  lappend _observerRecords "$o(contrastNoiseRatio) $tag"
+ # set tag [$o(contrastNoiseRatio) AddObserver AnyEvent "after idle $this updateMRMLFromGUI"]
+ # lappend _observerRecords "$o(contrastNoiseRatio) $tag"
 
-  set tag [$o(priorStrength) AddObserver AnyEvent "after idle $this updateMRMLFromGUI"]
-  lappend _observerRecords "$o(priorStrength) $tag"
+ # set tag [$o(priorStrength) AddObserver AnyEvent "after idle $this updateMRMLFromGUI"]
+ # lappend _observerRecords "$o(priorStrength) $tag"
 
-  set tag [[$o(overlay) GetWidget] AddObserver AnyEvent "after idle $this updateMRMLFromGUI"]
-  lappend _observerRecords "$o(overlay) $tag"
+#  set tag [[$o(overlay) GetWidget] AddObserver AnyEvent "after idle $this updateMRMLFromGUI"]
+#  lappend _observerRecords "$o(overlay) $tag"
 
   set tag [$o(apply) AddObserver AnyEvent "$this apply"]
   lappend _observerRecords "$o(apply) $tag"
@@ -626,17 +454,15 @@ itcl::body GrowCutSegmentEffect::tearDownOptions { } {
   # call superclass version of tearDownOptions
   chain
 
-  foreach w "help cancel apply objectSize contrastNoiseRatio priorStrength overlay" {
+  foreach w "help cancel apply" {
       if { [info exists o($w)] } {
     $o($w) SetParent ""
     pack forget [$o($w) GetWidgetName] 
       }
   }
-#  $this setLabelMapToSegmented  
-  if { $segmented != 2 & $_setGestures } {
-      $this setLabelMapToSegmented
-  }
-
+#  if { $swapped == 1 } {
+    $this swapInputForegroundLabel $_labelID $_foregroundID
+#  }
 }
 
 
@@ -647,25 +473,25 @@ itcl::body GrowCutSegmentEffect::updateMRMLFromGUI { } {
     chain
     set node [EditorGetParameterNode]
 
-    if { [info exists o(objectSize)] } {
-       $this configure -objectSize [$o(objectSize) GetValue]
-       $node SetParameter "GrowCutSegment,objectSize" $objectSize   
-    }
+#    if { [info exists o(objectSize)] } {
+#       $this configure -objectSize [$o(objectSize) GetValue]
+#       $node SetParameter "GrowCutSegment,objectSize" $objectSize   
+#    }
 
-    if { [info exists o(contrastNoiseRatio)] } {
-       $this configure -contrastNoiseRatio [$o(contrastNoiseRatio) GetValue]
-       $node SetParameter "GrowCutSegment,contrastNoiseRatio" $contrastNoiseRatio   
-    }
+#    if { [info exists o(contrastNoiseRatio)] } {
+#       $this configure -contrastNoiseRatio [$o(contrastNoiseRatio) GetValue]
+#       $node SetParameter "GrowCutSegment,contrastNoiseRatio" $contrastNoiseRatio   
+#    }
 
-    if { [info exists o(priorStrength)] } {
-       $this configure -priorStrength [$o(priorStrength) GetValue]
-       $node SetParameter "GrowCutSegment,priorStrength" $priorStrength   
-    }
+#    if { [info exists o(priorStrength)] } {
+#       $this configure -priorStrength [$o(priorStrength) GetValue]
+#       $node SetParameter "GrowCutSegment,priorStrength" $priorStrength   
+#    }
     
-    if { [info exists o(overlay)] } {
-       $this configure -overlay [[$o(overlay) GetWidget] GetSelectedState]
-       $node SetParameter "GrowCutSegment,overlay" $overlay
-    }
+#    if { [info exists o(overlay)] } {
+#       $this configure -overlay [[$o(overlay) GetWidget] GetSelectedState]
+#       $node SetParameter "GrowCutSegment,overlay" $overlay
+#    }
 
 #    puts "done updating MRML from GUI"
     
@@ -687,10 +513,10 @@ itcl::body GrowCutSegmentEffect::setMRMLDefaults { } {
     
 
     foreach {param default} {
-      objectSize 1
+      #objectSize 10
       contrastNoiseRatio 0.8
-      priorStrength 0.00003
-      overlay 0
+      priorStrength 0.0003
+      #overlay 0
       segmented 2
     } {
         set pvalue [$node GetParameter Paint,$param] 
@@ -699,7 +525,7 @@ itcl::body GrowCutSegmentEffect::setMRMLDefaults { } {
  }
     }
 
-    $node SetParameter "GrowCutSegment,objectSize" 100 
+   # $node SetParameter "GrowCutSegment,objectSize" 100 
     $node SetParameter "Paint, radius" 3
    # puts "done setting MRML defaults in Grow Cut"
 }
@@ -721,29 +547,29 @@ itcl::body GrowCutSegmentEffect::updateGUIFromMRML { } {
   # (only if this is the instance that "owns" the GUI
   
 #  catch {
-  set objectSize [$node GetParameter GrowCutSegment,objectSize] 
-  $this configure -objectSize $objectSize
-  if { [info exists o(objectSize)] } {
-      $o(objectSize) SetValue $objectSize
-  }
+#  set objectSize [$node GetParameter GrowCutSegment,objectSize] 
+#  $this configure -objectSize $objectSize
+#  if { [info exists o(objectSize)] } {
+#      $o(objectSize) SetValue $objectSize
+#  }
 
-  set contrastNoiseRatio [$node GetParameter GrowCutSegment,contrastNoiseRatio] 
-  $this configure -contrastNoiseRatio $contrastNoiseRatio
-  if { [info exists o(contrastNoiseRatio)] } {
-      $o(contrastNoiseRatio) SetValue $contrastNoiseRatio
-  }
+#  set contrastNoiseRatio [$node GetParameter GrowCutSegment,contrastNoiseRatio] 
+#  $this configure -contrastNoiseRatio $contrastNoiseRatio
+#  if { [info exists o(contrastNoiseRatio)] } {
+#      $o(contrastNoiseRatio) SetValue $contrastNoiseRatio
+#  }
 
- set priorStrength [$node GetParameter GrowCutSegment,priorStrength] 
-  $this configure -priorStrength $priorStrength
-  if { [info exists o(priorStrength)] } {
-    $o(priorStrength) SetValue $priorStrength
-  }
+# set priorStrength [$node GetParameter GrowCutSegment,priorStrength] 
+#  $this configure -priorStrength $priorStrength
+#  if { [info exists o(priorStrength)] } {
+#    $o(priorStrength) SetValue $priorStrength
+#  }
 
- set overlay [$node GetParameter GrowCutSegment,overlay] 
- $this configure -overlay $overlay
- if { [info exists o(overlay)] } {
-   [$o(overlay) GetWidget] SetSelectedState $overlay
- }
+ #set overlay [$node GetParameter GrowCutSegment,overlay] 
+ #$this configure -overlay $overlay
+ #if { [info exists o(overlay)] } {
+ #  [$o(overlay) GetWidget] SetSelectedState $overlay
+ #}
 
 #  } err1
 #  if { $err1 != ""} {puts $err1}
