@@ -3078,6 +3078,7 @@ void vtkSlicerSliceControllerWidget::ProcessWidgetEvents ( vtkObject *caller,
     // wait until the ScaleValueChangedEvent to propagate to the other viewers)
     if ( link && sgui0 && (event != vtkKWScale::ScaleValueChangingEvent) &&
          ((layout->GetViewArrangement() == vtkMRMLLayoutNode::SlicerLayoutCompareView) ||
+          (layout->GetViewArrangement() == vtkMRMLLayoutNode::SlicerLayoutCompareWidescreenView) || 
           (layout->GetViewArrangement() == vtkMRMLLayoutNode::SlicerLayoutSideBySideLightboxView)) )
       {
       modified |= this->UpdateCompareView( offset );
@@ -3118,6 +3119,7 @@ void vtkSlicerSliceControllerWidget::ProcessWidgetEvents ( vtkObject *caller,
       // modify all slice logic to synch all Compare Slice viewers
       if ( link && sgui0 &&
          ((layout->GetViewArrangement() == vtkMRMLLayoutNode::SlicerLayoutCompareView) ||
+          (layout->GetViewArrangement() == vtkMRMLLayoutNode::SlicerLayoutCompareWidescreenView) || 
           (layout->GetViewArrangement() == vtkMRMLLayoutNode::SlicerLayoutSideBySideLightboxView)) )
         {
         modified |= this->UpdateCompareView( newValue );
