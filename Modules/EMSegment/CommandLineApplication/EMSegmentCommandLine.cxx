@@ -601,7 +601,7 @@ int main(int argc, char** argv)
 
     // An error will apear here bc the emlogic is not fully set up yet bc we first have to read in the mrml file - just ignore it 
     cout << "=============================================================" << endl;
-    cout << "Ignore the following error msg: TCL: ERROR: EMSegmenterPreProcessingTcl::InitVariables: WorkingData not defined" << endl;
+    cout << "Ignore the following msg: TCL: EMSegmenterPreProcessingTcl::InitVariables: WorkingData not defined" << endl;
     std::string CMD = "::EMSegmenterPreProcessingTcl::InitVariables " + emLogicTcl + " " + emMRMLManagerTcl + " NULL";
     app->Script(CMD.c_str());
     cout << "=============================================================" << endl;

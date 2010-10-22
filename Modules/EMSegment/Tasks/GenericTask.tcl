@@ -232,7 +232,7 @@ namespace eval EMSegmenterPreProcessingTcl {
 
         set workingDN [$mrmlManager GetWorkingDataNode]
         if { $workingDN == "" } {
-            PrintError "InitVariables: WorkingData not defined"
+            $LOGIC PrintText "TCL: EMSegmenterPreProcessingTcl::InitVariables: WorkingData not defined"
             return 1
         }
 
