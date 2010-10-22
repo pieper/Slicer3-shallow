@@ -3120,7 +3120,7 @@ void vtkSlicerApplicationGUI::PackMainViewer ( int arrangmentType, const char *w
           break;
         case vtkMRMLLayoutNode::SlicerLayoutCompareWidescreenView:
           this->PackCompareWidescreenView();
-          break;          
+          break;
         case vtkMRMLLayoutNode::SlicerLayoutDual3DView:
           this->PackDual3DView();
           break;
@@ -3184,7 +3184,7 @@ void vtkSlicerApplicationGUI::UnpackMainViewer ( )
           break;
         case vtkMRMLLayoutNode::SlicerLayoutCompareWidescreenView:
           this->UnpackCompareWidescreenView();
-          break;          
+          break;
         case vtkMRMLLayoutNode::SlicerLayoutDual3DView:
           this->UnpackDual3DView();
           break;

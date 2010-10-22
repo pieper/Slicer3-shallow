@@ -307,7 +307,7 @@ class VTK_SLICER_BASE_GUI_EXPORT vtkSlicerApplicationGUI : public vtkSlicerCompo
     virtual void RestoreWidescreenCompareLayout();
     virtual void SaveWidescreenConventionalLayout();
     virtual void RestoreWidescreenConventionalLayout();
-    
+
     /// 
     /// Methods invoked by making selections from Help menu
     /// on the menu bar; give access to Slicer tutorials,
