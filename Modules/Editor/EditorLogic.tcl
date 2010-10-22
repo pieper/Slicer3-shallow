@@ -91,39 +91,39 @@ proc EditorLabelCheckPoint {} {
   set labelNode [$volumesLogic CloneVolume $::slicer3::MRMLScene $volumeNode $targetName]
 }
 
-proc ConversiontomL {this Voxels} {
+#proc ConversiontomL {this Voxels} {
   
-  set sliceLogic [$::slicer3::ApplicationLogic GetSliceLogic "Red"]
-  set layerLogic [$sliceLogic GetLabelLayer]
-  set volumeNode [$layerLogic GetVolumeNode]
-  set inputVolume [$volumeNode GetImageData]
+#  set sliceLogic [$::slicer3::ApplicationLogic GetSliceLogic "Red"]
+#  set layerLogic [$sliceLogic GetLabelLayer]
+#  set volumeNode [$layerLogic GetVolumeNode]
+#  set inputVolume [$volumeNode GetImageData]
 
-  scan [$inputVolume GetSpacing] "%f%f%f" dx dy dz
-  set voxelvolume [expr $dx * $dy * $dz]
-  set conversion 1000
+#  scan [$inputVolume GetSpacing] "%f%f%f" dx dy dz
+#  set voxelvolume [expr $dx * $dy * $dz]
+#  set conversion 1000
 
-  set voxelamount [expr $Voxels * $voxelvolume]
-  set mL [expr round($voxelamount) / $conversion]
+#  set voxelamount [expr $Voxels * $voxelvolume]
+#  set mL [expr round($voxelamount) / $conversion]
 
-  return $mL
-}
+#  return $mL
+#}
 
-proc ConversiontoVoxels {this mL} {
+#proc ConversiontoVoxels {this mL} {
 
-  set sliceLogic [$::slicer3::ApplicationLogic GetSliceLogic "Red"]
-  set layerLogic [$sliceLogic GetLabelLayer]
-  set volumeNode [$layerLogic GetVolumeNode]
-  set inputVolume [$volumeNode GetImageData]
+#  set sliceLogic [$::slicer3::ApplicationLogic GetSliceLogic "Red"]
+#  set layerLogic [$sliceLogic GetLabelLayer]
+#  set volumeNode [$layerLogic GetVolumeNode]
+#  set inputVolume [$volumeNode GetImageData]
 
-  scan [$inputVolume GetSpacing] "%f %f %f" dx dy dz
-  set voxelvolume [expr $dx * $dy * $dz]
-  set conversion 1000
+#  scan [$inputVolume GetSpacing] "%f %f %f" dx dy dz
+#  set voxelvolume [expr $dx * $dy * $dz]
+#  set conversion 1000
 
-  set voxelamount [expr $mL / $voxelvolume]
-  set Voxels [expr round($voxelamount) * $conversion]
+#  set voxelamount [expr $mL / $voxelvolume]
+#  set Voxels [expr round($voxelamount) * $conversion]
 
-  return $Voxels
-}
+#  return $Voxels
+#}
 
 #proc EditorCreateGestureParameterNode {id} {
 
