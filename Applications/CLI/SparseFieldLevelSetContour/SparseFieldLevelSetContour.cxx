@@ -26,25 +26,19 @@
 using namespace MeshContourEvolver;
 
 int run_test(vtkPolyData* polyDataOutput, vtkPolyData* polyDataBaseline)
-{
+{ // TODO: something was backwards with the 1/0 return values, chudy: 0 is "good"!
   std::cerr<<"Running MeshContourEvolver Test Function... \n";
   // polyDataBaseline, polyDataOutput
 
-  if( polyDataOutput->GetNumberOfPoints() != polyDataBaseline->GetNumberOfPoints() )
-  {
-    return 0;
-  } 
-  else 
-  {
-    //for(int i=0; i<polyDataOutput.GetNumberOfPoints(); i++)
-    {
-      if ( (polyDataOutput->GetPointData()->GetArray("activeContourVertIdx") == NULL) ||
-            (polyDataBaseline->GetPointData()->GetArray("activeContourVertIdx") == NULL ) )
-      {
-        return 0;
-      }
-    }
+  if( polyDataOutput->GetNumberOfPoints() != polyDataBaseline->GetNumberOfPoints() ) {
     return 1;
+  } 
+  else {
+      if ( (polyDataOutput->GetPointData()->GetArray("activeContourVertIdx") == NULL) ||
+            (polyDataBaseline->GetPointData()->GetArray("activeContourVertIdx") == NULL ) ) {
+        return 1;
+      }
+    return 0;
   }
 }
 
@@ -61,8 +55,7 @@ int main(int argc, char* argv[] )
   std::cout << "Adjacency tree levels "<< adj_levels << "\n";
   std::cout << "Right handed mesh: " << rightHandMesh << "\n";
   std::cout << "is_test: " << is_test << "\n";
-  if(is_test)
-  {
+  if(is_test) {
     std::cout<<"Running comparison test on \n";
     std::cout<<"Baseline model: "<<baselineModel.c_str()<<"\n";
   }
@@ -78,35 +71,32 @@ int main(int argc, char* argv[] )
   InitParam init = {evolve_its, mesh_smooth_its, H_smooth_its, adj_levels, rightHandMesh };
 
 
-  if (reader->GetOutput() == NULL)
-    {
+  if (reader->GetOutput() == NULL) {
     std::cerr << "ERROR reading input surface file " << InputSurface.c_str();
     reader->Delete();
     return EXIT_FAILURE;
-    }
+  }
   vtkSmartPointer<vtkPolyData> polyDataInput  = reader->GetOutput();
 
   vtkSmartPointer<vtkPolyData> polyDataOutput = vtkSmartPointer<vtkPolyData>::New();
-  
-  //vtkPolyData * polyDataOutput =
-  
+   
   entry_main( polyDataInput, ContourSeedPts, polyDataOutput, init );
 
+  int return_value = EXIT_SUCCESS;
   if(is_test != 0)  
   {
-//#define SFLS_TEST_RESULT_PASS 2
-  reader->SetFileName(baselineModel.c_str());
-  reader->Update();
-  if (reader->GetOutput() == NULL)
-  {
-    std::cerr <<"ERROR reading baseline surface file "<< baselineModel.c_str();
-    reader->Delete();
-    return EXIT_FAILURE;
-  }
-  vtkSmartPointer<vtkPolyData> polyDataBaseline = reader->GetOutput();
-    int iOut = run_test( polyDataOutput, polyDataBaseline);
-    return (iOut > 0 ) ? 2 : 1 ;
-  //#undef SFLS_TEST_RESULT_PASS
+    reader->SetFileName(baselineModel.c_str());
+    reader->Update();
+
+    if (reader->GetOutput() == NULL)
+    {
+      std::cerr <<"ERROR reading baseline surface file "<< baselineModel.c_str();
+      reader->Delete();
+      return EXIT_FAILURE;
+    }
+    vtkSmartPointer<vtkPolyData> polyDataBaseline = reader->GetOutput();
+      int iOut = run_test( polyDataOutput, polyDataBaseline);
+      return_value = iOut; //  (iOut > 0 ) ? 2 : 1 ;  // Doh! Chudy: 0 is "good" !
   }
   vtkSmartPointer<vtkXMLPolyDataWriter> writer = vtkSmartPointer<vtkXMLPolyDataWriter>::New();
   std::string commentWrite = "Writing output model " + OutputModel;
@@ -123,6 +113,6 @@ int main(int argc, char* argv[] )
 
   // The result is contained in the scalar colormap of the output.
 
-  return EXIT_SUCCESS;
+  return return_value;
 }
 
