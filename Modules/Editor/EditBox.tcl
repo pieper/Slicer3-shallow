@@ -330,9 +330,9 @@ itcl::body EditBox::selectEffect { effect } {
       # create an instance of the effect for each of the active sliceGUIs
       # - have the effect reset the tool label when completed
       #
-    if {$effect == "GrowCutSegment"} {
-  EditorGestureCheckPoint
-    } 
+      if {$effect == "GrowCutSegment"} {
+        EditorGestureCheckPoint
+      } 
    
       set ret [catch "EffectSWidget::Add $_effects($effect,class)" res]
       if { $ret } {

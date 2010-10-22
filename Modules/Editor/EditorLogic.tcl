@@ -74,7 +74,6 @@ proc EditorLabelCheckPoint {} {
 
   # find a unique name for this copy
   set sourceName [$volumeNode GetName]
-  set sourceID [$volumeNode GetID]
   set id 0
   while {1} {
     set targetName $sourceName-$id
