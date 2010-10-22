@@ -229,7 +229,7 @@ itcl::body GrowCutSegmentEffect::apply {} {
     }
 
    $this setProgressFilter $o(growCutFilter) "GrowCutSegment Filter"
-
+   catch {
    set numCnodes [$::slicer3::MRMLScene GetNumberOfNodesByClass "vtkMRMLScalarVolumeNode"]
    for { set j 0 } { $j < $numCnodes } { incr j } {
     set vnode [$::slicer3::MRMLScene GetNthNodeByClass $j "vtkMRMLScalarVolumeNode"]
@@ -243,59 +243,40 @@ itcl::body GrowCutSegmentEffect::apply {} {
     }
    
    }
-
+   } errCopy
+  if { $errCopy != "" } { puts "error in getting the gesture and segmented images $errCopy" }
    # Handle the logic for switching gestures and label layer here
    #
-   if { $_foundPainted == 0 } {
-      set range [$_gestureImage GetScalarRange]  
-      if { [llength $range] == 2 } {
-         set maxRange [lindex $range]
-         if {$maxRange > 0 } {
+   set range [$_gestureImage GetScalarRange]  
+   if { [llength $range] == 2 } {
+      set maxRange [lindex $range 1]
+      puts "range is $range"
+      if {$maxRange > 0 } {
           set _foundPainted 1
         }
-      }
-      puts "found painted is $_foundPainted"
-     if { $_foundPainted == 0 } {
+    }
+   set lrange [$_segmentedImage GetScalarRange]
+   puts "segmented image range $lrange"
+    puts "found painted is $_foundPainted"
+    catch {
+    if { $_foundPainted == 0 } {
         puts "swapping the label and gestureimage.." 
       
-        set tmpImage [vtkNew vtkImageData]
-        set dim [[$this getInputLabel] GetDimensions]
-        set x [lindex $dim 0]
-        set y [lindex $dim 1]
-        set z [lindex $dim 2]
-
-        set extent [[$this getInputLabel] GetExtent]
-        set origin [[$this getInputLabel] GetOrigin]
-        set spacing [[$this getInputLabel] GetSpacing]
-        $tmpImage SetDimensions $x $y $z
-        $tmpImage SetExtent [lindex $extent 0] [lindex $extent 1] \
-            [lindex $extent 2] [lindex $extent 3] \
-            [lindex $extent 4] [lindex $extent 5]
-
-       $tmpImage SetOrigin [lindex $origin 0] [lindex $origin 1] [lindex $origin 2]
-       $tmpImage SetSpacing [lindex $spacing 0] [lindex $spacing 1] [lindex $spacing 2]
-       $tmpImage SetScalarType [[$this getInputLabel] GetScalarType]
-       $tmpImage AllocateScalars
-
-       $tmpImage DeepCopy $_segmentedImage
-       $_segmentedImage DeepCopy $_gestureImage
-       $_gestureImage DeepCopy $tmpImage
+        $this swapInputForegroundLabel $_foregroundID $_labelID  
+        $_gestureImage DeepCopy [$this getInputForeground]
+        $_segmentedImage DeepCopy [$this getInputLabel] 
        
-       #$this setInputImageData $_gestureImage $_foregroundID
-      # $this setInputImageData $_segmentedImage $_labelID
-
-        #$_gestureImage DeepCopy [$this getInputForeground]
-        #$_segmentedImage DeepCopy [$this getInputLabel] 
+        #$this setInputImageData $_gestureImage $_foregroundID
+        #$this setInputImageData $_segmentedImage $_labelID
      
-        $o(growCutFilter) SetInput 1 $tmpImage 
-        $o(growCutFilter) SetInput 2 $_segmentedImage 
-       #set _foundPainted 1
-    } 
-  } else {
+        #set _foundPainted 1
+    }
     $o(growCutFilter) SetInput 1 $_gestureImage 
     $o(growCutFilter) SetInput 2 $_segmentedImage 
- }
-  puts "setting inputs for the grow cut filter ... "
+    
+   } errSwap
+   if {$errSwap != "" } { puts "error in the SWAPPING LOGIC $errSwap" }
+    puts "setting inputs for the grow cut filter ... "
     $o(growCutFilter) SetInput 0 [$this getInputBackground] 
     scan [$_gestureImage GetSpacing] "%f %f %f" dx dy dz
     set voxelvolume [expr $dx * $dy * $dz]
@@ -322,10 +303,11 @@ itcl::body GrowCutSegmentEffect::apply {} {
    # $_layers(label,node) SetAndObserveImageData [$o(growCutFilter) GetOutput]
    # $_layers(label,node) Modified
    $this setInputImageData $_segmentedImage $_labelID
+
    if { $_foundPainted == 0 } {
-     $this setInputImageData $_gestureImage $_foregroundID
-     set _foundPainted 1
-   } 
+
+        $this setInputImageData $_gestureImage $_foregroundID
+   }
 #    $_layers(label,node) SetAndObserveImageData [$o(growCutFilter) GetOutput]
 #    $_layers(label,node) Modified
     puts "done grow cut..."
