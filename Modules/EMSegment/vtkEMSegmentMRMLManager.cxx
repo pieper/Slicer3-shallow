@@ -4706,11 +4706,7 @@ void
 vtkEMSegmentMRMLManager::
 CopyEMRelatedNodesToMRMLScene(vtkMRMLScene* newScene)
 {
-  //
-  // clear scene
-  //
-  newScene->Clear(1);
-
+ 
   //
   // copy over nodes from the current scene to the new scene
   //
@@ -4722,34 +4718,10 @@ CopyEMRelatedNodesToMRMLScene(vtkMRMLScene* newScene)
     return;
     }
 
-  // get all nodes associated with this EMSeg parameter set
-  vtkCollection* emNodeCollection = this->GetMRMLScene()->
-    GetReferencedNodes(emNode);  
+  currentScene->GetReferencedSubScene(emNode, newScene);
 
-  // add the nodes to the scene
-  emNodeCollection->InitTraversal();
-  vtkObject* currentObject = NULL;
-  while ((currentObject = emNodeCollection->GetNextItemAsObject()) &&
-         (currentObject != NULL))
-    {
-    vtkMRMLNode* n = vtkMRMLNode::SafeDownCast(currentObject);
-    if (n == NULL)
-      {
-      continue;
-      }
+  return;
 
-    vtkMRMLNode* node = n->CreateNodeInstance();
-
-    // don't copy over the old scene, just id
-    node->Copy(n);
-    node->CopyID(n);
-
-    newScene->AddNodeNoNotify(node);
-    node->Delete();
-    }
-
-  // clean up
-  emNodeCollection->Delete();
 }
 
 //-----------------------------------------------------------------------------

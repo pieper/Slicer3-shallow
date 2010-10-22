@@ -11,6 +11,8 @@ Date:      $Date: 2006/03/17 15:10:09 $
 Version:   $Revision: 1.18 $
 
 =========================================================================auto=*/
+#include <string>
+#include <iostream>
 #include <sstream>
 #include <map>
 
@@ -117,6 +119,11 @@ vtkMRMLScene::vtkMRMLScene()
 
   this->ErrorCode = 0;
   this->IsClosed = 0;
+
+  this->LoadFromXMLString = 0;
+
+  this->SaveToXMLString = 0;
+
 
   this->LastLoadedVersion = NULL;
   this->Version = NULL;
@@ -618,6 +625,18 @@ void vtkMRMLScene::RegisterNodeClass(vtkMRMLNode* node)
 }
 
 //------------------------------------------------------------------------------
+void vtkMRMLScene::CopyRegisteredNodesToScene(vtkMRMLScene *scene) 
+{
+  if (scene) 
+    {
+    scene->RegisteredNodeClasses = this->RegisteredNodeClasses;
+    scene->RegisteredNodeTags = this->RegisteredNodeTags;
+    }
+}
+
+
+
+//------------------------------------------------------------------------------
 const char* vtkMRMLScene::GetClassNameByTag(const char *tagName)
 {
   if (tagName == NULL)
@@ -811,7 +830,8 @@ int vtkMRMLScene::Import()
 //------------------------------------------------------------------------------
 int vtkMRMLScene::LoadIntoScene(vtkCollection* nodeCollection)
 {
-  if (this->URL == "") 
+  if (this->URL == "" && this->GetLoadFromXMLString()==0 || 
+      this->GetLoadFromXMLString() == 1 && this->GetSceneXMLString().empty()) 
     {
     vtkErrorMacro("No URL specified");
     return 0;
@@ -855,9 +875,18 @@ int vtkMRMLScene::LoadIntoScene(vtkCollection* nodeCollection)
     {
     parser->SetNodeCollection(nodeCollection);
     }
-  vtkDebugMacro("Parsing: " << this->URL.c_str());
-  parser->SetFileName(URL.c_str());
-  int result = parser->Parse();
+
+  int result = 0;
+  if (this->GetLoadFromXMLString()) 
+    {
+    result = parser->Parse(this->GetSceneXMLString().c_str());
+    }
+  else 
+    {
+    vtkDebugMacro("Parsing: " << this->URL.c_str());
+    parser->SetFileName(URL.c_str());
+    result = parser->Parse();
+   }
   parser->Delete();
 
   vtkDebugMacro("Done Parsing: " << this->URL.c_str());
@@ -882,26 +911,40 @@ int vtkMRMLScene::Commit(const char* url)
     }
 
   vtkMRMLNode *node;
-  ofstream file;
+
+  std::stringstream oss;
+  std::ofstream ofs;
+
+  std::ostream *os = NULL;
+
+  if (this->GetSaveToXMLString()) 
+    {
+    os = &oss;
+    }
+  else 
+    {
+    os = &ofs;
+    // Open file
+#ifdef _WIN32
+    ofs.open(url, std::ios::out | std::ios::binary);
+#else
+    ofs.open(url, std::ios::out);
+#endif
+    if (ofs.fail()) 
+      {
+      vtkErrorMacro("Write: Could not open file " << url);
+#if (VTK_MAJOR_VERSION <= 5)      
+      this->SetErrorCode(2);
+#else
+     this->SetErrorCode(vtkErrorCode::GetErrorCodeFromString("CannotOpenFileError"));
+#endif
+      return 1;
+      }
+    }
+
   int indent=0, deltaIndent;
   
-  // Open file
-#ifdef _WIN32
-  file.open(url, std::ios::out | std::ios::binary);
-#else
-  file.open(url, std::ios::out);
-#endif
-  if (file.fail()) 
-    {
-    vtkErrorMacro("Write: Could not open file " << url);
-#if (VTK_MAJOR_VERSION <= 5)      
-    this->SetErrorCode(2);
-#else
-    this->SetErrorCode(vtkErrorCode::GetErrorCodeFromString("CannotOpenFileError"));
-#endif
-    return 1;
-    }
-  
+
     // this event is being detected by GUI to provide feedback during load
     // of data. But,
     // commented out for now because CLI modules are using MRML to write
@@ -913,12 +956,12 @@ int vtkMRMLScene::Commit(const char* url)
 
   //--- BEGIN test of user tags
   //file << "<MRML>\n";
-  file << "<MRML ";
+  *os << "<MRML ";
   
   // write version
   if (this->GetVersion())
     {
-    file << " version=\"" << this->GetVersion() << "\" ";
+    *os << " version=\"" << this->GetVersion() << "\" ";
     }
 
   //---write any user tags.
@@ -944,11 +987,11 @@ int vtkMRMLScene::Commit(const char* url)
       }
     if ( ss.str().c_str()!= NULL )
       {
-      file << "userTags=\"" << ss.str().c_str() << "\"";
+      *os << "userTags=\"" << ss.str().c_str() << "\"";
       }
     }
 
-  file << ">\n";
+  *os << ">\n";
   //--- END test of user tags
   
   // Write each node
@@ -968,16 +1011,16 @@ int vtkMRMLScene::Commit(const char* url)
       }
     
     vtkIndent vindent(indent);
-    file << vindent << "<" << node->GetNodeTagName() << "\n";
+    *os << vindent << "<" << node->GetNodeTagName() << "\n";
 
     if(indent<=0)
       indent = 1;
 
-    node->WriteXML(file, indent);
+    node->WriteXML(*os, indent);
     
-    file << vindent << ">";
-    node->WriteNodeBodyXML(file, indent);
-    file << "</" << node->GetNodeTagName() << ">\n";
+    *os << vindent << ">";
+    node->WriteNodeBodyXML(*os, indent);
+    *os << "</" << node->GetNodeTagName() << ">\n";
     
     if ( deltaIndent > 0 ) 
       {
@@ -985,10 +1028,17 @@ int vtkMRMLScene::Commit(const char* url)
       }    
     }
   
-  file << "</MRML>\n";
+  *os << "</MRML>\n";
   
   // Close file
-  file.close();
+  if (this->GetSaveToXMLString()) 
+    {
+    SceneXMLString = oss.str();
+    }
+  else 
+    {
+    ofs.close();
+    }
 #if (VTK_MAJOR_VERSION <= 5)      
   this->SetErrorCode(0);
 #else
@@ -2539,4 +2589,72 @@ vtkURIHandler * vtkMRMLScene::FindURIHandler(const char *URI)
     }
   vtkWarningMacro("FindURIHandler: unable to find a URI handler in the collection of " << this->GetURIHandlerCollection()->GetNumberOfItems() << " handlers to handle " << URI);
   return NULL;
+}
+
+//-----------------------------------------------------------------------------
+void
+vtkMRMLScene::
+GetReferencedSubScene(vtkMRMLNode *rnode, vtkMRMLScene* newScene)
+{
+  //
+  // clear scene
+  //
+  newScene->Clear(1);
+
+
+  if (rnode == NULL)
+    {
+    return;
+    }
+
+  // to get all references up-todate
+  // save the scene into a string
+  // and restore it into a new scene
+  this->SetSaveToXMLString(1);
+  this->Commit();
+  this->CopyRegisteredNodesToScene(newScene);
+  newScene->SetSceneXMLString(this->GetSceneXMLString());
+  newScene->SetLoadFromXMLString(1);
+  newScene->Connect();
+
+  this->SetSaveToXMLString(0);
+  newScene->SetLoadFromXMLString(0);
+
+  // 
+  // get all nodes associated with this node
+  vtkCollection* nodes = newScene->GetReferencedNodes(rnode);  
+
+  //
+  // clear scene
+  //
+  newScene->Clear(1);
+
+
+  //
+  // copy over nodes from the current scene to the new scene
+  //
+  nodes->InitTraversal();
+  vtkObject* currentObject = NULL;
+  while ((currentObject = nodes->GetNextItemAsObject()) &&
+         (currentObject != NULL))
+    {
+    vtkMRMLNode* n = vtkMRMLNode::SafeDownCast(currentObject);
+    if (n == NULL)
+      {
+      continue;
+      }
+
+    vtkMRMLNode* node = n->CreateNodeInstance();
+
+    // don't copy over the old scene, just id
+    node->Copy(n);
+    node->CopyID(n);
+
+    // add the nodes to the scene
+    newScene->AddNodeNoNotify(node);
+    node->Delete();
+    }
+
+  // clean up
+  nodes->Delete();
 }
