@@ -9,6 +9,7 @@
 #include "vtkEMSegmentLogic.h"
 #include "vtkEMSegmentMRMLManager.h"
 #include "vtkMRMLEMSSegmenterNode.h"
+#include "vtkMRMLEMSNode.h"
 
 
 #include "EMSegmentCommandLineCLP.h"
@@ -374,6 +375,7 @@ std::string StripBackslashes(const std::string& s)
   return outString;
 }
 
+
 class ProgressReporter
 {
 public:
@@ -489,43 +491,131 @@ int main(int argc, char** argv)
       }
     }
 
-  progressReporter.ReportProgress("Loading Data...", 
-                                   currentStep++ / totalSteps);
 
-  //
-  // create a mrml scene that will hold the parameters and data
-  vtkMRMLScene* mrmlScene = vtkMRMLScene::New();
-  vtkMRMLScene::SetActiveScene(mrmlScene);
-  mrmlScene->SetURL(mrmlSceneFileName.c_str());
+    // =======================================================================
+    //
+    //  Initialize TCL
+    // 
+    // =======================================================================
 
-  vtkSlicerColorLogic *colorLogic = vtkSlicerColorLogic::New ( );
-  colorLogic->SetMRMLScene(mrmlScene);
-  colorLogic->AddDefaultColorNodes();
-  colorLogic->SetMRMLScene(NULL);
-  colorLogic->Delete();
+     Tcl_Interp *interp = vtkKWApplication::InitializeTcl(argc, argv, &cout);
+     if (!interp)
+       {
+        cout << "Error: InitializeTcl failed" << endl;
+        return EXIT_FAILURE; 
+       }
 
-  //
-  // create an instance of vtkEMSegmentLogic and connect it with the
-  // MRML scene
-  vtkEMSegmentLogic* emLogic             = vtkEMSegmentLogic::New();
-  emLogic->SetModuleName("EMSegment");
-  emLogic->SetAndObserveMRMLScene(mrmlScene);
-  emLogic->RegisterMRMLNodesWithScene();
-  vtkIntArray *emsEvents                 = vtkIntArray::New();
-  emsEvents->InsertNextValue(vtkMRMLScene::NodeAddedEvent);
-  emsEvents->InsertNextValue(vtkMRMLScene::NodeRemovedEvent);
-  emLogic->SetAndObserveMRMLSceneEvents(mrmlScene, emsEvents);
-  emsEvents->Delete();
+     // This is necessary to load in EMSEgmenter package in TCL interp.
+     Emsegment_Init(interp);
+     Slicerbasegui_Init(interp);
+     Slicerbaselogic_Init(interp);
+     Mrml_Init(interp);
+     Mrmlcli_Init(interp); 
+     Vtkteem_Init(interp);
+     Vtkitk_Init(interp);
+     Commandlinemodule_Init(interp);
 
-  //
-  // For the EMSegment logic, getting and setting of parameters in the
-  // MRML scene is delegated to the EMSegment MRML manager.  Get a
-  // shortcut to the manager.
-  vtkEMSegmentMRMLManager* emMRMLManager = emLogic->GetMRMLManager();
+     // SLICER_HOME
+     cout << "Setting SLICER home: " << endl;
+     vtksys_stl::string slicerHome = tgGetSLICER_HOME(argv);
+     if(!slicerHome.size())
+       {
+         cout << "Error: Cannot find executable" << endl;
+         return EXIT_FAILURE; 
+       }
+       cout << "Slicer home is " << slicerHome << endl;
 
-  progressReporter.ReportProgress("Loading Data...", 
-                                   currentStep / totalSteps,
+     vtkSlicerApplication *app;
+     app = vtkSlicerApplication::GetInstance();
+     app->PromptBeforeExitOff();
+     std::string appTcl;
+     appTcl = vtksys::SystemTools::DuplicateString(vtkKWTkUtilities::GetTclNameFromPointer(interp, app));;
+
+     app->Script ("namespace eval slicer3 set Application %s", appTcl.c_str());
+
+     tgVtkDefineMacro(appLogic,vtkSlicerApplicationLogic);
+     app->Script ("namespace eval slicer3 set ApplicationLogic %s", appLogicTcl.c_str());
+
+    // =======================================================================
+    //
+    //  Setting up initial Scene 
+    // 
+    // =======================================================================
+
+    //
+    // create a mrml scene that will hold the parameters and data
+    vtkMRMLScene* mrmlScene = vtkMRMLScene::New();
+    vtkMRMLScene::SetActiveScene(mrmlScene);
+    appLogic->SetAndObserveMRMLScene(mrmlScene);
+
+    vtkSlicerColorLogic *colorLogic = vtkSlicerColorLogic::New ( );
+    colorLogic->SetMRMLScene(mrmlScene);
+    colorLogic->AddDefaultColorNodes();
+    colorLogic->SetMRMLScene(NULL);
+    colorLogic->Delete();
+
+    //
+    // create an instance of vtkEMSegmentLogic and connect it with the
+    // MRML scene
+    vtkEMSegmentLogic* emLogic             = vtkEMSegmentLogic::New();
+    emLogic->SetModuleName("EMSegment");
+    emLogic->SetAndObserveMRMLScene(mrmlScene);
+    emLogic->RegisterMRMLNodesWithScene();
+    std::string emLogicTcl = vtksys::SystemTools::DuplicateString(vtkKWTkUtilities::GetTclNameFromPointer(interp,emLogic));
+
+    vtkIntArray *emsEvents                 = vtkIntArray::New();
+    emsEvents->InsertNextValue(vtkMRMLScene::NodeAddedEvent);
+    emsEvents->InsertNextValue(vtkMRMLScene::NodeRemovedEvent);
+    emLogic->SetAndObserveMRMLSceneEvents(mrmlScene, emsEvents);
+    emsEvents->Delete();
+
+    //
+    // For the EMSegment logic, getting and setting of parameters in the
+    // MRML scene is delegated to the EMSegment MRML manager.  Get a
+    // shortcut to the manager.
+    vtkEMSegmentMRMLManager* emMRMLManager = emLogic->GetMRMLManager();
+
+    std::string emMRMLManagerTcl = vtksys::SystemTools::DuplicateString(vtkKWTkUtilities::GetTclNameFromPointer(interp,emMRMLManager));
+
+    // =======================================================================
+    //
+    //  Loading Data
+    // 
+    // =======================================================================
+
+    progressReporter.ReportProgress("Loading Data...", 
+                                   currentStep++ / totalSteps,
                                    0.2f);
+
+
+    // Little hack to load in the data first with my own method - write the file in the temp dir and then load it in 
+    // make sure the tmp directory exists   
+    // To do so first source generic file
+    vtksys_stl::string generalFile =  emLogic->DefineTclTaskFullPathName(app, vtkMRMLEMSNode::GetDefaultTclTaskFilename());
+    
+    if (emLogic->SourceTclFile(app,generalFile.c_str()))
+    {
+
+      throw std::runtime_error("ERROR: could not source  tcl file . "); 
+    }  
+
+    // An error will apear here bc the emlogic is not fully set up yet bc we first have to read in the mrml file - just ignore it 
+    cout << "=============================================================" << endl;
+    cout << "Ignore the following error msg: TCL: ERROR: EMSegmenterPreProcessingTcl::InitVariables: WorkingData not defined" << endl;
+    std::string CMD = "::EMSegmenterPreProcessingTcl::InitVariables " + emLogicTcl + " " + emMRMLManagerTcl + " NULL";
+    app->Script(CMD.c_str());
+    cout << "=============================================================" << endl;
+
+
+    // Now load data down from web if needed and write file to temp directory with new path 
+    CMD = "::EMSegmenterPreProcessingTcl::ReplaceInSceneURINameWithFileName " + mrmlSceneFileName;
+    mrmlSceneFileName = app->Script(CMD.c_str());
+    if ( mrmlSceneFileName.empty()) 
+        {
+           throw std::runtime_error("ERROR: could not download data. "); 
+        }
+
+    mrmlScene->SetURL(mrmlSceneFileName.c_str());
 
   //
   // global try block makes sure data is cleaned up if anything goes
@@ -537,6 +627,7 @@ int main(int argc, char** argv)
     try 
       {
       if (verbose) std::cerr << "Reading MRML scene...";
+      // 
       mrmlScene->Connect();
       if (verbose) std::cerr << "DONE" << std::endl;
       }
@@ -1007,49 +1098,7 @@ int main(int argc, char** argv)
        // =======================================================================
 
        cout << "===== New Version =======" << endl;
-       Tcl_Interp *interp = vtkKWApplication::InitializeTcl(argc, argv, &cout);
-       if (!interp)
-       {
-        cout << "Error: InitializeTcl failed" << endl;
-        return EXIT_FAILURE; 
-       }
-
-       // This is necessary to load in EMSEgmenter package in TCL interp.
-       Emsegment_Init(interp);
-       Slicerbasegui_Init(interp);
-       Slicerbaselogic_Init(interp);
-       Mrml_Init(interp);
-       Mrmlcli_Init(interp); 
-       Vtkteem_Init(interp);
-       Vtkitk_Init(interp);
-       // Brainsfit_Init(interp);
-       Commandlinemodule_Init(interp);
-
-       // SLICER_HOME
-       cout << "Setting SLICER home: " << endl;
-       vtksys_stl::string slicerHome = tgGetSLICER_HOME(argv);
-       if(!slicerHome.size())
-       {
-         cout << "Error: Cannot find executable" << endl;
-         return EXIT_FAILURE; 
-       }
-       cout << "Slicer home is " << slicerHome << endl;
-
-       vtkSlicerApplication *app;
-       app = vtkSlicerApplication::GetInstance();
-       app->PromptBeforeExitOff();
-       std::string appTcl;
-       appTcl = vtksys::SystemTools::DuplicateString(vtkKWTkUtilities::GetTclNameFromPointer(interp, app));;
-
-       app->Script ("namespace eval slicer3 set Application %s", appTcl.c_str());
-
-       tgVtkDefineMacro(appLogic,vtkSlicerApplicationLogic);
-       app->Script ("namespace eval slicer3 set ApplicationLogic %s", appLogicTcl.c_str());
-       appLogic->SetAndObserveMRMLScene(mrmlScene);
-
-       std::string emLogicTcl = vtksys::SystemTools::DuplicateString(vtkKWTkUtilities::GetTclNameFromPointer(interp,emLogic));
-       std::string emMRMLManagerTcl = vtksys::SystemTools::DuplicateString(vtkKWTkUtilities::GetTclNameFromPointer(interp,emMRMLManager));
-       
+ 
        // -----------------------------------
        // Check Data 
 
@@ -1090,18 +1139,19 @@ int main(int argc, char** argv)
          emMRMLManager->GetWorkingDataNode()->SetAlignedTargetNodeIsValid(0);
          emMRMLManager->GetWorkingDataNode()->SetAlignedAtlasNodeIsValid(0);
     
+
          if (emLogic->SourcePreprocessingTclFiles(app))
            {
              throw std::runtime_error("ERROR: could not source tcl files. "); 
            } 
-    
-         std::string CMD = "::EMSegmenterPreProcessingTcl::InitVariables " + emLogicTcl + " " + emMRMLManagerTcl + " NULL";
 
+        // Have to init variables again bc first time EMLogic was not fully set up  
+        std::string CMD = "::EMSegmenterPreProcessingTcl::InitVariables " + emLogicTcl + " " + emMRMLManagerTcl + " NULL";      
+        if (atoi(app->Script(CMD.c_str())))
+        {
+           throw std::runtime_error("ERROR: could not init files. "); 
+        }
 
-         if (atoi(app->Script(CMD.c_str())))
-           {
-             throw std::runtime_error("ERROR: could not init files. "); 
-           }
 
          if (atoi(app->Script("::EMSegmenterPreProcessingTcl::Run")))
            {

@@ -720,13 +720,15 @@ namespace eval EMSegmenterPreProcessingTcl {
     proc CreateTemporaryFileName { Node } {
         variable GUI
         if { [$Node GetClassName] == "vtkMRMLScalarVolumeNode" } {
-            set EXT ".nrrd"
-        } else {
+        set NAME "[$Node GetID].nrrd"
+        } elseif { [$Node GetClassName] == "vtkMRMLScene"  } {
+            set NAME "[file tail [$Node GetURL]]"
+     } else {
             # Transform node - check also for bspline
-            set EXT ".mat"
+            set NAME "[$Node GetID].nrrd"
         }
 
-        return "[$GUI GetTemporaryDirectory]/[expr int(rand()*10000)]_[$Node GetID]$EXT"
+        return "[$GUI GetTemporaryDirectory]/[expr int(rand()*10000)]_$NAME"
     }
 
     proc WriteDataToTemporaryDir { Node Type} {
@@ -955,6 +957,139 @@ namespace eval EMSegmenterPreProcessingTcl {
     variable mrmlManager
     set rootID [$mrmlManager GetTreeRootNodeID]
     return "[CheckAndCorrectClassCovarianceMatrix $rootID]"
+    }
+
+    proc Progress {args} {
+        variable LOGIC
+        $LOGIC PrintTextNoNewLine "."
+    }
+
+    proc wget { url  fileName } {
+        package require http
+        variable LOGIC
+        $LOGIC  PrintTextNoNewLine "Loading $url "
+    if { [ catch { set r [http::geturl $url -binary 1 -progress ::EMSegmenterPreProcessingTcl::Progress ] } errmsg ] }  {
+        $LOGIC  PrintText " " 
+            PrintError "Could not download $url: $errmsg"
+        return 1
+    }
+
+        set fo [open $fileName w]
+        fconfigure $fo -translation binary
+        puts -nonewline $fo [http::data $r]
+        close $fo
+        $LOGIC PrintText "\nSaving to $fileName\n"
+        ::http::cleanup $r
+
+    return 0
+    }
+
+    # returns 1 if error occured
+    proc DownloadFileIfNeededAndSetURIToNULL { node origMRMLFileName forceFlag } {
+    variable GUI
+    variable LOGIC
+        variable SCENE
+
+    if { [$node GetClassName] != "vtkMRMLVolumeArchetypeStorageNode" } {
+        PrintError "DownloadFileIfNeededAndSetURIToNULL: Wrong node type" 
+        return 1 
+    } 
+       
+    # ONLY WORKS FOR AB
+    set URI "[$node GetURI ]"
+    $node SetURI ""
+
+        if {$forceFlag == 0 } {
+        set oldFileName [$node GetFileName]
+        if { "$oldFileName" != "" } {
+        # Turn it into absolute file if it is not already
+        if { "[ file pathtype oldFileName ]" != "absolute" } {
+            set oldFileName "[file dirname $origMRMLFileName ]$oldFileName" 
+        }
+
+            if { [file exists $oldFileName ] && [file isfile $oldFileName ] } {
+                # Must set it again bc path of scene might have changed so set it to absolute first 
+                $node SetFileName $oldFileName
+                return 0
+            }
+        }
+    }
+       
+    if {$URI == ""} {
+            PrintError "DownloadFileIfNeededAndSetURIToNULL: File does not exist and URI is NULL" 
+        return 1
+    }
+
+        # Need to download file to temp directory 
+        set fileName [$GUI GetTemporaryDirectory]/[expr int(rand()*10000)]_[file tail $URI]
+
+        if { [wget $URI $fileName] } {
+        return 1
+    }
+
+
+    $node SetFileName $fileName
+    return 0 
+    }
+
+    proc ReplaceInSceneURINameWithFileName { mrmlFileName } {
+       variable GUI
+       variable LOGIC
+       variable SCENE
+
+       # Important so that it will write out all the nodes we are interested 
+       set mrmlScene [vtkMRMLScene New]
+       set num [$SCENE GetNumberOfRegisteredNodeClasses]
+       for { set i 0 } { $i < $num } { incr i } {
+       set node [$SCENE GetNthRegisteredNodeClass $i]
+       if { ($node != "" ) } {
+          set name [$node GetClassName ]
+          if {[ string first "vtkMRMLFiniteElement" $name  ] < 0 } {
+           $mrmlScene RegisterNodeClass $node
+           }
+       }
+    }
+    
+       set parser [vtkMRMLParser New ] 
+       $parser SetMRMLScene $mrmlScene
+       $parser SetFileName $mrmlFileName
+  
+       if { [$parser Parse] } {
+       set errorFlag 0
+       } else {
+       set errorFlag 1
+       }
+       $parser Delete
+
+       if {$errorFlag == 0 } { 
+       # Download all the files if needed 
+       set TYPE "vtkMRMLVolumeArchetypeStorageNode"
+       set n [$mrmlScene GetNumberOfNodesByClass $TYPE]
+
+       for { set i 0 } { $i < $n } { incr i } {
+           if { [DownloadFileIfNeededAndSetURIToNULL [$mrmlScene GetNthNodeByClass $i $TYPE] $mrmlFileName 0 ] } {
+           set errorFlag 1
+           }
+       }
+
+       if { $errorFlag == 0 } {
+            # Set the new path of mrmlScene - by first setting scene to old path so that the function afterwards cen extract the file name  
+                $mrmlScene SetURL $mrmlFileName
+                set tmpFileName [CreateTemporaryFileName  $mrmlScene]
+                $mrmlScene SetURL $tmpFileName
+                $mrmlScene SetRootDirectory [file dirname $tmpFileName ] 
+            $mrmlScene Commit $tmpFileName
+       }
+       } 
+       $mrmlScene Delete
+
+       if { $errorFlag } { 
+       return "" 
+       }        
+
+       $LOGIC PrintText "TCL: Wrote modified $mrmlFileName to $tmpFileName"
+
+       return $tmpFileName
     }
 }
 

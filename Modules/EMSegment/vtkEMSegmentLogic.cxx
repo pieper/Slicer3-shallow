@@ -2427,6 +2427,11 @@ void vtkEMSegmentLogic::PrintText(char *TEXT) {
   cout << TEXT << endl;
 } 
 
+void vtkEMSegmentLogic::PrintTextNoNewLine(char *TEXT) {
+  cout << TEXT;
+  cout.flush();
+} 
+
 //-----------------------------------------------------------------------------
 // Make sure you source EMSegmentAutoSample.tcl
 

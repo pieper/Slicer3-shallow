@@ -145,6 +145,8 @@ public:
                                   int iterpolationType,
                                  double backgroundLevel);
 
+  // Helper Classes for tcl 
+  void PrintTextNoNewLine(char *TEXT);
   void PrintText(char *TEXT);
 
   void DefineValidSegmentationBoundary(); 
