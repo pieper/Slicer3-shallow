@@ -412,7 +412,7 @@ itcl::body SWidget::processUpdate {} {
 
 itcl::body SWidget::requestDelayedAnnotation { } {
     $this cancelDelayedAnnotation
-    set _annotationTaskID [after 300 $this processDelayedAnnotation]
+    set _annotationTaskID [after 300 ::SWidget::ProtectedCallback $this processDelayedAnnotation]
 }
 
 itcl::body SWidget::processDelayedAnnotation { } {
