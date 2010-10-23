@@ -24,6 +24,7 @@ vtkSlicerToolbarIcons::vtkSlicerToolbarIcons ( )
     this->LoadSceneIcon = vtkKWIcon::New();
     this->ChooseLayoutIcon = vtkKWIcon::New ( );
     this->TwinViewIcon = vtkKWIcon::New();
+    this->TripleViewIcon = vtkKWIcon::New();
     this->ConventionalViewIcon = vtkKWIcon::New();
     this->ConventionalWidescreenViewIcon = vtkKWIcon::New();
     this->SideBySideCompareViewIcon = vtkKWIcon::New();
@@ -137,6 +138,11 @@ vtkSlicerToolbarIcons::~vtkSlicerToolbarIcons ( )
     {
     this->TwinViewIcon->Delete();
     this->TwinViewIcon = NULL;    
+    }
+  if ( this->TripleViewIcon )
+    {
+    this->TripleViewIcon->Delete();
+    this->TripleViewIcon = NULL;    
     }
   if ( this->ConventionalViewIcon )
     {
@@ -386,6 +392,12 @@ void vtkSlicerToolbarIcons::AssignImageDataToIcons ( )
                                    image_ToolbarTwinView_pixel_size,
                                    image_ToolbarTwinView_length, 0);
     
+    this->TripleViewIcon->SetImage ( image_ToolbarTriple3DView,
+                                   image_ToolbarTriple3DView_width,
+                                   image_ToolbarTriple3DView_height,
+                                   image_ToolbarTriple3DView_pixel_size,
+                                   image_ToolbarTriple3DView_length, 0);
+
     this->ConventionalViewIcon->SetImage( image_ToolbarConventionalView,
                                           image_ToolbarConventionalView_width,
                                           image_ToolbarConventionalView_height,
@@ -593,6 +605,7 @@ void vtkSlicerToolbarIcons::PrintSelf ( ostream& os, vtkIndent indent )
     os << indent << "SaveSceneIcon" << this->GetSaveSceneIcon ( ) << "\n";
     os << indent << "LoadSceneIcon" << this->GetLoadSceneIcon ( ) << "\n";
     os << indent << "TwinViewIcon" << this->GetTwinViewIcon() << "\n";
+    os << indent << "TripleViewIcon" << this->GetTripleViewIcon() << "\n";
     os << indent << "ConventionalViewIcon" << this->GetConventionalViewIcon ( ) << "\n";
     os << indent << "ConventionalWidescreenViewIcon" << this->GetConventionalWidescreenViewIcon ( ) << "\n";
     os << indent << "ChooseLayoutIcon" << this->GetChooseLayoutIcon ( ) << "\n";

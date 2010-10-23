@@ -833,6 +833,14 @@ void vtkSlicerToolbarGUI::ProcessGUIEvents ( vtkObject *caller,
             layout->SetViewArrangement (vtkMRMLLayoutNode::SlicerLayoutDual3DView);
             }
           }
+        else if (!strcmp( whichLayout, "Triple 3D layout" ))
+          {
+          if ( layout->GetViewArrangement() != vtkMRMLLayoutNode::SlicerLayoutTriple3DEndoscopyView )
+            {
+            appGUI->GetMRMLScene()->SaveStateForUndo ( layout );
+            layout->SetViewArrangement (vtkMRMLLayoutNode::SlicerLayoutTriple3DEndoscopyView);
+            }
+          }
         else if (!strcmp( whichLayout, "3D only layout" ))
           {
           if ( layout->GetViewArrangement() != vtkMRMLLayoutNode::SlicerLayoutOneUp3DView )
@@ -1034,6 +1042,9 @@ if ( this->ChooseLayoutIconMenuButton->GetMenu() != NULL )
    case vtkMRMLLayoutNode::SlicerLayoutDual3DView:              
      this->ChooseLayoutIconMenuButton->SetValue ( "Dual 3D layout" );
      break;
+   case vtkMRMLLayoutNode::SlicerLayoutTriple3DEndoscopyView:              
+     this->ChooseLayoutIconMenuButton->SetValue ( "Triple 3D layout" );
+     break;     
    default:
      break;
    }
@@ -1531,6 +1542,14 @@ void vtkSlicerToolbarGUI::BuildGUI ( )
   this->ChooseLayoutIconMenuButton->GetMenu()->SetItemCompoundModeToLeft ( index );
 //  this->ChooseLayoutIconMenuButton->GetMenu()->SetItemVariableValueAsInt
 //  ( "Dual 3D layout", vtkMRMLLayoutNode::SlicerLayoutDual3DView );
+
+  this->ChooseLayoutIconMenuButton->GetMenu()->AddRadioButton ( "Triple 3D layout");
+  index = this->ChooseLayoutIconMenuButton->GetMenu()->GetIndexOfItem ( "Triple 3D layout");
+  imageName.clear();
+  imageName = "SlicerTriple3DLayoutImage";
+  vtkKWTkUtilities::UpdatePhotoFromIcon ( this->GetApplication(), imageName.c_str(), this->SlicerToolbarIcons->GetTripleViewIcon(), 0 );
+  this->ChooseLayoutIconMenuButton->GetMenu()->SetItemImage ( index, imageName.c_str());
+  this->ChooseLayoutIconMenuButton->GetMenu()->SetItemCompoundModeToLeft ( index );
 
   this->ChooseLayoutIconMenuButton->GetMenu()->AddRadioButton ( "3D only layout");
   index = this->ChooseLayoutIconMenuButton->GetMenu()->GetIndexOfItem ( "3D only layout");

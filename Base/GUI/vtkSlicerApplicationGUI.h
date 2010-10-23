@@ -247,6 +247,7 @@ class VTK_SLICER_BASE_GUI_EXPORT vtkSlicerApplicationGUI : public vtkSlicerCompo
     virtual void PackCompareWidescreenView();
     virtual void PackSideBySideLightboxView();
     virtual void PackDual3DView();
+    virtual void PackTriple3DEndoscopyView();
     virtual void UnpackConventionalView ( );
     virtual void UnpackConventionalWidescreenView ( );
     virtual void UnpackOneUp3DView ( );
@@ -259,6 +260,7 @@ class VTK_SLICER_BASE_GUI_EXPORT vtkSlicerApplicationGUI : public vtkSlicerCompo
     virtual void UnpackCompareWidescreenView();
     virtual void UnpackSideBySideLightboxView();
     virtual void UnpackDual3DView();
+    virtual void UnpackTriple3DEndoscopyView();    
 
     /// 
     /// Methods to manage Slice viewers

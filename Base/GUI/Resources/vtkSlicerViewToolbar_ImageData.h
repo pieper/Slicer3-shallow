@@ -16,6 +16,23 @@ static const unsigned char image_ToolbarChooseView[] =
 
 /* 
  * Resource generated for file:
+ *    ToolbarTriple3DView.png (zlib, base64) (image file)
+ */
+static const unsigned int  image_ToolbarTriple3DView_width          = 21;
+static const unsigned int  image_ToolbarTriple3DView_height         = 21;
+static const unsigned int  image_ToolbarTriple3DView_pixel_size     = 3;
+static const unsigned long image_ToolbarTriple3DView_length         = 292;
+static const unsigned long image_ToolbarTriple3DView_decoded_length = 1323;
+
+static const unsigned char image_ToolbarTriple3DView[] = 
+  "eNrVk+0KgjAUhtU70hQqu/2+NHfmNUSQjgq6gt52cA51Jtmf4GHIOe+zL6bve/488qIiqT"
+  "AWVBek9PhGSAWaiipEjUxZPhHGCFhHhnSSNHGSDhOn1GR4BtZNRVi6nTRFoa3O6v1kfw+m"
+  "Pl0frPyL/vXZXTc/RU+SjYtB3a7wtwsTsPWZYLbFYi3oxuwPl+3uHOutfuxyIDvVUbRi8L"
+  "aRJ3k3+kg3CDz9uym0zBk7uqsL9yf6Ma9GdFe31bMrDsUgGYZLko9Wd3SNjgmxhA3fbRD4"
+  "o11vJi/KMKSA";
+
+/* 
+ * Resource generated for file:
  *    ToolbarConventionalView.png (zlib, base64) (image file)
  */
 static const unsigned int  image_ToolbarConventionalView_width          = 21;

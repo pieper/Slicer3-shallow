@@ -1004,6 +1004,10 @@ const char* vtkSlicerApplicationGUI::GetCurrentLayoutStringName ( )
         {
         return ( "Dual 3D layout" );
         }
+      else if (layout == vtkMRMLLayoutNode::SlicerLayoutTriple3DEndoscopyView )
+        {
+        return ( "Triple 3D layout" );
+        }
       else
         {
         return (NULL);
@@ -1111,6 +1115,17 @@ void vtkSlicerApplicationGUI::UpdateLayout ( )
 #endif
     this->RepackMainViewer (vtkMRMLLayoutNode::SlicerLayoutDual3DView, NULL );
     this->SetCurrentLayout ( vtkMRMLLayoutNode::SlicerLayoutDual3DView );
+    //TEST
+    this->ApplicationToolbar->ResumeViewRockOrSpin(mode);
+    }
+  else if ( target == vtkMRMLLayoutNode::SlicerLayoutTriple3DEndoscopyView &&
+      this->GetCurrentLayout()!= vtkMRMLLayoutNode::SlicerLayoutTriple3DEndoscopyView )
+    {
+#ifndef TOOLBAR_DEBUG
+    mode = this->ApplicationToolbar->StopViewRockOrSpin();
+#endif
+    this->RepackMainViewer (vtkMRMLLayoutNode::SlicerLayoutTriple3DEndoscopyView, NULL );
+    this->SetCurrentLayout ( vtkMRMLLayoutNode::SlicerLayoutTriple3DEndoscopyView );
     //TEST
     this->ApplicationToolbar->ResumeViewRockOrSpin(mode);
     }
@@ -3124,6 +3139,9 @@ void vtkSlicerApplicationGUI::PackMainViewer ( int arrangmentType, const char *w
         case vtkMRMLLayoutNode::SlicerLayoutDual3DView:
           this->PackDual3DView();
           break;
+        case vtkMRMLLayoutNode::SlicerLayoutTriple3DEndoscopyView:
+          this->PackTriple3DEndoscopyView();
+          break;
         default:
           this->PackConventionalView ( );
           break;
@@ -3187,6 +3205,9 @@ void vtkSlicerApplicationGUI::UnpackMainViewer ( )
           break;
         case vtkMRMLLayoutNode::SlicerLayoutDual3DView:
           this->UnpackDual3DView();
+          break;
+        case vtkMRMLLayoutNode::SlicerLayoutTriple3DEndoscopyView:
+          this->UnpackTriple3DEndoscopyView();
           break;
         default:
           this->UnpackConventionalView ( );
@@ -3504,6 +3525,94 @@ void vtkSlicerApplicationGUI::PackConventionalView ( )
     layout->DisableModifiedEventOff();
     }
 }
+
+//---------------------------------------------------------------------------
+void vtkSlicerApplicationGUI::PackTriple3DEndoscopyView ()
+{
+  if ( this->GetApplication() != NULL )
+    {
+    vtkMRMLLayoutNode *layout = this->GetGUILayoutNode();
+    if ( layout == NULL )
+      {
+      return;
+      }
+
+    // here we want to pack one conventional 3D viewer at the top.
+    // and we want the bottom frame to be split evenly between
+    // an endoscopic view and a conventional 3D viewer set up to
+    // do volume rendering.
+
+    // Show the top and bottom panels
+    this->MainSlicerWindow->GetSecondarySplitFrame()->SetFrame2Visibility(1);
+    this->MainSlicerWindow->GetSecondarySplitFrame()->SetFrame1Visibility(1);
+    // Don't use tabs
+    this->MainSlicerWindow->GetViewNotebook()->SetAlwaysShowTabs ( 0 );
+
+    // pack the top.
+    this->Script ( "pack %s -side top -fill both -expand 1 -padx 0 -pady 0 ", this->GridFrame1->GetWidgetName ( ) );
+    this->Script ("grid columnconfigure %s 0 -weight 1", this->GridFrame1->GetWidgetName() );
+    this->Script ("grid rowconfigure %s 0 -weight 1", this->GridFrame1->GetWidgetName() );
+
+    // and pack the bottom, make both bottom viewers resize equally.
+    this->Script ( "pack %s -side top -fill both -expand 1 -padx 0 -pady 0 ", this->GridFrame2->GetWidgetName ( ) );
+    this->Script ("grid columnconfigure %s 0 -weight 1", this->GridFrame2->GetWidgetName() );
+    this->Script ("grid columnconfigure %s 1 -weight 1", this->GridFrame2->GetWidgetName() );
+    this->Script ("grid rowconfigure %s 0 -weight 1", this->GridFrame2->GetWidgetName() );
+
+    // Do we need to make some more 3D viewer nodes?
+    // We will need 3 for this layout.
+    if (GetNumberOfVisibleViewNodes() < 3)
+      {
+      vtkMRMLViewNode *vnode;
+      for ( int n=GetNumberOfVisibleViewNodes(); n < 3; n++ )
+        {
+        // Need another view node.  When the view node is added to the
+        // scene, a viewer widget will be constructed automatically
+        vnode = vtkMRMLViewNode::New();
+        this->MRMLScene->AddNode(vnode);
+        vnode->Delete();
+        this->OnViewNodeAdded(vnode);
+        }
+      }
+
+    // Pack the 3D viewers
+    for (size_t i=0; i < (this->Internals->ViewerWidgets.size() > 3 ? 3 : this->Internals->ViewerWidgets.size()); i++)
+      {
+      vtkSlicerViewerWidget *viewer_widget = this->Internals->ViewerWidgets[i];
+      if (viewer_widget)
+        {
+        if ( i == 0 )
+          {
+          viewer_widget->GridWidget(this->GridFrame1, 0, 0);
+          }
+        else if ( i == 1 || i == 2 )
+          {
+          viewer_widget->GridWidget(this->GridFrame2, 0, i-1);
+          }
+        }
+      }
+
+    //--- no slice viewers are used in this layout.... so pack none of them.
+
+    //--- Configure the second viewerWidget to have endoscopic-type camera.
+    
+    //--- Configure the third viewerWidget to do volume rendering (?)
+
+    // finally, modify the layout node
+    layout->DisableModifiedEventOn();
+    layout->SetBottomPanelVisibility(1);
+    int cur = layout->GetViewArrangement();
+    if ( cur != vtkMRMLLayoutNode::SlicerLayoutTriple3DEndoscopyView)
+      {
+      layout->SetViewArrangement ( vtkMRMLLayoutNode::SlicerLayoutTriple3DEndoscopyView );
+      }
+    layout->DisableModifiedEventOff();
+    }
+}
+
+
+
+
 
 //---------------------------------------------------------------------------
 void vtkSlicerApplicationGUI::PackDual3DView ( )
@@ -4536,6 +4645,33 @@ void vtkSlicerApplicationGUI::UnpackConventionalView()
       }
     }
 }
+
+
+//---------------------------------------------------------------------------
+void vtkSlicerApplicationGUI::UnpackTriple3DEndoscopyView()
+{
+  // Unpack the 3D viewer widget
+  // (we don't know if it is the active widget or not)
+  this->GridFrame1->UnpackChildren();
+  this->GridFrame2->UnpackChildren();
+
+
+  if (this->MainSlicerWindow->GetViewFrame())
+    {
+    this->MainSlicerWindow->GetViewFrame()->UnpackChildren();
+    }
+
+    // Hide the secondary panel
+  if ( this->MainSlicerWindow )
+    {
+    if ( this->MainSlicerWindow->GetSecondarySplitFrame() )
+      {
+      this->MainSlicerWindow->GetSecondarySplitFrame()->SetFrame1Visibility(0);
+      }
+    }
+}
+
+
 
 //---------------------------------------------------------------------------
 void vtkSlicerApplicationGUI::UnpackDual3DView()
