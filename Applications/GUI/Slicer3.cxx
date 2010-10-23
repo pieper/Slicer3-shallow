@@ -2031,7 +2031,9 @@ int Slicer3_main(int& argc, char *argv[])
   // - don't set if in test mode or --no-modules
   //
   const char *homeModule = slicerApp->GetHomeModule();
+   
   if ( ( slicerApp->GetUseWelcomeModuleAtStartup() ) &&
+       ( slicerApp->GetModuleGUIByName ( homeModule ) == NULL ) &&
        ( slicerApp->GetModuleGUIByName ( "SlicerWelcome" ) != NULL) )
     {
     homeModule = "SlicerWelcome";
