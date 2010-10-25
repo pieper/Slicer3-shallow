@@ -725,7 +725,7 @@ namespace eval EMSegmenterPreProcessingTcl {
             set NAME "[file tail [$Node GetURL]]"
      } else {
             # Transform node - check also for bspline
-            set NAME "[$Node GetID].nrrd"
+            set NAME "[$Node GetID].mat"
         }
 
         return "[$GUI GetTemporaryDirectory]/[expr int(rand()*10000)]_$NAME"
