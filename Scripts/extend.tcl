@@ -323,15 +323,14 @@ proc upload {fileName} {
 
   set fp [open $fileName "r"]
   fconfigure $fp -translation binary -encoding binary
-  set data [read $fp]
-  close $fp
 
   set sock [socket ext.slicer.org 8845]
   puts $sock "put $::EXTEND(slicerSVNSubpath) $::EXTEND(slicerSVNRevision)-$::env(BUILD) $name $size"
   fconfigure $sock -translation binary -encoding binary
-  puts -nonewline $sock $data
+  fcopy $fp $sock -size $size
   flush $sock
   close $sock
+  close $fp
   
   set uploadLocation "http://ext.slicer.org/[file tail $::EXTEND(slicerSVNSubpath)]/$::EXTEND(slicerSVNRevision)-$::env(BUILD)/[file tail $name]"
   vputs "uploaded $fileName ($size bytes, ${uploadLocation})"
