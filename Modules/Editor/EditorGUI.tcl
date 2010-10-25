@@ -770,7 +770,7 @@ proc EditorGestureCheckPoint {} {
    }
    
    set labelname [$labelNode GetName]
-   set name "[$labelNode GetName]-gesture"
+   set name "[$labelNode GetName]-growcut"
 
    set GestureID ""
 
