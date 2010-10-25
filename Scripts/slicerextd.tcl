@@ -43,6 +43,7 @@ proc slicerextd_start { {port 8845} } {
         return
     }
 
+    puts "Listing for extensions on $::SLICEREXTD(serversock)..."
     set ::SLICEREXTD(running) 1
 }
 
@@ -123,12 +124,6 @@ proc slicerextd_sock_fileevent {sock} {
             set revbuild [file tail [lindex $line 2]]
             set name [file tail [lindex $line 3]]
             set size [file tail [lindex $line 4]]
-            
-            fconfigure $sock -translation binary
-            puts "reading data ($size bytes) from $::SLICEREXTD(addr) for $name..."
-            set data [read $sock $size]
-            fconfigure $sock -translation auto
-            puts "succeeded in reading $name."
 
             set pathSoFar ""
             foreach subdir [file split $subpath] {
@@ -145,8 +140,11 @@ proc slicerextd_sock_fileevent {sock} {
             }
             set fp [open $dir/$name "w"]
             fconfigure $fp -translation binary
-            puts "saving..."
-            puts -nonewline $fp $data
+            fconfigure $sock -translation binary
+            puts "reading data ($size bytes) from $::SLICEREXTD(addr) for $name..."
+            fcopy $sock $fp -size $size
+            fconfigure $sock -translation auto
+            puts "succeeded in reading $name."
             close $fp
             puts "done"
 
