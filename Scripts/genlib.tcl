@@ -356,7 +356,19 @@ if { [BuildThis $::CMAKE "cmake"] == 1 } {
 
         if {$::GENLIB(buildit)} {
           cd $::CMAKE_PATH
-          runcmd $Slicer3_LIB/CMake/bootstrap
+          if { $isDarwin } {
+            # for mac, create a dummy cache to work around bad 
+            # jni.h file - see http://cmake.org/Bug/view.php?id=11357
+            set fp [open "initialCache.cmake" "w"]
+            puts $fp "SET(JNI_H FALSE CACHE BOOL \"\" FORCE)"
+            puts $fp "SET(Java_JAVA_EXECUTABLE FALSE CACHE BOOL \"\" FORCE)"
+            puts $fp "SET(Java_JAVAC_EXECUTABLE FALSE CACHE BOOL \"\" FORCE)"
+            close $fp
+            runcmd $Slicer3_LIB/CMake/configure --init=initialCache.cmake
+          } else {
+            runcmd $Slicer3_LIB/CMake/configure
+          }
+
           eval runcmd $::MAKE
        }
     }
