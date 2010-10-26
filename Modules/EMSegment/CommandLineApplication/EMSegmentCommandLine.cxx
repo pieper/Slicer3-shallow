@@ -1395,6 +1395,9 @@ int main(int argc, char** argv)
   // ------------------------------
   // DELETE
 
+  emLogic->SetAndObserveMRMLScene(NULL);
+  emLogic->Delete();
+
   //
   //--- Cache and RemoteIO ManagerGUI
   //
@@ -1436,12 +1439,8 @@ int main(int argc, char** argv)
     }
   mrmlScene->SetUserTagTable( NULL );
 
-
-
   mrmlScene->Clear(true);
   mrmlScene->Delete();
-  emLogic->SetAndObserveMRMLScene(NULL);
-  emLogic->Delete();
   if (verbose) std::cerr << "DONE" << std::endl;
 
   return segmentationSucceeded ? EXIT_SUCCESS : EXIT_FAILURE;  
