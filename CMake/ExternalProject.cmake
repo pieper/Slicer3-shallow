@@ -2,66 +2,66 @@
 # The 'ExternalProject_Add' function creates a custom target to drive
 # download, update/patch, configure, build, install and test steps of an
 # external project:
-# ExternalProject_Add(<name> # Name for custom target
-# [DEPENDS projects...] # Targets on which the project depends
-# [PREFIX dir] # Root dir for entire project
-# [LIST_SEPARATOR sep] # Sep to be replaced by ; in cmd lines
-# [TMP_DIR dir] # Directory to store temporary files
-# [STAMP_DIR dir] # Directory to store step timestamps
-# #--Download step--------------
-# [DOWNLOAD_DIR dir] # Directory to store downloaded files
-# [DOWNLOAD_COMMAND cmd...] # Command to download source tree
-# [CVS_REPOSITORY cvsroot] # CVSROOT of CVS repository
-# [CVS_MODULE mod] # Module to checkout from CVS repo
-# [CVS_TAG tag] # Tag to checkout from CVS repo
-# [SVN_REPOSITORY url] # URL of Subversion repo
-# [SVN_REVISION rev] # Revision to checkout from Subversion repo
-# [SVN_USERNAME john ] # Username to use for Subversion checkout and update
-# [SVN_PASSWORD doe ] # Password to use for Subversion checkout and update
-# [GIT_REPOSITORY url] # URL of GIT repo
-# [GIT_TAG tag] # Git branch name, commit id or tag
-# [URL /.../src.tgz] # Full path or URL of source
-# [TIMEOUT seconds] # Time allowed for file download operations
-# #--Update/Patch step----------
-# [UPDATE_COMMAND cmd...] # Source work-tree update command
-# [PATCH_COMMAND cmd...] # Command to patch downloaded source
-# #--Configure step-------------
-# [SOURCE_DIR dir] # Source dir to be used for build
-# [CONFIGURE_COMMAND cmd...] # Build tree configuration command
-# [CMAKE_COMMAND /.../cmake] # Specify alternative cmake executable
-# [CMAKE_GENERATOR gen] # Specify generator for native build
-# [CMAKE_ARGS args...] # Arguments to CMake command line
-# #--Build step-----------------
-# [BINARY_DIR dir] # Specify build dir location
-# [BUILD_COMMAND cmd...] # Command to drive the native build
-# [BUILD_IN_SOURCE 1] # Use source dir for build dir
-# #--Install step---------------
-# [INSTALL_DIR dir] # Installation prefix
-# [INSTALL_COMMAND cmd...] # Command to drive install after build
-# #--Test step---------------
-# [TEST_BEFORE_INSTALL 1] # Add test step executed before install step
-# [TEST_AFTER_INSTALL 1] # Add test step executed after install step
-# [TEST_COMMAND cmd...] # Command to drive test
-# )
+#  ExternalProject_Add(<name>    # Name for custom target
+#    [DEPENDS projects...]       # Targets on which the project depends
+#    [PREFIX dir]                # Root dir for entire project
+#    [LIST_SEPARATOR sep]        # Sep to be replaced by ; in cmd lines
+#    [TMP_DIR dir]               # Directory to store temporary files
+#    [STAMP_DIR dir]             # Directory to store step timestamps
+#   #--Download step--------------
+#    [DOWNLOAD_DIR dir]          # Directory to store downloaded files
+#    [DOWNLOAD_COMMAND cmd...]   # Command to download source tree
+#    [CVS_REPOSITORY cvsroot]    # CVSROOT of CVS repository
+#    [CVS_MODULE mod]            # Module to checkout from CVS repo
+#    [CVS_TAG tag]               # Tag to checkout from CVS repo
+#    [SVN_REPOSITORY url]        # URL of Subversion repo
+#    [SVN_REVISION rev]          # Revision to checkout from Subversion repo
+#    [SVN_USERNAME john ]        # Username to use for Subversion checkout and update
+#    [SVN_PASSWORD doe ]         # Password to use for Subversion checkout and update
+#    [GIT_REPOSITORY url]        # URL of GIT repo
+#    [GIT_TAG tag]               # Git branch name, commit id or tag
+#    [URL /.../src.tgz]          # Full path or URL of source
+#    [TIMEOUT seconds]           # Time allowed for file download operations
+#   #--Update/Patch step----------
+#    [UPDATE_COMMAND cmd...]     # Source work-tree update command
+#    [PATCH_COMMAND cmd...]      # Command to patch downloaded source
+#   #--Configure step-------------
+#    [SOURCE_DIR dir]            # Source dir to be used for build
+#    [CONFIGURE_COMMAND cmd...]  # Build tree configuration command
+#    [CMAKE_COMMAND /.../cmake]  # Specify alternative cmake executable
+#    [CMAKE_GENERATOR gen]       # Specify generator for native build
+#    [CMAKE_ARGS args...]        # Arguments to CMake command line
+#   #--Build step-----------------
+#    [BINARY_DIR dir]            # Specify build dir location
+#    [BUILD_COMMAND cmd...]      # Command to drive the native build
+#    [BUILD_IN_SOURCE 1]         # Use source dir for build dir
+#   #--Install step---------------
+#    [INSTALL_DIR dir]           # Installation prefix
+#    [INSTALL_COMMAND cmd...]    # Command to drive install after build
+#   #--Test step---------------
+#    [TEST_BEFORE_INSTALL 1]     # Add test step executed before install step
+#    [TEST_AFTER_INSTALL 1]      # Add test step executed after install step
+#    [TEST_COMMAND cmd...]       # Command to drive test
+#    )
 # The *_DIR options specify directories for the project, with default
 # directories computed as follows.
 # If the PREFIX option is given to ExternalProject_Add() or the EP_PREFIX
 # directory property is set, then an external project is built and installed
 # under the specified prefix:
-# TMP_DIR = <prefix>/tmp
-# STAMP_DIR = <prefix>/src/<name>-stamp
-# DOWNLOAD_DIR = <prefix>/src
-# SOURCE_DIR = <prefix>/src/<name>
-# BINARY_DIR = <prefix>/src/<name>-build
-# INSTALL_DIR = <prefix>
+#   TMP_DIR      = <prefix>/tmp
+#   STAMP_DIR    = <prefix>/src/<name>-stamp
+#   DOWNLOAD_DIR = <prefix>/src
+#   SOURCE_DIR   = <prefix>/src/<name>
+#   BINARY_DIR   = <prefix>/src/<name>-build
+#   INSTALL_DIR  = <prefix>
 # Otherwise, if the EP_BASE directory property is set then components
 # of an external project are stored under the specified base:
-# TMP_DIR = <base>/tmp/<name>
-# STAMP_DIR = <base>/Stamp/<name>
-# DOWNLOAD_DIR = <base>/Download/<name>
-# SOURCE_DIR = <base>/Source/<name>
-# BINARY_DIR = <base>/Build/<name>
-# INSTALL_DIR = <base>/Install/<name>
+#   TMP_DIR      = <base>/tmp/<name>
+#   STAMP_DIR    = <base>/Stamp/<name>
+#   DOWNLOAD_DIR = <base>/Download/<name>
+#   SOURCE_DIR   = <base>/Source/<name>
+#   BINARY_DIR   = <base>/Build/<name>
+#   INSTALL_DIR  = <base>/Install/<name>
 # If no PREFIX, EP_PREFIX, or EP_BASE is specified then the default
 # is to set PREFIX to "<name>-prefix".
 # Relative paths are interpreted with respect to the build directory
@@ -77,15 +77,15 @@
 #
 # The 'ExternalProject_Add_Step' function adds a custom step to an external
 # project:
-# ExternalProject_Add_Step(<name> <step> # Names of project and custom step
-# [COMMAND cmd...] # Command line invoked by this step
-# [COMMENT "text..."] # Text printed when step executes
-# [DEPENDEES steps...] # Steps on which this step depends
-# [DEPENDERS steps...] # Steps that depend on this step
-# [DEPENDS files...] # Files on which this step depends
-# [ALWAYS 1] # No stamp file, step always runs
-# [WORKING_DIRECTORY dir] # Working directory for command
-# )
+#  ExternalProject_Add_Step(<name> <step> # Names of project and custom step
+#    [COMMAND cmd...]        # Command line invoked by this step
+#    [COMMENT "text..."]     # Text printed when step executes
+#    [DEPENDEES steps...]    # Steps on which this step depends
+#    [DEPENDERS steps...]    # Steps that depend on this step
+#    [DEPENDS files...]      # Files on which this step depends
+#    [ALWAYS 1]              # No stamp file, step always runs
+#    [WORKING_DIRECTORY dir] # Working directory for command
+#    )
 # The command line, comment, and working directory of every standard
 # and custom step is processed to replace tokens
 # <SOURCE_DIR>,
@@ -96,7 +96,7 @@
 #
 # The 'ExternalProject_Get_Property' function retrieves external project
 # target properties:
-# ExternalProject_Get_Property(<name> [prop1 [prop2 [...]]])
+#  ExternalProject_Get_Property(<name> [prop1 [prop2 [...]]])
 # It stores property values in variables of the same name.
 # Property names correspond to the keyword argument names of
 # 'ExternalProject_Add'.
@@ -112,23 +112,23 @@
 # See the License for more information.
 #=============================================================================
 # (To distributed this file outside of CMake, substitute the full
-# License text for the above reference.)
+#  License text for the above reference.)
 
 # Pre-compute a regex to match documented keywords for each command.
 file(STRINGS "${CMAKE_CURRENT_LIST_FILE}" lines LIMIT_COUNT 103
-     REGEX "^# ( \\[[A-Z_]+ [^]]*\\] +#.*$|[A-Za-z_]+\\()")
+     REGEX "^#  (  \\[[A-Z_]+ [^]]*\\] +#.*$|[A-Za-z_]+\\()")
 foreach(line IN LISTS lines)
-  if("${line}" MATCHES "^# [A-Za-z_]+\\(")
+  if("${line}" MATCHES "^#  [A-Za-z_]+\\(")
     if(_ep_func)
       set(_ep_keywords_${_ep_func} "${_ep_keywords_${_ep_func}})$")
     endif()
-    string(REGEX REPLACE "^# ([A-Za-z_]+)\\(.*" "\\1" _ep_func "${line}")
+    string(REGEX REPLACE "^#  ([A-Za-z_]+)\\(.*" "\\1" _ep_func "${line}")
     #message("function [${_ep_func}]")
     set(_ep_keywords_${_ep_func} "^(")
     set(_ep_keyword_sep)
   else()
-    string(REGEX REPLACE "^# \\[([A-Z_]+) .*" "\\1" _ep_key "${line}")
-    #message(" keyword [${_ep_key}]")
+    string(REGEX REPLACE "^#    \\[([A-Z_]+) .*" "\\1" _ep_key "${line}")
+    #message("  keyword [${_ep_key}]")
     set(_ep_keywords_${_ep_func}
       "${_ep_keywords_${_ep_func}}${_ep_keyword_sep}${_ep_key}")
     set(_ep_keyword_sep "|")
@@ -474,11 +474,11 @@ function(_ep_get_build_command name step cmd_var)
     set(args)
     _ep_get_configure_command_id(${name} cfg_cmd_id)
     if(cfg_cmd_id STREQUAL "cmake")
-      # CMake project. Select build command based on generator.
+      # CMake project.  Select build command based on generator.
       get_target_property(cmake_generator ${name} _EP_CMAKE_GENERATOR)
       if("${cmake_generator}" MATCHES "Make" AND
           "${cmake_generator}" STREQUAL "${CMAKE_GENERATOR}")
-        # The project uses the same Makefile generator. Use recursive make.
+        # The project uses the same Makefile generator.  Use recursive make.
         set(cmd "$(MAKE)")
         if(step STREQUAL "INSTALL")
           set(args install)
@@ -505,7 +505,7 @@ function(_ep_get_build_command name step cmd_var)
         endif()
       endif()
     else() # if(cfg_cmd_id STREQUAL "configure")
-      # Non-CMake project. Guess "make" and "make install" and "make test".
+      # Non-CMake project.  Guess "make" and "make install" and "make test".
       set(cmd "make")
       if(step STREQUAL "INSTALL")
         set(args install)
@@ -730,9 +730,9 @@ function(_ep_add_download_command name)
   elseif(git_repository)
     #find_package(Git)
     # If 'git.cmd' are 'eg.cmd' are used, execute_process fails and outputs the following error:
-    # 'chcp' is not recognized as an internal or external command, operable program or batch file
-    find_program(git_EXECUTABLE
-      NAMES git eg
+    #  'chcp' is not recognized as an internal or external command, operable program or batch file
+    find_program(git_EXECUTABLE 
+      NAMES git eg 
       PATHS
        "C:/Program Files/Git/bin"
        "C:/Program Files (x86)/Git/bin"
@@ -770,7 +770,7 @@ function(_ep_add_download_command name)
     # The script will delete the source directory and then call git clone.
     #
     _ep_write_gitclone_script(${tmp_dir}/${name}-gitclone.cmake ${source_dir}
-${git_EXECUTABLE} ${git_repository} "${git_tag}" ${src_name} ${work_dir})
+    ${git_EXECUTABLE} ${git_repository} "${git_tag}" ${src_name} ${work_dir})
 
     set(comment "Performing download step (git clone) for '${name}'")
     set(cmd ${CMAKE_COMMAND} -P ${tmp_dir}/${name}-gitclone.cmake)
@@ -789,14 +789,14 @@ ${git_EXECUTABLE} ${git_repository} "${git_tag}" ${src_name} ${work_dir})
     if(IS_DIRECTORY "${url}")
       get_filename_component(abs_dir "${url}" ABSOLUTE)
       set(comment "Performing download step (DIR copy) for '${name}'")
-      set(cmd ${CMAKE_COMMAND} -E remove_directory ${source_dir}
+      set(cmd   ${CMAKE_COMMAND} -E remove_directory ${source_dir}
         COMMAND ${CMAKE_COMMAND} -E copy_directory ${abs_dir} ${source_dir})
     else()
       if("${url}" MATCHES "^[a-z]+://")
         # TODO: Should download and extraction be different steps?
         string(REGEX MATCH "[^/]*$" fname "${url}")
         if(NOT "${fname}" MATCHES "\\.(tar|tgz|tar\\.gz)$")
-          message(FATAL_ERROR "Could not extract tarball filename from url:\n ${url}")
+          message(FATAL_ERROR "Could not extract tarball filename from url:\n  ${url}")
         endif()
         set(file ${download_dir}/${fname})
         get_property(timeout TARGET ${name} PROPERTY _EP_TIMEOUT)
@@ -1044,9 +1044,9 @@ function(ExternalProject_Add name)
   ExternalProject_Get_Property(${name} stamp_dir)
 
   # The 'complete' step depends on all other steps and creates a
-  # 'done' mark. A dependent external project's 'configure' step
+  # 'done' mark.  A dependent external project's 'configure' step
   # depends on the 'done' mark so that it rebuilds when this project
-  # rebuilds. It is important that 'done' is not the output of any
+  # rebuilds.  It is important that 'done' is not the output of any
   # custom command so that CMake does not propagate build rules to
   # other external project targets.
   add_custom_command(
@@ -1085,4 +1085,3 @@ function(ExternalProject_Add name)
   #
   _ep_add_test_command(${name})
 endfunction(ExternalProject_Add)
-
