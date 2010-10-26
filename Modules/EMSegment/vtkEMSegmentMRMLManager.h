@@ -36,7 +36,7 @@ public:
   vtkTypeMacro(vtkEMSegmentMRMLManager,vtkObject);
   void PrintSelf(ostream& os, vtkIndent indent);
 
-  // the current mrml scene
+  // Get/Set the current mrml scene
   vtkSetObjectMacro(MRMLScene, vtkMRMLScene);
   vtkGetObjectMacro(MRMLScene, vtkMRMLScene);
 
@@ -527,10 +527,10 @@ public:
   virtual void PrintTree();
   virtual void PrintTree(vtkIdType rootID, vtkIndent indent);
 
-  virtual void PrintVolumeInfo();
+  virtual void PrintVolumeInfo( vtkMRMLScene* mrmlScene );
 
   //
-  // convienince functions for managing MRML nodes
+  // convenience functions for managing MRML nodes
   //
   virtual vtkMRMLEMSTemplateNode*         GetTemplateNode();
   virtual vtkMRMLEMSTargetNode*           GetTargetInputNode();

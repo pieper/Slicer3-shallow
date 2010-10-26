@@ -411,7 +411,7 @@ int main(int argc, char** argv)
 
   bool useDefaultParametersNode = parametersMRMLNodeName.empty();
   bool useDefaultTarget         = targetVolumeFileNames.empty();
-  bool useDefaultAtlas          = atlasVolumeFileNames.empty();
+  bool useDefaultAtlas          = true;
   bool useDefaultOutput         = resultVolumeFileName.empty();
   bool writeIntermediateResults = !intermediateResultsDirectory.empty();
   bool segmentationSucceeded    = true;
@@ -480,18 +480,6 @@ int main(int argc, char** argv)
       std::cerr << "Error: target volume file " << i << " does not exist." 
                 << std::endl;
       std::cerr << targetVolumeFileNames[i] << std::endl;      
-      return EXIT_FAILURE;
-      }
-    }
-
-  for (unsigned int i = 0; i < atlasVolumeFileNames.size(); ++i)
-    {
-    if (!vtksys::SystemTools::
-        FileExists(atlasVolumeFileNames[i].c_str()))
-      {
-      std::cerr << "Error: atlas volume file " << i << " does not exist." 
-                << std::endl;
-      std::cerr << atlasVolumeFileNames[i] << std::endl;      
       return EXIT_FAILURE;
       }
     }
@@ -977,44 +965,6 @@ int main(int argc, char** argv)
         {
         throw std::runtime_error("ERROR: failed to add atlas node.");
         }
-
-      if (verbose)
-        std::cerr << "Adding " << atlasVolumeFileNames.size() 
-                  << " atlas images..." << std::endl;
-      for (unsigned int imageIndex = 0; 
-           imageIndex < atlasVolumeFileNames.size(); ++imageIndex)
-        {
-        if (verbose) std::cerr << "Loading atlas image " << imageIndex
-                               << "..." << std::endl;
-        try
-          {
-          // load image into scene
-          vtkMRMLVolumeNode* volumeNode = 
-            AddScalarArchetypeVolume(mrmlScene, 
-                                     atlasVolumeFileNames[imageIndex].c_str(),
-                                     false,
-                                     false,
-                                     NULL);
-          
-          if (!volumeNode)
-            {
-            throw std::runtime_error("failed to load image.");
-            }
-       
-          // set volume name and ID in map
-          emMRMLManager->GetAtlasInputNode()->
-            AddVolume(oldAtlasNode->GetNthKey(imageIndex), 
-                      volumeNode->GetID());
-          }
-        catch(...)
-          {
-          vtkstd::stringstream ss;
-          ss << "ERROR: failed to load atlas image "
-             << atlasVolumeFileNames[imageIndex];
-          throw std::runtime_error(ss.str());
-          }
-        }
-
       //
       // make sure the number of atlas volumes matches the expected
       // value in the parameters
@@ -1395,9 +1345,6 @@ int main(int argc, char** argv)
   // ------------------------------
   // DELETE
 
-  emLogic->SetAndObserveMRMLScene(NULL);
-  emLogic->Delete();
-
   //
   //--- Cache and RemoteIO ManagerGUI
   //
@@ -1439,8 +1386,12 @@ int main(int argc, char** argv)
     }
   mrmlScene->SetUserTagTable( NULL );
 
+
+
   mrmlScene->Clear(true);
   mrmlScene->Delete();
+  emLogic->SetAndObserveMRMLScene(NULL);
+  emLogic->Delete();
   if (verbose) std::cerr << "DONE" << std::endl;
 
   return segmentationSucceeded ? EXIT_SUCCESS : EXIT_FAILURE;  

@@ -407,7 +407,7 @@ public:
   std::string GetSceneXMLString() {
     return this->SceneXMLString;
   };
-  
+
 //ETX
 
   void SetErrorMessage(const char * message)

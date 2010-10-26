@@ -2607,7 +2607,7 @@ GetReferencedSubScene(vtkMRMLNode *rnode, vtkMRMLScene* newScene)
     return;
     }
 
-  // to get all references up-todate
+  // to get all references up-to-date
   // save the scene into a string
   // and restore it into a new scene
   this->SetSaveToXMLString(1);
