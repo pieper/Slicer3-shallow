@@ -528,7 +528,7 @@ void vtkEMSegmentRunSegmentationStep::SelectTemplateFileCallback()
         return;
       }
 
-    vtkKWMessageDialog::PopupMessage(this->GetApplication(),NULL,"Info About Template Generation", "The template generator only works correctly if no more than one scene were imported! Visit web site listed under Help for more info." , vtkKWMessageDialog::WarningIcon | vtkKWMessageDialog::InvokeAtPointer);
+  //  vtkKWMessageDialog::PopupMessage(this->GetApplication(),NULL,"Info About Template Generation", "The template generator only works correctly if no more than one scene were imported! Visit web site listed under Help for more info." , vtkKWMessageDialog::WarningIcon | vtkKWMessageDialog::InvokeAtPointer);
 
    this->RunSegmentationSaveTemplateButton->GetLoadSaveDialog()->SaveLastPathToRegistry("OpenPath");
    vtksys_stl::string filename = this->RunSegmentationSaveTemplateButton->GetFileName();
