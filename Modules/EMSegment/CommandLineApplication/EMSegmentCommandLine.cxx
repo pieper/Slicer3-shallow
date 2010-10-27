@@ -1171,10 +1171,10 @@ int main(int argc, char** argv)
            } 
 
         // Have to init variables again bc first time EMLogic was not fully set up  
-        std::string CMD = "::EMSegmenterPreProcessingTcl::InitVariables " + emLogicTcl + " " + emMRMLManagerTcl + " NULL";      
+        std::string CMD = "::EMSegmenterPreProcessingTcl::InitVariables " + emLogicTcl + " " + emMRMLManagerTcl + " NULL";
         if (atoi(app->Script(CMD.c_str())))
         {
-           throw std::runtime_error("ERROR: could not init files. "); 
+           throw std::runtime_error("ERROR: could not init files. ");
         }
 
 
@@ -1260,7 +1260,7 @@ int main(int argc, char** argv)
     catch (std::runtime_error& e)
       {
       std::cerr << e.what() << std::endl;
-      std::cerr << "Errors detetected.  Writing failed." << std::endl;
+      std::cerr << "Errors detected.  Writing failed." << std::endl;
       segmentationSucceeded = false;
       }
     catch (...)
