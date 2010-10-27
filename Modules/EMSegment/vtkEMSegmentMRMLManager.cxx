@@ -4,6 +4,12 @@
 #include "vtkEMSegmentLogic.h"
 #include "vtkEMSegment.h"
 
+#include "vtkHTTPHandler.h"
+#include "vtkHIDHandler.h"
+#include "vtkXNDHandler.h"
+#include "vtkSRBHandler.h"
+
+
 #include "vtkMRMLScene.h"
 
 #include "vtkMRMLEMSNode.h"
@@ -17,6 +23,9 @@
 #include "vtkMRMLEMSIntensityNormalizationParametersNode.h"
 #include "vtkMRMLEMSClassInteractionMatrixNode.h"
 #include "vtkImageEMGeneral.h"
+
+#include "vtkDataIOManagerLogic.h"
+
 
 #include "vtkMatrix4x4.h"
 #include "vtkMath.h"
@@ -4501,15 +4510,13 @@ PrintTree(vtkIdType rootID, vtkIndent indent)
 //-----------------------------------------------------------------------------
 void
 vtkEMSegmentMRMLManager::
-PrintVolumeInfo()
+PrintVolumeInfo( vtkMRMLScene* mrmlScene )
 {
   // for every volume node
-  int numVolumes = 
-    this->GetMRMLScene()->GetNumberOfNodesByClass("vtkMRMLVolumeNode");
+  int numVolumes = mrmlScene->GetNumberOfNodesByClass("vtkMRMLVolumeNode");
   for (int i = 0; i < numVolumes; ++i)
     {
-    vtkMRMLNode* node = this->GetMRMLScene()->
-      GetNthNodeByClass(i, "vtkMRMLVolumeNode");
+    vtkMRMLNode* node = mrmlScene->GetNthNodeByClass(i, "vtkMRMLVolumeNode");
     vtkMRMLVolumeNode* volumeNode = vtkMRMLVolumeNode::SafeDownCast(node);
 
     // print volume node ID and name
@@ -4540,14 +4547,100 @@ PackageAndWriteData(const char* packageDirectory)
   //
   // create a scene and copy the EMSeg related nodes to it
   //
-  vtkMRMLScene* newScene = vtkMRMLScene::New();
   std::string outputDirectory(packageDirectory);
-
   std::string mrmlURL(outputDirectory + "/EMSegmenterScene.mrml");
+
+  vtkMRMLScene* newScene = vtkMRMLScene::New();
+  // Create Remote I/O and Cache handling mechanisms
+  // and configure them using Application registry values
+  vtkCacheManager *cacheManager = vtkCacheManager::New();
+//  cacheManager->SetRemoteCacheLimit ( app->GetRemoteCacheLimit() );
+//  cacheManager->SetRemoteCacheFreeBufferSize ( app->GetRemoteCacheFreeBufferSize() );
+//  cacheManager->SetEnableForceRedownload ( app->GetEnableForceRedownload() );
+//  cacheManager->SetRemoteCacheDirectory( app->GetRemoteCacheDirectory() );
+  cacheManager->SetRemoteCacheDirectory( "/tmp/" );
+  cacheManager->SetMRMLScene ( newScene );
+  //cacheManager->SetEnableRemoteCacheOverwriting ( app->GetEnableRemoteCacheOverwriting() );
+  //--- MRML collection of data transfers with access to cache manager
+  vtkDataIOManager *dataIOManager = vtkDataIOManager::New();
+  dataIOManager->SetCacheManager ( cacheManager );
+//  dataIOManager->SetEnableAsynchronousIO ( app->GetEnableAsynchronousIO () );
+   dataIOManager->SetEnableAsynchronousIO ( true );
+   //--- Data transfer logic
+
+  vtkDataIOManagerLogic *dataIOManagerLogic = vtkDataIOManagerLogic::New();
+  dataIOManagerLogic->SetMRMLScene ( newScene );
+//    dataIOManagerLogic->SetApplicationLogic ( appLogic );
+  dataIOManagerLogic->SetAndObserveDataIOManager ( dataIOManager );
+
+  newScene->SetDataIOManager ( dataIOManager );
+  newScene->SetCacheManager( cacheManager );
+  vtkCollection *URIHandlerCollection = vtkCollection::New();
+
+  // add some new handlers
+
+  newScene->SetURIHandlerCollection( URIHandlerCollection );
+
+  // register all existing uri handlers (add to collection)
+  vtkHTTPHandler *httpHandler = vtkHTTPHandler::New();
+  httpHandler->SetPrefix ( "http://" );
+  httpHandler->SetName ( "HTTPHandler");
+  newScene->AddURIHandler(httpHandler);
+  httpHandler->Delete();
+
+  vtkSRBHandler *srbHandler = vtkSRBHandler::New();
+  srbHandler->SetPrefix ( "srb://" );
+  srbHandler->SetName ( "SRBHandler" );
+  newScene->AddURIHandler(srbHandler);
+  srbHandler->Delete();
+/*
+    vtkXNATHandler *xnatHandler = vtkXNATHandler::New();
+    vtkSlicerXNATPermissionPrompterWidget *xnatPermissionPrompter = vtkSlicerXNATPermissionPrompterWidget::New();
+    xnatPermissionPrompter->SetApplication ( slicerApp );
+    xnatPermissionPrompter->SetPromptTitle ("Permission Prompt");
+    xnatHandler->SetPrefix ( "xnat://" );
+    xnatHandler->SetName ( "XNATHandler" );
+    xnatHandler->SetRequiresPermission (1);
+    xnatHandler->SetPermissionPrompter ( xnatPermissionPrompter );
+    mrmlScene->AddURIHandler(xnatHandler);
+    xnatPermissionPrompter->Delete();
+    xnatHandler->Delete();
+*/
+  vtkHIDHandler *hidHandler = vtkHIDHandler::New();
+  hidHandler->SetPrefix ( "hid://" );
+  hidHandler->SetName ( "HIDHandler" );
+  newScene->AddURIHandler( hidHandler);
+  hidHandler->Delete();
+
+  vtkXNDHandler *xndHandler = vtkXNDHandler::New();
+  xndHandler->SetPrefix ( "xnd://" );
+  xndHandler->SetName ( "XNDHandler" );
+  newScene->AddURIHandler( xndHandler);
+  xndHandler->Delete();
+
+  //add something to hold user tags
+  vtkTagTable *userTagTable = vtkTagTable::New();
+  newScene->SetUserTagTable( userTagTable );
+  userTagTable->Delete();
+
   newScene->SetRootDirectory(outputDirectory.c_str());
   newScene->SetURL(mrmlURL.c_str());
+
+  std::cout << std::endl;
+  std::cerr << "[BEGIN] PrintVolumeInfo " << std::endl;
+  this->PrintVolumeInfo( this->GetMRMLScene() );
+  std::cerr << "[END] PrintVolumeInfo " << std::endl;
+
+  std::cerr << "[BEGIN] PrintVolumeInfo of new scene (empty)" << std::endl;
+  this->PrintVolumeInfo( newScene );
+  std::cerr << "[END] PrintVolumeInfo of new scene (empty)" << std::endl;
+
   this->CopyEMRelatedNodesToMRMLScene(newScene);
-  
+
+  std::cerr << "[BEGIN] PrintVolumeInfo of new scene" << std::endl;
+  this->PrintVolumeInfo( newScene );
+  std::cerr << "[END] PrintVolumeInfo of new scene" << std::endl;
+
   //
   // update filenames to match standardized package structure
   this->CreatePackageFilenames(newScene, packageDirectory);

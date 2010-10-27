@@ -754,7 +754,7 @@ int vtkMRMLScene::Import()
       }
 
 
-    // fix node refrences that may be not unique in the imported scene.
+    // fix node references that may be not unique in the imported scene.
     this->UpdateNodeReferences(scene);
 
     this->RemoveReservedIDs();
@@ -2615,6 +2615,10 @@ GetReferencedSubScene(vtkMRMLNode *rnode, vtkMRMLScene* newScene)
   this->CopyRegisteredNodesToScene(newScene);
   newScene->SetSceneXMLString(this->GetSceneXMLString());
   newScene->SetLoadFromXMLString(1);
+ofstream myfile;
+myfile.open ("/tmp/bug-intermediate-results.mrml");
+myfile << this->GetSceneXMLString();
+myfile.close();
   newScene->Connect();
 
   this->SetSaveToXMLString(0);
