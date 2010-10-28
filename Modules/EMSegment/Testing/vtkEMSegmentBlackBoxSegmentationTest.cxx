@@ -3,8 +3,6 @@
 #include "vtkMRMLScene.h"
 #include "vtkEMSegmentLogic.h"
 #include "vtkEMSegmentTestUtilities.h"
-#include "vtkSlicerApplication.h"
-#include "vtkSlicerApplicationLogic.h"
 
 int main(int argc, char** argv)
 {
@@ -147,15 +145,10 @@ int main(int argc, char** argv)
   
   //
   // run the segmentation
-  vtkSlicerApplication* app;
-  vtkKWApplication::InitializeTcl(argc, argv, &cout);
-  app = vtkSlicerApplication::GetInstance();
-  app->PromptBeforeExitOff();
-  vtkSlicerApplicationLogic* appLogic = vtkSlicerApplicationLogic::New();
   try
   {
     std::cerr << "Starting segmentation..." << std::endl;
-    emLogic->StartSegmentation(app,appLogic);
+    emLogic->StartSegmentation(NULL,NULL);
   }
   catch (...)
   {
@@ -166,21 +159,8 @@ int main(int argc, char** argv)
     mrmlScene->Delete();
     emLogic->SetAndObserveMRMLScene(NULL);
     emLogic->Delete();
-    appLogic->Delete();
-    appLogic = NULL;
-
-    app->Delete();
-    app = NULL;
     return EXIT_FAILURE;
   }
-
-
-  appLogic->Delete();
-  appLogic = NULL;
-
-  app->Delete();
-  app = NULL;
-
 
   //
   // get a pointer to the results

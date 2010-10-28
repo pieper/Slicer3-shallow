@@ -119,10 +119,6 @@ void vtkEMSegmentLogic::PrintSelf(ostream& os, vtkIndent indent)
 bool
 vtkEMSegmentLogic::SaveIntermediateResults(vtkSlicerApplication* app, vtkSlicerApplicationLogic *appLogic)
 {
-  if (!app || !appLogic)
-    {
-      return false;
-    }
   //
   // get output directory
   std::string outputDirectory(this->MRMLManager->GetSaveWorkingDirectory());
@@ -2604,14 +2600,22 @@ std::string vtkEMSegmentLogic::DefineTclTaskFullPathName(vtkSlicerApplication* a
 //-----------------------------------------------------------------------------
 void vtkEMSegmentLogic::AddDataIOToScene(vtkMRMLScene* mrmlScene, vtkSlicerApplication *app, vtkSlicerApplicationLogic *appLogic, vtkDataIOManagerLogic *dataIOManagerLogic)
 {
+  if (!app || !appLogic) 
+    {
+      vtkWarningMacro("Parameter of DataIO are not set according to app or appLogic bc one of them is NULL - this might cause issues when downloading data form the web!");
+    }
   // Create Remote I/O and Cache handling mechanisms
   // and configure them using Application registry values
   {
     vtkCacheManager *cacheManager = vtkCacheManager::New();
-    cacheManager->SetRemoteCacheLimit ( app->GetRemoteCacheLimit() );
-    cacheManager->SetRemoteCacheFreeBufferSize ( app->GetRemoteCacheFreeBufferSize() );
-    cacheManager->SetEnableForceRedownload ( app->GetEnableForceRedownload() );
-    cacheManager->SetRemoteCacheDirectory( app->GetRemoteCacheDirectory() );
+    
+    if (app) 
+      {
+         cacheManager->SetRemoteCacheLimit ( app->GetRemoteCacheLimit() );
+         cacheManager->SetRemoteCacheFreeBufferSize ( app->GetRemoteCacheFreeBufferSize() );
+         cacheManager->SetEnableForceRedownload ( app->GetEnableForceRedownload() );
+         cacheManager->SetRemoteCacheDirectory( app->GetRemoteCacheDirectory() );
+      }
     cacheManager->SetMRMLScene ( mrmlScene );
     mrmlScene->SetCacheManager( cacheManager );
     cacheManager->Delete();
@@ -2622,7 +2626,10 @@ void vtkEMSegmentLogic::AddDataIOToScene(vtkMRMLScene* mrmlScene, vtkSlicerAppli
   {
      vtkDataIOManager *dataIOManager = vtkDataIOManager::New();
      dataIOManager->SetCacheManager ( mrmlScene->GetCacheManager());
-     dataIOManager->SetEnableAsynchronousIO ( app->GetEnableAsynchronousIO () );
+     if (app)
+       {
+         dataIOManager->SetEnableAsynchronousIO ( app->GetEnableAsynchronousIO () );
+       }
      mrmlScene->SetDataIOManager ( dataIOManager );
      dataIOManager->Delete();
   }
@@ -2631,7 +2638,10 @@ void vtkEMSegmentLogic::AddDataIOToScene(vtkMRMLScene* mrmlScene, vtkSlicerAppli
   {
     // vtkDataIOManagerLogic *dataIOManagerLogic = vtkDataIOManagerLogic::New();
      dataIOManagerLogic->SetMRMLScene ( mrmlScene );
+     if (appLogic)
+       {
      dataIOManagerLogic->SetApplicationLogic ( appLogic );
+       }
      dataIOManagerLogic->SetAndObserveDataIOManager ( mrmlScene->GetDataIOManager() );
   }
 
@@ -2658,7 +2668,10 @@ void vtkEMSegmentLogic::AddDataIOToScene(vtkMRMLScene* mrmlScene, vtkSlicerAppli
 
     vtkXNATHandler *xnatHandler = vtkXNATHandler::New();
     vtkSlicerXNATPermissionPrompterWidget *xnatPermissionPrompter = vtkSlicerXNATPermissionPrompterWidget::New();
+    if (app)
+      {
     xnatPermissionPrompter->SetApplication ( app );
+      }
     xnatPermissionPrompter->SetPromptTitle ("Permission Prompt");
     xnatHandler->SetPrefix ( "xnat://" );
     xnatHandler->SetName ( "XNATHandler" );
