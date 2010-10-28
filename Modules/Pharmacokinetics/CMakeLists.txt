@@ -23,6 +23,9 @@ if(NOT Slicer3_SOURCE_DIR)
   slicer3_set_default_install_prefix_for_external_projects()
 endif(NOT Slicer3_SOURCE_DIR)
 
+#-------------------------------------------------------------------
+# PkSolver is in a separate directory
+subdirs(PkSolver)
 
 # --------------------------------------------------------------------------
 # Include dirs
@@ -36,8 +39,8 @@ include_directories(
   ${CommandLineModule_BINARY_DIR}
   ${FourDImage_SOURCE_DIR}
   ${FourDImage_BINARY_DIR}
-#  ${PkSolver_SOURCE_DIR}
-#  ${PkSolver_BINARY_DIR}
+  ${PkSolver_SOURCE_DIR}
+  ${PkSolver_BINARY_DIR}
   ${vtkSlicerVolumesModuleLogic_SOURCE_DIR}
   ${vtkSlicerVolumesModuleLogic_BINARY_DIR}
   ${Volumes_SOURCE_DIR}
@@ -150,7 +153,7 @@ target_link_libraries(${lib_name}
   ${CommandLineModuleLib}
   ${ITK_LIBRARIES}
   ${CLP_MODULE}
-#  PkSolver
+  PkSolver
   vtkSlicerVolumesModuleLogic
   ${VolumesLib}
   ${FourDImageLib}
