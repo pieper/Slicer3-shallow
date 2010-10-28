@@ -687,6 +687,12 @@ void vtkEMSegmentGUI::StartSegmentation()
           currentStep->ShowUserInterface();
           this->StartSegmentStep = NULL;
         }
+    std::string msg = this->Logic->GetErrorMessage(); 
+    if (msg.size()) 
+      {
+        vtkKWMessageDialog::PopupMessage(this->GetApplication(),NULL,"Error In Segmentation", msg.c_str() , vtkKWMessageDialog::ErrorIcon | vtkKWMessageDialog::InvokeAtPointer);
+      }
+
         return;
       }
 

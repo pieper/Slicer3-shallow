@@ -33,6 +33,16 @@
 #include "vtkSlicerApplication.h"
 #include "vtkKWTkUtilities.h"
 
+#include "vtkSlicerApplicationLogic.h"
+#include "vtkDataIOManagerLogic.h"
+#include "vtkHTTPHandler.h"
+#include "vtkSRBHandler.h"
+#include "vtkXNATHandler.h"
+#include "vtkHIDHandler.h"
+#include "vtkXNDHandler.h"
+#include "vtkSlicerXNATPermissionPrompterWidget.h"
+
+
 // needed to translate between enums
 #include "EMLocalInterface.h"
 
@@ -107,9 +117,12 @@ void vtkEMSegmentLogic::PrintSelf(ostream& os, vtkIndent indent)
 
 //----------------------------------------------------------------------------
 bool
-vtkEMSegmentLogic::
-SaveIntermediateResults()
+vtkEMSegmentLogic::SaveIntermediateResults(vtkSlicerApplication* app, vtkSlicerApplicationLogic *appLogic)
 {
+  if (!app || !appLogic)
+    {
+      return false;
+    }
   //
   // get output directory
   std::string outputDirectory(this->MRMLManager->GetSaveWorkingDirectory());
@@ -122,8 +135,7 @@ SaveIntermediateResults()
 
   //
   // package EMSeg-related parameters together and write them to disk
-  bool writeSuccessful = 
-    this->MRMLManager->PackageAndWriteData(outputDirectory.c_str());
+  bool writeSuccessful = this->PackageAndWriteData(app,appLogic,outputDirectory.c_str());
 
   return writeSuccessful;
 }
@@ -1640,7 +1652,7 @@ StartPreprocessingAtlasToTargetRegistration()
 //----------------------------------------------------------------------------
 void
 vtkEMSegmentLogic::
-StartSegmentation()
+StartSegmentation(vtkSlicerApplication* app, vtkSlicerApplicationLogic *appLogic)
 {
   //
   // make sure preprocessing is up to date
@@ -1662,11 +1674,11 @@ StartSegmentation()
     }
   
   std::cerr << "EMSEG: Preprocessing complete." << std::endl;
-  this->StartSegmentationWithoutPreprocessing();
+  this->StartSegmentationWithoutPreprocessing(app,appLogic);
 }
 
 //----------------------------------------------------------------------------
-int vtkEMSegmentLogic::StartSegmentationWithoutPreprocessing()
+int vtkEMSegmentLogic::StartSegmentationWithoutPreprocessing(vtkSlicerApplication* app, vtkSlicerApplicationLogic *appLogic)
 {
   if (!this->MRMLManager->GetWorkingDataNode()->GetAlignedTargetNodeIsValid() ||
       !this->MRMLManager->GetWorkingDataNode()->GetAlignedAtlasNodeIsValid())
@@ -1678,6 +1690,7 @@ int vtkEMSegmentLogic::StartSegmentationWithoutPreprocessing()
   //
   // make sure we're ready to start
   //
+  ErrorMsg.clear();
 
   // find output volume
   if (!this->MRMLManager->GetSegmenterNode())
@@ -1753,7 +1766,8 @@ int vtkEMSegmentLogic::StartSegmentationWithoutPreprocessing()
     }
   catch (std::exception e)
     {
-    vtkErrorMacro("Exception thrown during segmentation: " << e.what());
+      vtkErrorMacro("Exception thrown during segmentation: " << e.what());
+      ErrorMsg = "Exception thrown during segmentation: "  + std::string(e.what());
     }
 
   if (this->GetDebug())
@@ -1794,7 +1808,7 @@ int vtkEMSegmentLogic::StartSegmentationWithoutPreprocessing()
   if (this->MRMLManager->GetSaveIntermediateResults())
     {
     std::cerr << "Saving intermediate results...";
-    bool savedResults = this->SaveIntermediateResults();
+    bool savedResults = this->SaveIntermediateResults(app,appLogic);
     std::cerr << "DONE" << std::endl;
     if (!savedResults)
       {
@@ -2585,4 +2599,647 @@ std::string vtkEMSegmentLogic::DefineTclTaskFullPathName(vtkSlicerApplication* a
   vtkErrorMacro("DefineTclTaskFullPathName : could not find tcl file with name  " << TclFileName ); 
   full_file_path = vtksys_stl::string("");
   return  full_file_path;
+}
+
+//-----------------------------------------------------------------------------
+void vtkEMSegmentLogic::AddDataIOToScene(vtkMRMLScene* mrmlScene, vtkSlicerApplication *app, vtkSlicerApplicationLogic *appLogic, vtkDataIOManagerLogic *dataIOManagerLogic)
+{
+  // Create Remote I/O and Cache handling mechanisms
+  // and configure them using Application registry values
+  {
+    vtkCacheManager *cacheManager = vtkCacheManager::New();
+    cacheManager->SetRemoteCacheLimit ( app->GetRemoteCacheLimit() );
+    cacheManager->SetRemoteCacheFreeBufferSize ( app->GetRemoteCacheFreeBufferSize() );
+    cacheManager->SetEnableForceRedownload ( app->GetEnableForceRedownload() );
+    cacheManager->SetRemoteCacheDirectory( app->GetRemoteCacheDirectory() );
+    cacheManager->SetMRMLScene ( mrmlScene );
+    mrmlScene->SetCacheManager( cacheManager );
+    cacheManager->Delete();
+  }
+
+  //cacheManager->SetEnableRemoteCacheOverwriting ( app->GetEnableRemoteCacheOverwriting() );
+  //--- MRML collection of data transfers with access to cache manager
+  {
+     vtkDataIOManager *dataIOManager = vtkDataIOManager::New();
+     dataIOManager->SetCacheManager ( mrmlScene->GetCacheManager());
+     dataIOManager->SetEnableAsynchronousIO ( app->GetEnableAsynchronousIO () );
+     mrmlScene->SetDataIOManager ( dataIOManager );
+     dataIOManager->Delete();
+  }
+
+  //--- Data transfer logic
+  {
+    // vtkDataIOManagerLogic *dataIOManagerLogic = vtkDataIOManagerLogic::New();
+     dataIOManagerLogic->SetMRMLScene ( mrmlScene );
+     dataIOManagerLogic->SetApplicationLogic ( appLogic );
+     dataIOManagerLogic->SetAndObserveDataIOManager ( mrmlScene->GetDataIOManager() );
+  }
+
+  {
+    vtkCollection *URIHandlerCollection = vtkCollection::New();
+    // add some new handlers
+    mrmlScene->SetURIHandlerCollection( URIHandlerCollection );
+    URIHandlerCollection->Delete();   
+  }
+
+#if !defined(REMOTEIO_DEBUG)
+    // register all existing uri handlers (add to collection)
+    vtkHTTPHandler *httpHandler = vtkHTTPHandler::New();
+    httpHandler->SetPrefix ( "http://" );
+    httpHandler->SetName ( "HTTPHandler");
+    mrmlScene->AddURIHandler(httpHandler);
+    httpHandler->Delete();
+
+    vtkSRBHandler *srbHandler = vtkSRBHandler::New();
+    srbHandler->SetPrefix ( "srb://" );
+    srbHandler->SetName ( "SRBHandler" );
+    mrmlScene->AddURIHandler(srbHandler);
+    srbHandler->Delete();
+
+    vtkXNATHandler *xnatHandler = vtkXNATHandler::New();
+    vtkSlicerXNATPermissionPrompterWidget *xnatPermissionPrompter = vtkSlicerXNATPermissionPrompterWidget::New();
+    xnatPermissionPrompter->SetApplication ( app );
+    xnatPermissionPrompter->SetPromptTitle ("Permission Prompt");
+    xnatHandler->SetPrefix ( "xnat://" );
+    xnatHandler->SetName ( "XNATHandler" );
+    xnatHandler->SetRequiresPermission (1);
+    xnatHandler->SetPermissionPrompter ( xnatPermissionPrompter );
+    mrmlScene->AddURIHandler(xnatHandler);
+    xnatPermissionPrompter->Delete();
+    xnatHandler->Delete();
+
+    vtkHIDHandler *hidHandler = vtkHIDHandler::New();
+    hidHandler->SetPrefix ( "hid://" );
+    hidHandler->SetName ( "HIDHandler" );
+    mrmlScene->AddURIHandler( hidHandler);
+    hidHandler->Delete();
+
+    vtkXNDHandler *xndHandler = vtkXNDHandler::New();
+    xndHandler->SetPrefix ( "xnd://" );
+    xndHandler->SetName ( "XNDHandler" );
+    mrmlScene->AddURIHandler( xndHandler);
+    xndHandler->Delete();
+
+    //add something to hold user tags
+    vtkTagTable *userTagTable = vtkTagTable::New();
+    mrmlScene->SetUserTagTable( userTagTable );
+    userTagTable->Delete();
+#endif
+}
+
+void vtkEMSegmentLogic::RemoveDataIOFromScene(vtkMRMLScene* mrmlScene, vtkDataIOManagerLogic *dataIOManagerLogic)
+{
+    if ( dataIOManagerLogic != NULL )
+    {
+       dataIOManagerLogic->SetAndObserveDataIOManager ( NULL );
+       dataIOManagerLogic->SetMRMLScene ( NULL );
+    }
+
+    if (mrmlScene->GetDataIOManager())
+      {
+    mrmlScene->GetDataIOManager()->SetCacheManager(NULL);
+        mrmlScene->SetDataIOManager(NULL);
+      }
+
+   if ( mrmlScene->GetCacheManager())
+    {
+      mrmlScene->GetCacheManager()->SetMRMLScene ( NULL );
+      mrmlScene->SetCacheManager(NULL);
+    }
+ 
+  mrmlScene->SetURIHandlerCollection(NULL);
+  mrmlScene->SetUserTagTable( NULL );
+}
+
+bool vtkEMSegmentLogic::PackageAndWriteData(vtkSlicerApplication* app, vtkSlicerApplicationLogic *appLogic, const char* packageDirectory)
+{
+  //
+  // create a scene and copy the EMSeg related nodes to it
+  //
+  if (!this->GetMRMLManager())
+    {
+      return false;
+    }
+
+  std::string outputDirectory(packageDirectory);
+  std::string mrmlURL(outputDirectory + "/EMSegmenterScene.mrml");
+
+  vtkMRMLScene* newScene = vtkMRMLScene::New();
+
+  vtkDataIOManagerLogic *dataIOManagerLogic = vtkDataIOManagerLogic::New();
+  this->AddDataIOToScene(newScene,app,appLogic,dataIOManagerLogic);
+
+  newScene->SetRootDirectory(outputDirectory.c_str());
+  newScene->SetURL(mrmlURL.c_str());
+
+  std::cout << std::endl;
+  std::cerr << "[BEGIN] PrintVolumeInfo " << std::endl;
+  this->GetMRMLManager()->PrintVolumeInfo( this->GetMRMLScene() );
+  std::cerr << "[END] PrintVolumeInfo " << std::endl;
+
+  std::cerr << "[BEGIN] PrintVolumeInfo of new scene (empty)" << std::endl;
+  this->GetMRMLManager()->PrintVolumeInfo( newScene );
+  std::cerr << "[END] PrintVolumeInfo of new scene (empty)" << std::endl;
+
+  this->GetMRMLManager()->CopyEMRelatedNodesToMRMLScene(newScene);
+
+  std::cerr << "[BEGIN] PrintVolumeInfo of new scene" << std::endl;
+  this->GetMRMLManager()->PrintVolumeInfo( newScene );
+  std::cerr << "[END] PrintVolumeInfo of new scene" << std::endl;
+
+  //
+  // update filenames to match standardized package structure
+  this->CreatePackageFilenames(newScene, packageDirectory);
+
+  //
+  // create directory structure on disk
+  bool errorFlag = !this->CreatePackageDirectories(packageDirectory);
+
+  if (errorFlag)
+    {
+    vtkErrorMacro("PackageAndWriteData: failed to create directories");
+    }
+  else 
+    {
+      //
+      // write the scene out to disk
+      errorFlag = !this->WritePackagedScene(newScene);
+      if (errorFlag)
+    {
+      vtkErrorMacro("PackageAndWrite: failed to write scene");
+    }
+    }
+
+    this->RemoveDataIOFromScene(newScene,dataIOManagerLogic);
+    dataIOManagerLogic->Delete();
+    dataIOManagerLogic = NULL;
+    newScene->Delete();
+
+    return !errorFlag;
+}
+
+
+//-----------------------------------------------------------------------------
+void
+vtkEMSegmentLogic::
+CreatePackageFilenames(vtkMRMLScene* scene, 
+                       const char* vtkNotUsed(packageDirectoryName))
+{
+  //
+  // set up mrml manager for this new scene
+  vtkEMSegmentMRMLManager* newSceneManager = vtkEMSegmentMRMLManager::New();
+  newSceneManager->SetMRMLScene(scene);
+  vtkMRMLEMSNode* newEMSNode = dynamic_cast<vtkMRMLEMSNode*>
+    (scene->GetNthNodeByClass(0, "vtkMRMLEMSNode"));
+  if (newEMSNode == NULL)
+    {
+    vtkWarningMacro("CreatePackageFilenames: no EMS node!");
+    newSceneManager->Delete();
+    return;
+    }
+  else
+    {
+    newSceneManager->SetNode(newEMSNode);
+    }
+  vtkMRMLEMSWorkingDataNode* workingDataNode = 
+    newSceneManager->GetWorkingDataNode();
+
+  //
+  // We might be creating volume storage nodes.  We must decide if the
+  // images should be automatically centered when they are read.  Look
+  // at the original input target node zero to decide if we will use
+  // centering.
+  bool centerImages = false;
+  if (workingDataNode && workingDataNode->GetInputTargetNode())
+    {
+    if (workingDataNode->GetInputTargetNode()->GetNumberOfVolumes() > 0)
+      {
+      vtkMRMLStorageNode* firstTargetStorageNode =
+        workingDataNode->GetInputTargetNode()->GetNthVolumeNode(0)->
+        GetStorageNode();
+      vtkMRMLVolumeArchetypeStorageNode* firstTargetVolumeStorageNode =
+        dynamic_cast<vtkMRMLVolumeArchetypeStorageNode*>
+        (firstTargetStorageNode);
+      if (firstTargetVolumeStorageNode != NULL)
+        {
+        centerImages = firstTargetVolumeStorageNode->GetCenterImage();
+        }
+      }
+    }
+
+   // get the full path to the scene
+  std::vector<std::string> scenePathComponents;
+  vtksys_stl::string rootDir = newSceneManager->GetMRMLScene()->GetRootDirectory();
+  if (rootDir.find_last_of("/") == rootDir.length() - 1)
+    {
+      vtkDebugMacro("em seg: found trailing slash in : " << rootDir);
+      rootDir = rootDir.substr(0, rootDir.length()-1);
+    }
+  vtkDebugMacro("em seg scene manager root dir = " << rootDir);
+  vtksys::SystemTools::SplitPath(rootDir.c_str(), scenePathComponents);
+
+  // change the storage file for the segmentation result
+    {
+    vtkMRMLVolumeNode* volumeNode = newSceneManager->GetOutputVolumeNode();
+    if (volumeNode != NULL)
+      {
+      vtkMRMLStorageNode* storageNode = volumeNode->GetStorageNode();
+      vtkMRMLVolumeArchetypeStorageNode* volumeStorageNode = 
+        dynamic_cast<vtkMRMLVolumeArchetypeStorageNode*>(storageNode);
+      if (volumeStorageNode == NULL)
+      {
+      // create a new storage node for this volume
+      volumeStorageNode = vtkMRMLVolumeArchetypeStorageNode::New();
+      scene->AddNodeNoNotify(volumeStorageNode);
+      volumeNode->SetAndObserveStorageNodeID(volumeStorageNode->GetID());
+      std::cerr << "Added storage node : " << volumeStorageNode->GetID() 
+                << std::endl;
+      volumeStorageNode->Delete();
+      storageNode = volumeStorageNode;
+      }
+      volumeStorageNode->SetCenterImage(centerImages);
+    
+      // create new filename
+      std::string oldFilename       = 
+        (storageNode->GetFileName() ? storageNode->GetFileName() :
+         "SegmentationResult.mhd");
+      std::string oldFilenameNoPath = 
+        vtksys::SystemTools::GetFilenameName(oldFilename);
+
+      scenePathComponents.push_back("Segmentation");
+      scenePathComponents.push_back(oldFilenameNoPath);
+
+      std::string newFilename = 
+        vtksys::SystemTools::JoinPath(scenePathComponents);
+      storageNode->SetFileName(newFilename.c_str());
+      scenePathComponents.pop_back();
+      scenePathComponents.pop_back();
+
+      }
+    }
+
+  //
+  // change the storage file for the targets
+  int numTargets = newSceneManager->GetTargetNumberOfSelectedVolumes();
+
+  // input target volumes
+  if (workingDataNode->GetInputTargetNode())
+    {
+    for (int i = 0; i < numTargets; ++i)
+      {
+      vtkMRMLVolumeNode* volumeNode =
+        workingDataNode->GetInputTargetNode()->GetNthVolumeNode(i);
+      if (volumeNode != NULL)
+        {
+        vtkMRMLStorageNode* storageNode = volumeNode->GetStorageNode();
+        vtkMRMLVolumeArchetypeStorageNode* volumeStorageNode = 
+          dynamic_cast<vtkMRMLVolumeArchetypeStorageNode*>(storageNode);
+        if (volumeStorageNode == NULL)
+          {
+          // create a new storage node for this volume
+          volumeStorageNode = vtkMRMLVolumeArchetypeStorageNode::New();
+          scene->AddNodeNoNotify(volumeStorageNode);
+          volumeNode->SetAndObserveStorageNodeID(volumeStorageNode->GetID());
+          std::cerr << "Added storage node : " << storageNode->GetID() 
+                    << std::endl;
+          volumeStorageNode->Delete();
+          storageNode = volumeStorageNode;
+          }
+        volumeStorageNode->SetCenterImage(centerImages);
+      
+        // create new filename
+        vtkstd::stringstream defaultFilename;
+        defaultFilename << "Target" << i << "_Input.mhd";
+        std::string oldFilename       = 
+          (storageNode->GetFileName() ? storageNode->GetFileName() :
+           defaultFilename.str().c_str());
+        std::string oldFilenameNoPath = 
+          vtksys::SystemTools::GetFilenameName(oldFilename);
+        scenePathComponents.push_back("Target");
+        scenePathComponents.push_back("Input");
+        scenePathComponents.push_back(oldFilenameNoPath);
+        std::string newFilename = 
+          vtksys::SystemTools::JoinPath(scenePathComponents);
+        
+        storageNode->SetFileName(newFilename.c_str());
+    scenePathComponents.pop_back();
+    scenePathComponents.pop_back();
+    scenePathComponents.pop_back();
+        }
+      }  
+    }
+
+  // normalized target volumes
+  if (workingDataNode->GetNormalizedTargetNode())
+    {
+    for (int i = 0; i < numTargets; ++i)
+      {
+      vtkMRMLVolumeNode* volumeNode =
+        workingDataNode->GetNormalizedTargetNode()->GetNthVolumeNode(i);
+      if (volumeNode != NULL)
+        {
+        vtkMRMLStorageNode* storageNode = volumeNode->GetStorageNode();
+        vtkMRMLVolumeArchetypeStorageNode* volumeStorageNode = 
+          dynamic_cast<vtkMRMLVolumeArchetypeStorageNode*>(storageNode);
+        if (volumeStorageNode == NULL)
+          {
+          // create a new storage node for this volume
+          volumeStorageNode = vtkMRMLVolumeArchetypeStorageNode::New();
+          scene->AddNodeNoNotify(volumeStorageNode);
+          volumeNode->SetAndObserveStorageNodeID(volumeStorageNode->GetID());
+          std::cerr << "Added storage node : " << volumeStorageNode->GetID() 
+                    << std::endl;
+          volumeStorageNode->Delete();
+          storageNode = volumeStorageNode;
+          }
+        volumeStorageNode->SetCenterImage(centerImages);
+          
+        // create new filename
+        vtkstd::stringstream defaultFilename;
+        defaultFilename << "Target" << i << "_Normalized.mhd";
+        std::string oldFilename       = 
+          (storageNode->GetFileName() ? storageNode->GetFileName() :
+           defaultFilename.str().c_str());
+        std::string oldFilenameNoPath = 
+          vtksys::SystemTools::GetFilenameName(oldFilename);
+        scenePathComponents.push_back("Target");
+        scenePathComponents.push_back("Normalized");
+        scenePathComponents.push_back(oldFilenameNoPath);
+        std::string newFilename = 
+          vtksys::SystemTools::JoinPath(scenePathComponents);
+        
+        storageNode->SetFileName(newFilename.c_str());
+    scenePathComponents.pop_back();
+    scenePathComponents.pop_back();
+    scenePathComponents.pop_back();
+        }
+      }  
+    }
+
+  // aligned target volumes
+  if (workingDataNode->GetAlignedTargetNode())
+    {
+    for (int i = 0; i < numTargets; ++i)
+      {
+      vtkMRMLVolumeNode* volumeNode =
+        workingDataNode->GetAlignedTargetNode()->GetNthVolumeNode(i);
+      if (volumeNode != NULL)
+        {
+        vtkMRMLStorageNode* storageNode = volumeNode->GetStorageNode();
+        vtkMRMLVolumeArchetypeStorageNode* volumeStorageNode = 
+          dynamic_cast<vtkMRMLVolumeArchetypeStorageNode*>(storageNode);
+        if (volumeStorageNode == NULL)
+          {
+          // create a new storage node for this volume
+          volumeStorageNode = vtkMRMLVolumeArchetypeStorageNode::New();
+          scene->AddNodeNoNotify(volumeStorageNode);
+          volumeNode->SetAndObserveStorageNodeID(volumeStorageNode->GetID());
+          std::cerr << "Added storage node : " << volumeStorageNode->GetID() 
+                    << std::endl;
+          volumeStorageNode->Delete();
+          storageNode = volumeStorageNode;
+          }
+        volumeStorageNode->SetCenterImage(centerImages);
+          
+        // create new filename
+        vtkstd::stringstream defaultFilename;
+        defaultFilename << "Target" << i << "_Aligned.mhd";
+        std::string oldFilename       = 
+          (storageNode->GetFileName() ? storageNode->GetFileName() :
+           defaultFilename.str().c_str());
+        std::string oldFilenameNoPath = 
+          vtksys::SystemTools::GetFilenameName(oldFilename);
+        scenePathComponents.push_back("Target");
+        scenePathComponents.push_back("Aligned");
+        scenePathComponents.push_back(oldFilenameNoPath);
+        std::string newFilename = 
+          vtksys::SystemTools::JoinPath(scenePathComponents);
+        
+        storageNode->SetFileName(newFilename.c_str());
+    scenePathComponents.pop_back();
+    scenePathComponents.pop_back();
+    scenePathComponents.pop_back();
+        }
+      }  
+    }
+
+  //
+  // change the storage file for the atlas
+  int numAtlasVolumes = newSceneManager->GetAtlasInputNode()->
+    GetNumberOfVolumes();
+
+  // input atlas volumes
+  if (workingDataNode->GetInputAtlasNode())
+    {
+    for (int i = 0; i < numAtlasVolumes; ++i)
+      {
+      vtkMRMLVolumeNode* volumeNode =
+        workingDataNode->GetInputAtlasNode()->GetNthVolumeNode(i);
+      if (volumeNode != NULL)
+        {
+        vtkMRMLStorageNode* storageNode = volumeNode->GetStorageNode();
+        vtkMRMLVolumeArchetypeStorageNode* volumeStorageNode = 
+          dynamic_cast<vtkMRMLVolumeArchetypeStorageNode*>(storageNode);
+        if (volumeStorageNode == NULL)
+          {
+          // create a new storage node for this volume
+          volumeStorageNode = vtkMRMLVolumeArchetypeStorageNode::New();
+          scene->AddNodeNoNotify(volumeStorageNode);
+          volumeNode->SetAndObserveStorageNodeID(volumeStorageNode->GetID());
+          std::cerr << "Added storage node : " << volumeStorageNode->GetID() 
+                    << std::endl;
+          volumeStorageNode->Delete();
+          storageNode = volumeStorageNode;
+          }
+        volumeStorageNode->SetCenterImage(centerImages);
+      
+        // create new filename
+        vtkstd::stringstream defaultFilename;
+        defaultFilename << "Atlas" << i << "_Input.mhd";
+        std::string oldFilename       = 
+          (storageNode->GetFileName() ? storageNode->GetFileName() :
+           defaultFilename.str().c_str());
+        std::string oldFilenameNoPath = 
+          vtksys::SystemTools::GetFilenameName(oldFilename);
+        scenePathComponents.push_back("Atlas");
+        scenePathComponents.push_back("Input");
+        scenePathComponents.push_back(oldFilenameNoPath);
+        std::string newFilename = 
+          vtksys::SystemTools::JoinPath(scenePathComponents);
+        
+        storageNode->SetFileName(newFilename.c_str());
+    scenePathComponents.pop_back();
+    scenePathComponents.pop_back();
+    scenePathComponents.pop_back();
+        }
+      }  
+    }
+
+  // aligned atlas volumes
+  if (workingDataNode->GetAlignedAtlasNode())
+    {
+    for (int i = 0; i < numAtlasVolumes; ++i)
+      {
+      vtkMRMLVolumeNode* volumeNode =
+        workingDataNode->GetAlignedAtlasNode()->GetNthVolumeNode(i);
+      if (volumeNode != NULL)
+        {
+        vtkMRMLStorageNode* storageNode = volumeNode->GetStorageNode();
+        vtkMRMLVolumeArchetypeStorageNode* volumeStorageNode = 
+          dynamic_cast<vtkMRMLVolumeArchetypeStorageNode*>(storageNode);
+        if (volumeStorageNode == NULL)
+          {
+          // create a new storage node for this volume
+          volumeStorageNode = vtkMRMLVolumeArchetypeStorageNode::New();
+          scene->AddNodeNoNotify(volumeStorageNode);
+          volumeNode->SetAndObserveStorageNodeID(volumeStorageNode->GetID());
+          std::cerr << "Added storage node : " << volumeStorageNode->GetID() 
+                    << std::endl;
+          volumeStorageNode->Delete();
+          storageNode = volumeStorageNode;
+          }
+        volumeStorageNode->SetCenterImage(centerImages);
+        
+        // create new filename
+        vtkstd::stringstream defaultFilename;
+        defaultFilename << "Atlas" << i << "_Aligned.mhd";
+        std::string oldFilename       = 
+          (storageNode->GetFileName() ? storageNode->GetFileName() :
+           defaultFilename.str().c_str());
+        std::string oldFilenameNoPath = 
+          vtksys::SystemTools::GetFilenameName(oldFilename);
+        scenePathComponents.push_back("Atlas");
+        scenePathComponents.push_back("Aligned");
+        scenePathComponents.push_back(oldFilenameNoPath);
+        std::string newFilename = 
+          vtksys::SystemTools::JoinPath(scenePathComponents);
+        
+        storageNode->SetFileName(newFilename.c_str());
+    scenePathComponents.pop_back();
+    scenePathComponents.pop_back();
+    scenePathComponents.pop_back();
+        }
+      }  
+    }
+
+  // clean up
+  newSceneManager->Delete();
+}
+
+//-----------------------------------------------------------------------------
+bool
+vtkEMSegmentLogic::
+CreatePackageDirectories(const char* packageDirectoryName)
+{
+  vtkstd::string packageDirectory(packageDirectoryName);
+  
+  // check that parent directory exists
+  std::string parentDirectory = 
+    vtksys::SystemTools::GetParentDirectory(packageDirectory.c_str());
+  if (!vtksys::SystemTools::FileExists(parentDirectory.c_str()))
+    {
+    vtkWarningMacro
+      ("CreatePackageDirectories: Parent directory does not exist!");
+    return false;
+    }
+  
+  // create package directories
+  bool createdOK = true;
+  std::string newDir = packageDirectory + "/Atlas/Input";
+  createdOK = createdOK &&
+    vtksys::SystemTools::MakeDirectory(newDir.c_str());  
+  newDir = packageDirectory + "/Atlas/Aligned";
+  createdOK = createdOK &&
+    vtksys::SystemTools::MakeDirectory(newDir.c_str());  
+  newDir = packageDirectory + "/Target/Input";
+  createdOK = createdOK &&
+    vtksys::SystemTools::MakeDirectory(newDir.c_str());  
+  newDir = packageDirectory + "/Target/Normalized";
+  createdOK = createdOK &&
+    vtksys::SystemTools::MakeDirectory(newDir.c_str());  
+  newDir = packageDirectory + "/Target/Aligned";
+  createdOK = createdOK &&
+    vtksys::SystemTools::MakeDirectory(newDir.c_str());  
+  newDir = packageDirectory + "/Segmentation";
+  createdOK = createdOK &&
+    vtksys::SystemTools::MakeDirectory(newDir.c_str());  
+
+  if (!createdOK)
+    {
+    vtkWarningMacro("CreatePackageDirectories: Could not create directories!");
+    return false;
+    }
+
+  return true;
+}
+
+//-----------------------------------------------------------------------------
+bool
+vtkEMSegmentLogic::
+WritePackagedScene(vtkMRMLScene* scene)
+{
+  //
+  // write the volumes
+  scene->InitTraversal();
+  vtkMRMLNode* currentNode;
+  bool allOK = true;
+  while ((currentNode = scene->GetNextNodeByClass("vtkMRMLVolumeNode")) &&
+         (currentNode != NULL))
+    {
+    vtkMRMLVolumeNode* volumeNode = 
+      dynamic_cast<vtkMRMLVolumeNode*>(currentNode);
+
+    if (volumeNode == NULL)
+      {
+      vtkWarningMacro("Volume node is null for node: " 
+                    << currentNode->GetID());
+      scene->RemoveNode(currentNode);
+      allOK = false;
+      continue;
+      }
+    if (volumeNode->GetImageData() == NULL)
+      {
+      vtkWarningMacro("Volume data is null for volume node: " 
+                    << currentNode->GetID());
+      scene->RemoveNode(currentNode);
+      allOK = false;
+      continue;
+      }
+    if (volumeNode->GetStorageNode() == NULL)
+      {
+      vtkWarningMacro("Volume storage node is null for volume node: " 
+                    << currentNode->GetID());
+      scene->RemoveNode(currentNode);
+      allOK = false;
+      continue;
+      }
+
+    try
+      {
+      std::cerr << "Writing volume: " << volumeNode->GetName() 
+                << ": " << volumeNode->GetStorageNode()->GetFileName() << "...";
+      volumeNode->GetStorageNode()->SetUseCompression(0);
+      volumeNode->GetStorageNode()->WriteData(volumeNode);
+      std::cerr << "DONE" << std::endl;
+      }
+    catch (...)
+      {
+      vtkErrorMacro("Problem writing volume: " << volumeNode->GetID());
+      allOK = false;
+      }
+    }
+  
+  //
+  // write the MRML scene file
+  try 
+    {
+    scene->Commit();
+    }
+  catch (...)
+    {
+    vtkErrorMacro("Problem writing scene.");
+    allOK = false;
+    }  
+
+  return allOK;
 }

@@ -1235,7 +1235,7 @@ void vtkEMSegmentAnatomicalStructureStep::SelectedNodeNameChangedCallback(
     vtksys_stl::string val_no_white(value); 
     while (val_no_white.size() && !val_no_white.find(" "))
       {
-        val_no_white.erase(0);
+        val_no_white.erase(0,1);
       }
 
       if (val_no_white.size())

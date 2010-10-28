@@ -11,12 +11,6 @@
 #include "vtkMRMLEMSSegmenterNode.h"
 #include "vtkMRMLEMSNode.h"
 
-#include "vtkHTTPHandler.h"
-#include "vtkSRBHandler.h"
-#include "vtkXNATHandler.h"
-#include "vtkHIDHandler.h"
-#include "vtkXNDHandler.h"
-
 #include "EMSegmentCommandLineCLP.h"
 
 #include <vtksys/SystemTools.hxx>
@@ -547,77 +541,6 @@ int main(int argc, char** argv)
     colorLogic->SetMRMLScene(NULL);
     colorLogic->Delete();
 
-    // Create Remote I/O and Cache handling mechanisms
-    // and configure them using Application registry values
-    vtkCacheManager *cacheManager = vtkCacheManager::New();
-    cacheManager->SetRemoteCacheLimit ( app->GetRemoteCacheLimit() );
-    cacheManager->SetRemoteCacheFreeBufferSize ( app->GetRemoteCacheFreeBufferSize() );
-    cacheManager->SetEnableForceRedownload ( app->GetEnableForceRedownload() );
-    cacheManager->SetRemoteCacheDirectory( app->GetRemoteCacheDirectory() );
-    cacheManager->SetMRMLScene ( mrmlScene );
-    //cacheManager->SetEnableRemoteCacheOverwriting ( app->GetEnableRemoteCacheOverwriting() );
-    //--- MRML collection of data transfers with access to cache manager
-    vtkDataIOManager *dataIOManager = vtkDataIOManager::New();
-    dataIOManager->SetCacheManager ( cacheManager );
-    dataIOManager->SetEnableAsynchronousIO ( app->GetEnableAsynchronousIO () );
-    //--- Data transfer logic
-
-    vtkDataIOManagerLogic *dataIOManagerLogic = vtkDataIOManagerLogic::New();
-    dataIOManagerLogic->SetMRMLScene ( mrmlScene );
-    dataIOManagerLogic->SetApplicationLogic ( appLogic );
-    dataIOManagerLogic->SetAndObserveDataIOManager ( dataIOManager );
-
-    mrmlScene->SetDataIOManager ( dataIOManager );
-    mrmlScene->SetCacheManager( cacheManager );
-    vtkCollection *URIHandlerCollection = vtkCollection::New();
-    // add some new handlers
-
-    mrmlScene->SetURIHandlerCollection( URIHandlerCollection );
-#if !defined(REMOTEIO_DEBUG)
-    // register all existing uri handlers (add to collection)
-    vtkHTTPHandler *httpHandler = vtkHTTPHandler::New();
-    httpHandler->SetPrefix ( "http://" );
-    httpHandler->SetName ( "HTTPHandler");
-    mrmlScene->AddURIHandler(httpHandler);
-    httpHandler->Delete();
-
-    vtkSRBHandler *srbHandler = vtkSRBHandler::New();
-    srbHandler->SetPrefix ( "srb://" );
-    srbHandler->SetName ( "SRBHandler" );
-    mrmlScene->AddURIHandler(srbHandler);
-    srbHandler->Delete();
-/*
-    vtkXNATHandler *xnatHandler = vtkXNATHandler::New();
-    vtkSlicerXNATPermissionPrompterWidget *xnatPermissionPrompter = vtkSlicerXNATPermissionPrompterWidget::New();
-    xnatPermissionPrompter->SetApplication ( slicerApp );
-    xnatPermissionPrompter->SetPromptTitle ("Permission Prompt");
-    xnatHandler->SetPrefix ( "xnat://" );
-    xnatHandler->SetName ( "XNATHandler" );
-    xnatHandler->SetRequiresPermission (1);
-    xnatHandler->SetPermissionPrompter ( xnatPermissionPrompter );
-    mrmlScene->AddURIHandler(xnatHandler);
-    xnatPermissionPrompter->Delete();
-    xnatHandler->Delete();
-*/
-    vtkHIDHandler *hidHandler = vtkHIDHandler::New();
-    hidHandler->SetPrefix ( "hid://" );
-    hidHandler->SetName ( "HIDHandler" );
-    mrmlScene->AddURIHandler( hidHandler);
-    hidHandler->Delete();
-
-    vtkXNDHandler *xndHandler = vtkXNDHandler::New();
-    xndHandler->SetPrefix ( "xnd://" );
-    xndHandler->SetName ( "XNDHandler" );
-    mrmlScene->AddURIHandler( xndHandler);
-    xndHandler->Delete();
-
-    //add something to hold user tags
-    vtkTagTable *userTagTable = vtkTagTable::New();
-    mrmlScene->SetUserTagTable( userTagTable );
-    userTagTable->Delete();
-
-#endif
-
     //
     // create an instance of vtkEMSegmentLogic and connect it with the
     // MRML scene
@@ -632,6 +555,9 @@ int main(int argc, char** argv)
     emsEvents->InsertNextValue(vtkMRMLScene::NodeRemovedEvent);
     emLogic->SetAndObserveMRMLSceneEvents(mrmlScene, emsEvents);
     emsEvents->Delete();
+
+    vtkDataIOManagerLogic *dataIOManagerLogic = vtkDataIOManagerLogic::New();
+    emLogic->AddDataIOToScene(mrmlScene,app,appLogic,dataIOManagerLogic);
 
     //
     // For the EMSegment logic, getting and setting of parameters in the
@@ -1191,7 +1117,7 @@ int main(int argc, char** argv)
 
           if (verbose) std::cerr << "EMSEG: Start Segmentation." << std::endl;
 
-          emLogic->StartSegmentationWithoutPreprocessing();
+          emLogic->StartSegmentationWithoutPreprocessing(app,appLogic);
 
           if (verbose) std::cerr << "Segmentation complete." << std::endl;
           std::cerr << "============ End of New Pipeline =========================" << std::endl;
@@ -1218,7 +1144,7 @@ int main(int argc, char** argv)
     try
       {
         if (verbose) std::cerr << "Starting segmentation..." << std::endl;
-        emLogic->StartSegmentation();
+        emLogic->StartSegmentation(app,appLogic);
         if (verbose) std::cerr << "Segmentation complete." << std::endl;
       }
     catch (...)
@@ -1351,6 +1277,8 @@ int main(int argc, char** argv)
   //
   //--- Cache and RemoteIO ManagerGUI
   //
+
+
 /*
 #if !defined (REMOTEIO_DEBUG)
   remoteIOGUI->SetAndObserveDataIOManager ( NULL );
@@ -1360,36 +1288,9 @@ int main(int argc, char** argv)
 #endif
 */
   //--- Remote data handling mechanisms
-  if ( dataIOManagerLogic != NULL )
-    {
-    dataIOManagerLogic->SetAndObserveDataIOManager ( NULL );
-    dataIOManagerLogic->SetMRMLScene ( NULL );
-    dataIOManagerLogic->Delete();
-    dataIOManagerLogic = NULL;
-    }
-  if ( dataIOManager != NULL )
-    {
-    mrmlScene->SetDataIOManager(NULL);
-    dataIOManager->SetCacheManager(NULL);
-    dataIOManager->Delete();
-    dataIOManager = NULL;
-    }
-  if ( cacheManager != NULL )
-    {
-    mrmlScene->SetCacheManager(NULL);
-    cacheManager->SetMRMLScene ( NULL );
-    cacheManager->Delete();
-    cacheManager = NULL;
-    }
-  if (URIHandlerCollection != NULL )
-    {
-    mrmlScene->SetURIHandlerCollection(NULL);
-    URIHandlerCollection->Delete();
-    URIHandlerCollection = NULL;
-    }
-  mrmlScene->SetUserTagTable( NULL );
-
-
+  emLogic->RemoveDataIOFromScene(mrmlScene,dataIOManagerLogic);
+  dataIOManagerLogic->Delete();
+  dataIOManagerLogic = NULL;
 
   mrmlScene->Clear(true);
   mrmlScene->Delete();

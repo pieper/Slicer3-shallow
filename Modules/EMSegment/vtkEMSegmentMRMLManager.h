@@ -50,10 +50,6 @@ public:
 
   void CreateTemplateFile();
 
-  // 
-  // copy all nodes relating to the EMSegmenter into newScene
-  virtual bool PackageAndWriteData(const char* packageDirectoryName);
-
   //
   // functions for getting and setting the current template builder
   // node (i.e. the set of parameters to edit and use)
@@ -597,6 +593,7 @@ public:
 
   void  SetTreeNodeDistributionLogCovarianceOffDiagonal(vtkIdType nodeID, double value);
 
+  virtual void CopyEMRelatedNodesToMRMLScene(vtkMRMLScene* newScene);
 
 
 
@@ -615,14 +612,6 @@ private:
   virtual void           PropogateRemovalOfSelectedTargetImage(int index);
   virtual void           PropogateMovementOfSelectedTargetImage(int fromIndex,
                                                                 int toIndex);
-
-  //
-  // functions for packaging and writing intermediate results
-  virtual void CopyEMRelatedNodesToMRMLScene(vtkMRMLScene* newScene);
-  virtual void CreatePackageFilenames(vtkMRMLScene* scene, 
-                                      const char* packageDirectoryName);
-  virtual bool CreatePackageDirectories(const char* packageDirectoryName);
-  virtual bool WritePackagedScene(vtkMRMLScene* scene);
 
   // Update intensity statistics for a particular tissue type.
   virtual void      UpdateIntensityDistributionFromSample(vtkIdType nodeID);
@@ -694,9 +683,8 @@ private:
                                                         int rowIndex,
                                                         int columnIndex);
   int TreeNodeDistributionLogCovarianceCorrectionEnabled(vtkIdType nodeID);
-
-
   //ETX
+
 };
 
 #endif

@@ -885,7 +885,7 @@ namespace eval EMSegmenterPreProcessingTcl {
         # Filter options - just set it here to make sure that if default values are changed this still works as it supposed to
         set CMD "$CMD --backgroundFillValue $backgroundLevel"
         set CMD "$CMD --interpolationMode Linear"
-        set CMD "$CMD --maskProcessingMode  ROIAUTO --ROIAutoDilateSize 3.0"
+        set CMD "$CMD --maskProcessingMode  ROIAUTO --ROIAutoDilateSize 3.0 --maskInferiorCutOffFromCenter 500.0 "
 
         # might be still wrong
         foreach TYPE $RegistrationType {
@@ -898,7 +898,7 @@ namespace eval EMSegmenterPreProcessingTcl {
             set CMD "$CMD --numberOfSamples 10000"
         }
 
-        set CMD "$CMD --numberOfIterations 1500 --minimumStepSize 0.005 --translationScale 1000.0 --reproportionScale 1.0 --skewScale 1.0 --splineGridSize 14,10,12 --maskInferiorCutOffFromCenter 1000.0  --fixedVolumeTimeIndex 0 --movingVolumeTimeIndex 0 --medianFilterSize 0,0,0 --numberOfHistogramBins 50 --numberOfMatchPoints 10 --useCachingOfBSplineWeightsMode ON --useExplicitPDFDerivativesMode AUTO --relaxationFactor 0.5 --maximumStepSize 0.2 --failureExitCode -1 --debugNumberOfThreads -1 --debugLevel 0 --costFunctionConvergenceFactor 1e+9 --projectedGradientTolerance 1e-5"
+        set CMD "$CMD --numberOfIterations 1500 --minimumStepSize 0.005 --translationScale 1000.0 --reproportionScale 1.0 --skewScale 1.0 --splineGridSize 14,10,12 --fixedVolumeTimeIndex 0 --movingVolumeTimeIndex 0 --medianFilterSize 0,0,0 --numberOfHistogramBins 50 --numberOfMatchPoints 10 --useCachingOfBSplineWeightsMode ON --useExplicitPDFDerivativesMode AUTO --relaxationFactor 0.5 --maximumStepSize 0.2 --failureExitCode -1 --debugNumberOfThreads -1 --debugLevel 0 --costFunctionConvergenceFactor 1e+9 --projectedGradientTolerance 1e-5"
 
          $LOGIC PrintText "TCL: Executing $CMD"
         catch { eval exec $CMD } errmsg

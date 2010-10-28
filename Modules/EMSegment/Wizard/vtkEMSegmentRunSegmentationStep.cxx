@@ -711,7 +711,7 @@ void vtkEMSegmentRunSegmentationStep::StartSegmentationCallback()
   progress->Create();
   progress->SetMessageText("Please wait until segmentation has been finished.");
   progress->Display();
-  int returnCode = logic->StartSegmentationWithoutPreprocessing();
+  int returnCode = logic->StartSegmentationWithoutPreprocessing(vtkSlicerApplication::SafeDownCast(this->GetGUI()->GetApplication()),this->GetGUI()->GetApplicationLogic());
   progress->SetParent(NULL);
   progress->Delete();
 

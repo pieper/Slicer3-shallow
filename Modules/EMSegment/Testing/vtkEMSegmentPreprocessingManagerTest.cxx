@@ -7,6 +7,8 @@
 #include "vtkMRMLEMSTargetNode.h"
 #include <stdexcept>
 #include <stdlib.h>
+#include "vtkSlicerApplication.h"
+#include "vtkSlicerApplicationLogic.h"
 
 int main(int vtkNotUsed(argc), char** argv)
 {
@@ -293,7 +295,19 @@ int main(int vtkNotUsed(argc), char** argv)
 
     //
     // start actual segmentation
-    emLogic->StartSegmentation();
+    vtkSlicerApplication* app;
+    app = vtkSlicerApplication::GetInstance();
+    app->PromptBeforeExitOff();
+  
+    vtkSlicerApplicationLogic* appLogic = vtkSlicerApplicationLogic::New();
+    emLogic->StartSegmentation(app,appLogic);
+
+    appLogic->Delete();
+    appLogic = NULL;
+
+    app->Delete();
+    app = NULL;
+ 
 
     if (m->GetTargetNumberOfSelectedVolumes() != 2)
       {
