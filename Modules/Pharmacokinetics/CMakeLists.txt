@@ -25,7 +25,7 @@ endif(NOT Slicer3_SOURCE_DIR)
 
 #-------------------------------------------------------------------
 # PkSolver is in a separate directory
-subdirs(PkSolver)
+add_subdirectory(PkSolver)
 
 # --------------------------------------------------------------------------
 # Include dirs
