@@ -71,7 +71,7 @@ public:
   //
   // MRML Related Methods.  The collection of MRML nodes for the
   // EMSegmenter is complicated.  Therefore, the management of these
-  // nodes are delagated to the vtkEMSegmentMRMLManager class.
+  // nodes are delegated to the vtkEMSegmentMRMLManager class.
   vtkGetObjectMacro(MRMLManager, vtkEMSegmentMRMLManager);
 
   //
@@ -207,7 +207,7 @@ private:
                                            vtkIdType nodeID);  
 
   //
-  // convienience methods for translating enums between algorithm and
+  // convenience methods for translating enums between algorithm and
   // this module
   virtual int
     ConvertGUIEnumToAlgorithmEnumStoppingConditionType(int guiEnumValue);

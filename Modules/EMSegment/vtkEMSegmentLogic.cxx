@@ -1676,29 +1676,32 @@ StartSegmentation(vtkSlicerApplication* app, vtkSlicerApplicationLogic *appLogic
 //----------------------------------------------------------------------------
 int vtkEMSegmentLogic::StartSegmentationWithoutPreprocessing(vtkSlicerApplication* app, vtkSlicerApplicationLogic *appLogic)
 {
-  if (!this->MRMLManager->GetWorkingDataNode()->GetAlignedTargetNodeIsValid() ||
-      !this->MRMLManager->GetWorkingDataNode()->GetAlignedAtlasNodeIsValid())
-    {
-    vtkErrorMacro("Preprocessing pipeline not up to date!  Aborting Segmentation.");
-    return EXIT_FAILURE;
-    }
-
   //
   // make sure we're ready to start
   //
   ErrorMsg.clear();
 
+  if (!this->MRMLManager->GetWorkingDataNode()->GetAlignedTargetNodeIsValid() ||
+      !this->MRMLManager->GetWorkingDataNode()->GetAlignedAtlasNodeIsValid())
+    {
+    ErrorMsg = "Preprocessing pipeline not up to date!  Aborting Segmentation.";
+    vtkErrorMacro( << ErrorMsg );
+    return EXIT_FAILURE;
+    }
+
+
   // find output volume
   if (!this->MRMLManager->GetSegmenterNode())
     {
-    vtkErrorMacro("Segmenter node is null---aborting segmentation.");
+    ErrorMsg     = "Segmenter node is null---aborting segmentation.";
+    vtkErrorMacro( << ErrorMsg );
     return EXIT_FAILURE;
     }
-  vtkMRMLScalarVolumeNode *outVolume = 
-    this->MRMLManager->GetOutputVolumeNode();
+  vtkMRMLScalarVolumeNode *outVolume = this->MRMLManager->GetOutputVolumeNode();
   if (outVolume == NULL)
     {
-    vtkErrorMacro("No output volume found---aborting segmentation.");
+    ErrorMsg     = "No output volume found---aborting segmentation.";
+    vtkErrorMacro( << ErrorMsg );
     return EXIT_FAILURE;
     }
 
@@ -1714,7 +1717,8 @@ int vtkEMSegmentLogic::StartSegmentationWithoutPreprocessing(vtkSlicerApplicatio
     SafeDownCast(this->GetMRMLScene()->GetNodeByID(inMRLMID));
   if (inVolume == NULL)
     {
-    vtkErrorMacro("Can't get first target image.");
+    ErrorMsg     = "Can't get first target image.";
+    vtkErrorMacro( "Can't get first target image." );
     return EXIT_FAILURE;
     }
 
@@ -1727,7 +1731,8 @@ int vtkEMSegmentLogic::StartSegmentationWithoutPreprocessing(vtkSlicerApplicatio
   vtkImageEMLocalSegmenter* segmenter = vtkImageEMLocalSegmenter::New();
   if (segmenter == NULL)
     {
-    vtkErrorMacro("Could not create vtkImageEMLocalSegmenter pointer");
+    ErrorMsg = "Could not create vtkImageEMLocalSegmenter pointer";
+    vtkErrorMacro( << ErrorMsg );
     return EXIT_FAILURE;
     }
 
@@ -1755,15 +1760,15 @@ int vtkEMSegmentLogic::StartSegmentationWithoutPreprocessing(vtkSlicerApplicatio
   //
   try 
     {
-    vtkstd::cerr << "[Start] Segmentation algorithm..." 
-                 << vtkstd::endl;
+    vtkstd::cerr << "[Start] Segmentation algorithm..." << vtkstd::endl;
     segmenter->Update();
     vtkstd::cerr << "[Done]  Segmentation algorithm." << vtkstd::endl;
     }
   catch (std::exception e)
     {
-      vtkErrorMacro("Exception thrown during segmentation: " << e.what());
-      ErrorMsg = "Exception thrown during segmentation: "  + std::string(e.what());
+    ErrorMsg = "Exception thrown during segmentation: "  + std::string(e.what());
+    vtkErrorMacro( << ErrorMsg );
+    //return EXIT_FAILURE;
     }
 
   if (this->GetDebug())
@@ -1781,7 +1786,7 @@ int vtkEMSegmentLogic::StartSegmentationWithoutPreprocessing(vtkSlicerApplicatio
   // copy result to output volume
   //
   
-  // set ouput of the filter to VolumeNode's ImageData
+  // set output of the filter to VolumeNode's ImageData
   vtkImageData* image = vtkImageData::New(); 
   image->ShallowCopy(segmenter->GetOutput());
   outVolume->SetAndObserveImageData(image);
@@ -1808,9 +1813,12 @@ int vtkEMSegmentLogic::StartSegmentationWithoutPreprocessing(vtkSlicerApplicatio
     std::cerr << "DONE" << std::endl;
     if (!savedResults)
       {
-      vtkErrorMacro("Error writing intermediate results");
+      ErrorMsg = "Error writing intermediate results";
+      vtkErrorMacro( << ErrorMsg );
+      return EXIT_FAILURE;
       }
     }
+
   return EXIT_SUCCESS;
 }
 
