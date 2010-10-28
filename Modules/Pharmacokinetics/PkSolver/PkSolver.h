@@ -15,9 +15,11 @@
 #ifndef PkSolver_h_
 #define PkSolver_h_
 
+#include "PkSolverWin32Header.h"
+
 namespace PkSolver {
 
-bool pk_solver (const int signalSize, const float* timeAxis, 
+bool PkSolver_EXPORT pk_solver (const int signalSize, const float* timeAxis, 
                 const float* PixelConcentrationCurve, 
                 const float* BloodConcentrationCurve, 
                 float& Ktrans, float& Ve, float& Fpv,
@@ -29,7 +31,7 @@ bool pk_solver (const int signalSize, const float* timeAxis,
                 const float hematocrit = 0.4f);
 
 
-bool convert_signal_to_concentration (const unsigned int signalSize, 
+bool PkSolver_EXPORT convert_signal_to_concentration (const unsigned int signalSize, 
                                       const float* SignalIntensityCurve, 
                                       const float T1, const float TR, const float FA,
                                       float*& concentration,
@@ -38,18 +40,18 @@ bool convert_signal_to_concentration (const unsigned int signalSize,
                                       const float S0GradThresh = 15.0f);
 
 
-void compute_derivative (const int signalSize, const float* SingnalY, float*& YDeriv);
-float get_signal_max (const int signalSize, const float* SignalY);
+void PkSolver_EXPORT compute_derivative (const int signalSize, const float* SingnalY, float*& YDeriv);
+float PkSolver_EXPORT get_signal_max (const int signalSize, const float* SignalY);
 
-bool compute_bolus_arrival_time (const int signalSize, const float* SignalY,
+bool PkSolver_EXPORT compute_bolus_arrival_time (const int signalSize, const float* SignalY,
                                 int& ArrivalTime, int& FirstPeak, float& MaxSlope);
 
-void compute_gradient (const int signalSize, const float* SignalY, float*& SignalGradient);
+void PkSolver_EXPORT compute_gradient (const int signalSize, const float* SignalY, float*& SignalGradient);
 
-float compute_s0_using_sumsignal_properties (const int signalSize, const float* SignalY, 
+float PkSolver_EXPORT compute_s0_using_sumsignal_properties (const int signalSize, const float* SignalY, 
                                              const short* lowGradIndex, const int FirstPeak);
 
-float compute_s0_individual_curve (const int signalSize, const float* SignalY, const float S0GradThresh);
+float PkSolver_EXPORT compute_s0_individual_curve (const int signalSize, const float* SignalY, const float S0GradThresh);
 
 };
 
