@@ -3,6 +3,7 @@
 #include "vtkCommand.h"
 #include "vtkKWWidget.h"
 #include "vtkKWMessageDialog.h"
+#include "vtkKWLoadSaveDialog.h"
 #include "vtkKWTkUtilities.h"
 #include "vtkSlicerApplication.h"
 #include "vtkSlicerApplicationGUI.h"
@@ -172,7 +173,15 @@ vtkSlicerCacheAndDataIOManagerGUI::~vtkSlicerCacheAndDataIOManagerGUI ( )
     }
   if ( this->ManagerTopLevel )
     {
+    vtkSlicerApplication *app = vtkSlicerApplication::SafeDownCast (this->GetApplication());
+    if ( app )
+      {
+      app->Script ( "grab release %s", this->ManagerTopLevel->GetWidgetName() );
+      }
+    this->ManagerTopLevel->Withdraw();
     this->ManagerTopLevel->SetParent ( NULL );
+    this->ManagerTopLevel->SetMasterWindow ( NULL );
+    this->ManagerTopLevel->SetApplication ( NULL );
     this->ManagerTopLevel->Delete();
     this->ManagerTopLevel = NULL;    
     }
@@ -225,8 +234,6 @@ void vtkSlicerCacheAndDataIOManagerGUI::RemoveGUIObservers ( )
   this->CacheLimitSpinBox->GetWidget()->RemoveObservers ( vtkKWSpinBox::SpinBoxValueChangedEvent, (vtkCommand *)this->GUICallbackCommand );
   this->CacheFreeBufferSizeSpinBox->GetWidget()->RemoveObservers ( vtkKWSpinBox::SpinBoxValueChangedEvent, (vtkCommand *)this->GUICallbackCommand );
   this->CacheDirectoryButton->GetWidget()->GetLoadSaveDialog()->RemoveObservers ( vtkKWTopLevel::WithdrawEvent, (vtkCommand *)this->GUICallbackCommand );
-
-  
 }
 
 //---------------------------------------------------------------------------
@@ -244,8 +251,6 @@ void vtkSlicerCacheAndDataIOManagerGUI::AddGUIObservers ( )
   this->CacheLimitSpinBox->GetWidget()->AddObserver ( vtkKWSpinBox::SpinBoxValueChangedEvent, (vtkCommand *)this->GUICallbackCommand );
   this->CacheFreeBufferSizeSpinBox->GetWidget()->AddObserver( vtkKWSpinBox::SpinBoxValueChangedEvent, (vtkCommand *)this->GUICallbackCommand );
   this->CacheDirectoryButton->GetWidget()->GetLoadSaveDialog()->AddObserver ( vtkKWTopLevel::WithdrawEvent, (vtkCommand *)this->GUICallbackCommand );
-
-
 }
 
 
@@ -256,8 +261,7 @@ void vtkSlicerCacheAndDataIOManagerGUI::ProcessGUIEvents ( vtkObject *caller,
   vtkKWPushButton *b = vtkKWPushButton::SafeDownCast ( caller );
 
   vtkKWSpinBox *sb = vtkKWSpinBox::SafeDownCast ( caller );
-  vtkKWTopLevel *lsb = vtkKWTopLevel::SafeDownCast ( caller );
-
+  vtkKWLoadSaveDialog *loadSaveDialog = vtkKWLoadSaveDialog::SafeDownCast ( caller );
 
   int ret=0;
 
@@ -360,18 +364,32 @@ void vtkSlicerCacheAndDataIOManagerGUI::ProcessGUIEvents ( vtkObject *caller,
     if ( sb == this->CacheLimitSpinBox->GetWidget() && event == vtkKWSpinBox::SpinBoxValueChangedEvent )
       {
       app->SetRemoteCacheLimit ((int)(this->CacheLimitSpinBox->GetWidget()->GetValue()) );
-      this->UpdateOverviewPanel();      
+      this->UpdateOverviewPanel();
       }
     else if ( sb == this->CacheFreeBufferSizeSpinBox->GetWidget() && event == vtkKWSpinBox::SpinBoxValueChangedEvent )
       {
       app->SetRemoteCacheFreeBufferSize((int)(this->CacheFreeBufferSizeSpinBox->GetWidget()->GetValue()) );
-      this->UpdateOverviewPanel();      
+      this->UpdateOverviewPanel();
       }
-    if ( lsb == this->CacheDirectoryButton->GetWidget()->GetLoadSaveDialog() && event == vtkKWTopLevel::WithdrawEvent )
+
+    if ( this->CacheDirectoryButton && this->CacheDirectoryButton->IsCreated() )
       {
-      app->SetRemoteCacheDirectory ( this->CacheDirectoryButton->GetWidget()->GetLoadSaveDialog()->GetFileName() );
-      this->UpdateOverviewPanel();      
+      if ( this->CacheDirectoryButton->GetWidget() && this->CacheDirectoryButton->GetWidget()->IsCreated() )
+        {
+        if ( this->CacheDirectoryButton->GetWidget()->GetLoadSaveDialog() && this->CacheDirectoryButton->GetWidget()->GetLoadSaveDialog()->IsCreated() )        
+          {
+          if ( loadSaveDialog == this->CacheDirectoryButton->GetWidget()->GetLoadSaveDialog() && event == vtkKWTopLevel::WithdrawEvent)
+            {
+            if ( const char *cd = this->CacheDirectoryButton->GetWidget()->GetLoadSaveDialog()->GetFileName() )
+              {
+              app->SetRemoteCacheDirectory ( cd );
+              this->UpdateOverviewPanel();
+              }
+            }
+          }
+        }
       }
+
     if ( c == this->ForceReloadCheckButton && event == vtkKWCheckButton::SelectedStateChangedEvent )
       {
       //--- application will update only if the value has changed;
@@ -504,7 +522,10 @@ void vtkSlicerCacheAndDataIOManagerGUI::ProcessMRMLEvents ( vtkObject *caller,
       }
     else if ( event == vtkCacheManager::SettingsUpdateEvent )
       {
-      this->CacheDirectoryButton->GetWidget()->GetLoadSaveDialog()->SetFileName( app0->GetRemoteCacheDirectory() );
+      if ( app0->GetRemoteCacheDirectory() != NULL ) 
+        {
+        this->CacheDirectoryButton->GetWidget()->GetLoadSaveDialog()->SetFileName( app0->GetRemoteCacheDirectory() );
+        }
       this->CacheLimitSpinBox->GetWidget()->SetValue(app0->GetRemoteCacheLimit() );
       this->CacheFreeBufferSizeSpinBox->GetWidget()->SetValue( app0->GetRemoteCacheFreeBufferSize() );
       }
@@ -671,14 +692,31 @@ void vtkSlicerCacheAndDataIOManagerGUI::UpdateOverviewPanel()
     {
     appGUI = app->GetApplicationGUI();
     }
-  
-  vtkDebugMacro("vtkSlicerCacheAndDataIOManagerGUI: Updating Overview Panel");
+  if ( app == NULL || appGUI == NULL )
+    {
+    vtkErrorMacro ( "Got NULL application or applicationGUI." );
+    return;
+    }
+
   if ( this->CacheManager != NULL )
     {
-    //---CacheSize:
+
+    //---CacheSize and location:
     sprintf ( txt, "%s", "" );
     if ( this->CacheManager->GetRemoteCacheDirectory() != NULL )
       {      
+      //location
+      if (this->CacheDirectoryButton && this->CacheDirectoryButton->GetWidget() )
+        {
+        if ( ( this->CacheDirectoryButton->GetWidget()->GetText() != NULL ) &&
+             ( app->GetRemoteCacheDirectory() != NULL ) &&
+             ( strcmp ( this->CacheDirectoryButton->GetWidget()->GetText(), app->GetRemoteCacheDirectory() )))
+          {
+          this->CacheDirectoryButton->GetWidget()->SetText(app->GetRemoteCacheDirectory());
+          this->CacheDirectoryButton->GetWidget()->GetLoadSaveDialog()->SetLastPath(app->GetRemoteCacheDirectory());
+          }
+        }
+      //size
       sz = this->CacheManager->ComputeCacheSize(this->CacheManager->GetRemoteCacheDirectory(), 0);
       if ( sz > this->CacheManager->GetRemoteCacheLimit() )
         {
@@ -947,7 +985,6 @@ void vtkSlicerCacheAndDataIOManagerGUI::Exit ( )
 void vtkSlicerCacheAndDataIOManagerGUI::TearDownGUI ( )
 {
   this->WithdrawManagerWindow();
-//  this->ManagerTopLevel->SetMasterWindow(NULL);
   this->Exit();
   if ( this->Built )
     {
@@ -970,12 +1007,11 @@ void vtkSlicerCacheAndDataIOManagerGUI::BuildGUI ( )
   if ( appGUI != NULL )
     {
     this->ManagerTopLevel = vtkKWTopLevel::New();
-    this->ManagerTopLevel->SetApplication ( app );
+//    this->ManagerTopLevel->SetApplication ( app );
     vtksys_stl::string title = "Cache & Remote Data I/O Manager Window";
   
     this->ManagerTopLevel->SetTitle(title.c_str());
-//    this->ManagerTopLevel->SetMasterWindow(master);
-    this->ManagerTopLevel->SetApplication ( app );
+    this->ManagerTopLevel->SetMasterWindow(appGUI->GetMainSlicerWindow());
     this->ManagerTopLevel->Create();
     this->ManagerTopLevel->SetBorderWidth ( 2 );
     this->ManagerTopLevel->SetReliefToFlat();
@@ -1178,38 +1214,34 @@ void vtkSlicerCacheAndDataIOManagerGUI::BuildGUI ( )
 
 
     //--- CacheDirectoryButton
-    if (!this->CacheDirectoryButton)
-      {
-      this->CacheDirectoryButton = vtkKWLoadSaveButtonWithLabel::New();
-      }
-
+    this->CacheDirectoryButton = vtkKWLoadSaveButtonWithLabel::New();
     this->CacheDirectoryButton->SetParent(this->ButtonFrame);
     this->CacheDirectoryButton->Create();
     this->CacheDirectoryButton->SetLabelText("Cache Directory:");
     this->CacheDirectoryButton->GetWidget()->TrimPathFromFileNameOff();
-    this->CacheDirectoryButton->GetWidget()
-      ->GetLoadSaveDialog()->ChooseDirectoryOn();
-    this->CacheDirectoryButton->GetWidget()
-      ->GetLoadSaveDialog()->SaveDialogOff();
-    this->CacheDirectoryButton->GetWidget()
-      ->GetLoadSaveDialog()->SetTitle("Select a directory for cached files");
-    this->CacheDirectoryButton->SetBalloonHelpString(
-                                                           "Remote Cache directory for downloded files.");
-    this->CacheDirectoryButton->GetWidget()->GetLoadSaveDialog()->SetFileName( app->GetRemoteCacheDirectory() );
-
+    this->CacheDirectoryButton->GetWidget()->GetLoadSaveDialog()->ChooseDirectoryOn();
+    this->CacheDirectoryButton->GetWidget()->GetLoadSaveDialog()->SaveDialogOff();
+    this->CacheDirectoryButton->GetWidget()->GetLoadSaveDialog()->SetTitle("Select a directory for cached files");
+    this->CacheDirectoryButton->GetWidget()->SetCommand(this, "RemoteCacheDirectoryCallback");
+    if ( this->CacheManager && this->CacheManager->GetRemoteCacheDirectory() )
+      {
+//      this->CacheDirectoryButton->GetWidget()->GetLoadSaveDialog()->SetFileName ( this->CacheManager->GetRemoteCacheDirectory());
+      }
+    this->CacheDirectoryButton->SetBalloonHelpString("Remote Cache directory for downloded files.");
+    
     //--- CacheLimitSpinBox
      if (!this->CacheLimitSpinBox)
-    {
-    this->CacheLimitSpinBox = vtkKWSpinBoxWithLabel::New();
-    }
-     this->CacheLimitSpinBox->SetParent(this->ButtonFrame);
-     this->CacheLimitSpinBox->Create();
-     this->CacheLimitSpinBox->SetLabelText("Cache Limit:");
-     this->CacheLimitSpinBox->GetWidget()->SetRestrictValueToInteger();
-     this->CacheLimitSpinBox->GetWidget()->SetWidth (6);
-     this->CacheLimitSpinBox->GetWidget()->SetRange(0,1000);
-     this->CacheLimitSpinBox->SetBalloonHelpString("Set the upper limit on the size of the cache directory (Mb).");
-     this->CacheLimitSpinBox->GetWidget()->SetValue(app->GetRemoteCacheLimit() );
+       {
+       this->CacheLimitSpinBox = vtkKWSpinBoxWithLabel::New();
+       this->CacheLimitSpinBox->SetParent(this->ButtonFrame);
+       this->CacheLimitSpinBox->Create();
+       this->CacheLimitSpinBox->SetLabelText("Cache Limit:");
+       this->CacheLimitSpinBox->GetWidget()->SetRestrictValueToInteger();
+       this->CacheLimitSpinBox->GetWidget()->SetWidth (6);
+       this->CacheLimitSpinBox->GetWidget()->SetRange(0,1000);
+       this->CacheLimitSpinBox->SetBalloonHelpString("Set the upper limit on the size of the cache directory (Mb).");
+       this->CacheLimitSpinBox->GetWidget()->SetValue(app->GetRemoteCacheLimit() );
+       }
 
      //--- CacheFreeBufferSizeSpinBox
      if (!this->CacheFreeBufferSizeSpinBox)
@@ -1244,6 +1276,19 @@ void vtkSlicerCacheAndDataIOManagerGUI::BuildGUI ( )
     
      this->Script ( "pack %s -side right -anchor n -padx 4 -pady 4", this->CloseButton->GetWidgetName() );
      this->Built = true;
+    }
+}
+
+//----------------------------------------------------------------------------
+void vtkSlicerCacheAndDataIOManagerGUI::RemoteCacheDirectoryCallback()
+{
+  vtkSlicerApplication *app
+    = vtkSlicerApplication::SafeDownCast(this->GetApplication());
+
+  if (app)
+    {
+    // Store the setting in the application object
+    app->SetRemoteCacheDirectory(this->CacheDirectoryButton->GetWidget()->GetLoadSaveDialog()->GetFileName());
     }
 }
 

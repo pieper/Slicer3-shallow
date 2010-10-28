@@ -128,6 +128,8 @@ public:
   virtual void DisplayManagerWindow ( );
   virtual void WithdrawManagerWindow ( );
 
+  void RemoteCacheDirectoryCallback();
+  
 protected:
   vtkSlicerCacheAndDataIOManagerGUI ( );
   virtual ~vtkSlicerCacheAndDataIOManagerGUI ( );
