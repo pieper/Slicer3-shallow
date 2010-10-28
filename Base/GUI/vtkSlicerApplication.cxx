@@ -1028,8 +1028,22 @@ void vtkSlicerApplication::RestoreApplicationSettingsFromRegistry()
                     << this->TemporaryDirectory);
     }
 
-  //--- Set up the cache directory -- use the temporary directory initially.
-  strcpy ( this->RemoteCacheDirectory, this->TemporaryDirectory);
+  //--- Set up the cache directory -- hang a RemoteIO dir off
+  //--- of the temporary directory initially.
+  std::string cacheString;
+  cacheString = this->TemporaryDirectory;
+  cacheString += "/RemoteIO";
+    //--- make sure directory is present
+  if (!vtksys::SystemTools::FileExists(cacheString.c_str()))
+    {
+    vtksys::SystemTools::MakeDirectory(cacheString.c_str());
+    }
+  //-- set directory if it is present.
+  if ( (vtksys::SystemTools::FileExists( cacheString.c_str())) &&
+       (vtksys::SystemTools::FileIsDirectory( cacheString.c_str()) ) )
+    {
+    strcpy ( this->RemoteCacheDirectory, cacheString.c_str() );
+    }
 
   //--- web browser
   // start with no browser...
