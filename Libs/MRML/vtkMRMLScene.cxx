@@ -2615,14 +2615,18 @@ GetReferencedSubScene(vtkMRMLNode *rnode, vtkMRMLScene* newScene)
   this->CopyRegisteredNodesToScene(newScene);
   newScene->SetSceneXMLString(this->GetSceneXMLString());
   newScene->SetLoadFromXMLString(1);
-ofstream myfile;
-myfile.open ("/tmp/bug-intermediate-results.mrml");
-myfile << this->GetSceneXMLString();
-myfile.close();
+
+  std::string url = std::string(newScene->GetURL());
+  std::string root = std::string(newScene->GetRootDirectory());
+  newScene->SetURL(this->GetURL());
+  newScene->SetRootDirectory(this->GetRootDirectory());
+
   newScene->Connect();
 
   this->SetSaveToXMLString(0);
   newScene->SetLoadFromXMLString(0);
+  newScene->SetURL(url.c_str());
+  newScene->SetRootDirectory(root.c_str());
 
   // 
   // get all nodes associated with this node
