@@ -761,7 +761,7 @@ Function WindowsVersionNotificationPage
       Abort
     ${EndIf}
     
-    !insertmacro MUI_HEADER_TEXT "Visual Studio Runtime" "MSVC 2008 runtime required"
+    !insertmacro MUI_HEADER_TEXT "Visual Studio 2008 Runtime" "Runtime not detected"
     
     ${NSD_CreateLabel} 0 0 100% 16u "Attention:"
     Pop $Label1
@@ -769,7 +769,7 @@ Function WindowsVersionNotificationPage
     CreateFont $1 "$(^Font)" "12"
     SendMessage $Label1 ${WM_SETFONT} $1 1 
 
-    ${NSD_CreateLabel} 0 16u 100% 35u "Slicer requires the Visual Studio 2008 runtime. Windows XP SP2 has been detected and may not have it installed. It is highly recommend that you install the latest Windows XP Service Pack or install the Visual Studio 2008 runtime by clicking the following link."
+    ${NSD_CreateLabel} 0 16u 100% 35u "Slicer requires the Visual Studio 2008 runtime and it was not detected on your System. It is highly recommend that you install the Visual Studio 2008 runtime by clicking the following link."
     Pop $Label2
 
     ${NSD_CreateLink} 0 51u 100% 12u "Please Click Here to be redirected to the Microsoft Visual Studio 2008 Runtime download page"
