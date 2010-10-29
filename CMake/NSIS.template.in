@@ -744,7 +744,7 @@ FunctionEnd
 
 Function onClickMyLink
   Pop $0 ; don't forget to pop HWND of the stack
-  ExecShell "open" "http://www.microsoft.com/downloads/en/details.aspx?FamilyID=9b2da534-3e03-4391-8a4d-074b9f2bc1bf&displaylang=en"
+  ExecShell "open" "http://www.microsoft.com/downloads/en/details.aspx?familyid=A5C84275-3B97-4AB7-A40D-3802B2AF5FC2&displaylang=en"
 FunctionEnd
 
 Var Dialog
@@ -752,8 +752,8 @@ Var Label1
 Var Label2
 
 Function WindowsVersionNotificationPage
-  ${If} ${IsWinXP}
-  ${AndIf} ${AtMostServicePack} 2
+  ${IfNot} ${FileExists} "$WINDIR\winsxs\x86_microsoft.vc90.crt_1fc8b3b9a1e18e3b_9.0.30729.1_none_e163563597edeada\msvcr90.dll"
+  ${AndIfNot} ${FileExists} "$WINDIR\winsxs\x86_Microsoft.VC90.CRT_1fc8b3b9a1e18e3b_9.0.30729.1_x-ww_6f74963e\msvcr90.dll"
     nsDialogs::Create 1018
     Pop $Dialog
 
@@ -775,9 +775,9 @@ Function WindowsVersionNotificationPage
     ${NSD_CreateLink} 0 51u 100% 12u "Please Click Here to be redirected to the Microsoft Visual Studio 2008 Runtime download page"
     Var /GLOBAL LINK 
     Pop $LINK 
-  ${NSD_OnClick} $LINK onClickMyLink
+    ${NSD_OnClick} $LINK onClickMyLink
 
-  nsDialogs::Show
+    nsDialogs::Show
   ${EndIf}
   
 FunctionEnd
