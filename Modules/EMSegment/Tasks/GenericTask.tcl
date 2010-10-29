@@ -467,9 +467,18 @@ namespace eval EMSegmenterPreProcessingTcl {
         variable subjectNode
         variable inputAtlasNode
         variable outputAtlasNode
-         $LOGIC PrintText "TCL: =========================================="
-         $LOGIC PrintText "TCL: == InitPreprocessing"
-         $LOGIC PrintText "TCL: =========================================="
+        $LOGIC PrintText "TCL: =========================================="
+        $LOGIC PrintText "TCL: == InitPreprocessing"
+        $LOGIC PrintText "TCL: =========================================="
+
+        # TODO: Check for
+        # - environment variables  and
+        # - command line executables
+        #set PLUGINS_DIR "$::env(Slicer3_PLUGINS_DIR)"
+        #if { $PLUGINS_DIR == "" } {
+        #    PrintError "InitPreProcessing: Environmet variable not set corretly"
+        #    return 1
+        #}
 
         # -----------------------------------------------------------
         # Check and set valid variables
@@ -763,7 +772,7 @@ namespace eval EMSegmenterPreProcessingTcl {
         variable GUI
         variable SCENE
         if { [file exists $FileName] == 0 } {
-            PrintError "ReadImageData: $FileName does not exist"
+            PrintError "ReadDataFromDisk: $FileName does not exist"
             return 0
         }
 
@@ -776,7 +785,7 @@ namespace eval EMSegmenterPreProcessingTcl {
         } elseif { "$Type" == "Transform" } {
             set dataReader [vtkMRMLTransformStorageNode New]
         } else {
-            PrintError "ReadImageData: Unkown type $Type"
+            PrintError "ReadDataFromDisk: Unkown type $Type"
             return 0
         }
 
@@ -786,7 +795,7 @@ namespace eval EMSegmenterPreProcessingTcl {
         $dataReader Delete
 
         if { $FLAG == 0 } {
-            PrintError "ReadDataFromFile : could not read file $FileName"
+            PrintError "ReadDataFromDisk : could not read file $FileName"
             return 0
         }
         return 1
@@ -900,21 +909,36 @@ namespace eval EMSegmenterPreProcessingTcl {
 
         set CMD "$CMD --numberOfIterations 1500 --minimumStepSize 0.005 --translationScale 1000.0 --reproportionScale 1.0 --skewScale 1.0 --splineGridSize 14,10,12 --fixedVolumeTimeIndex 0 --movingVolumeTimeIndex 0 --medianFilterSize 0,0,0 --numberOfHistogramBins 50 --numberOfMatchPoints 10 --useCachingOfBSplineWeightsMode ON --useExplicitPDFDerivativesMode AUTO --relaxationFactor 0.5 --maximumStepSize 0.2 --failureExitCode -1 --debugNumberOfThreads -1 --debugLevel 0 --costFunctionConvergenceFactor 1e+9 --projectedGradientTolerance 1e-5"
 
-         $LOGIC PrintText "TCL: Executing $CMD"
+        $LOGIC PrintText "TCL: Executing $CMD"
         catch { eval exec $CMD } errmsg
-         $LOGIC PrintText "TCL: $errmsg"
+        $LOGIC PrintText "TCL: $errmsg"
 
 
         # Read results back to scene
         # $::slicer3::ApplicationLogic RequestReadData [$outVolumeNode GetID] $outVolumeFileName 0 1
-        # Cannot do it that way bc vtkSlicerApplicationLogic needs a cachemanager, which is defined through vtkSlicerCacheAndDataIOManagerGUI.cxx
-        # instead
+        # Cannot do it that way bc vtkSlicerApplicationLogic needs a cachemanager,
+        # which is defined through vtkSlicerCacheAndDataIOManagerGUI.cxx
+        # instead:
+
+        # Test:
         # ReadDataFromDisk $outVolumeNode /home/pohl/Slicer3pohl/463_vtkMRMLScalarVolumeNode17.nrrd Volume
-        ReadDataFromDisk $outVolumeNode $outVolumeFileName Volume
+        if { [ReadDataFromDisk $outVolumeNode $outVolumeFileName Volume] == 0 } {
+            set nodeID [$SCENE GetNodeByID $transID]
+            if { $nodeID != "" } {
+                $SCENE RemoveNode $nodeID
+            }
+        }
 
+        # Test:
         # ReadDataFromDisk [$SCENE GetNodeByID $transID] /home/pohl/Slicer3pohl/EMSegmentLinearTransform.mat Transform
-        ReadDataFromDisk [$SCENE GetNodeByID $transID] $outTransformFileName Transform
+        if { [ReadDataFromDisk [$SCENE GetNodeByID $transID] $outTransformFileName Transform] == 0 } {
+            set nodeID [$SCENE GetNodeByID $transID]
+            if { $nodeID != "" } {
+                $SCENE RemoveNode $nodeID
+            }
+        }
 
+        # Test: 
         # $LOGIC PrintText "==> [[$SCENE GetNodeByID $transID] Print]"
 
         foreach NAME $RemoveFiles {
@@ -925,6 +949,7 @@ namespace eval EMSegmenterPreProcessingTcl {
         $movingVolumeNode SetAndObserveTransformNodeID ""
         $SCENE Edited
 
+        # return ID or ""
         return [$SCENE GetNodeByID $transID]
     }
 

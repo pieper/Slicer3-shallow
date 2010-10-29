@@ -84,9 +84,9 @@ namespace eval EMSegmenterPreProcessingTcl {
         variable iccMaskSelectID
         variable inhomogeneityCorrectionFlagID
 
-         $LOGIC PrintText "TCLMRI: =========================================="
-         $LOGIC PrintText "TCLMRI: == Preprocress Data"
-         $LOGIC PrintText "TCLMRI: =========================================="
+        $LOGIC PrintText "TCLMRI: =========================================="
+        $LOGIC PrintText "TCLMRI: == Preprocress Data"
+        $LOGIC PrintText "TCLMRI: =========================================="
         # ---------------------------------------
         # Step 1 : Initialize/Check Input
         if {[InitPreProcessing]} { 
@@ -102,7 +102,7 @@ namespace eval EMSegmenterPreProcessingTcl {
         # [GetVolumeMenuButtonValueFromMRML $iccMaskSelectID]
         set inhomogeneityCorrectionFlag [GetCheckButtonValueFromMRML $inhomogeneityCorrectionFlagID]
 
-         $LOGIC PrintText "TCLMRI: ==> Preprocessing Setting: $atlasAlignedFlag $inhomogeneityCorrectionFlag"
+        $LOGIC PrintText "TCLMRI: ==> Preprocessing Setting: $atlasAlignedFlag $inhomogeneityCorrectionFlag"
 
         if { ($atlasAlignedFlag == 0) && ($skullStrippedFlag == 1) } {
             PrintError "Run: We currently cannot align the atlas to skull stripped image"
@@ -196,9 +196,9 @@ namespace eval EMSegmenterPreProcessingTcl {
     # -------------------------------------
     proc GenerateICCMask { inputAtlasVolumeNode inputAtlasICCMaskNode subjectVolumeNode } {
         variable LOGIC
-         $LOGIC PrintText "TCLMRI: =========================================="
-         $LOGIC PrintText "TCLMRI: == Generate ICC MASK (not yet implemented)"
-         $LOGIC PrintText "TCLMRI: =========================================="
+        $LOGIC PrintText "TCLMRI: =========================================="
+        $LOGIC PrintText "TCLMRI: == Generate ICC MASK (not yet implemented)"
+        $LOGIC PrintText "TCLMRI: =========================================="
         set EXE_DIR "$::env(Slicer3_HOME)/bin"
         set PLUGINS_DIR "$::env(Slicer3_HOME)/lib/Slicer3/Plugins"
 
@@ -219,9 +219,9 @@ namespace eval EMSegmenterPreProcessingTcl {
         variable LOGIC
         variable subjectNode
         variable SCENE
-         $LOGIC PrintText "TCLMRI: =========================================="
-         $LOGIC PrintText "TCLMRI: == Intensity Correction "
-         $LOGIC PrintText "TCLMRI: =========================================="
+        $LOGIC PrintText "TCLMRI: =========================================="
+        $LOGIC PrintText "TCLMRI: == Intensity Correction "
+        $LOGIC PrintText "TCLMRI: =========================================="
         set n4Module ""
         foreach gui [vtkCommandLineModuleGUI ListInstances] {
             if { [$gui GetGUIName] == "N4ITK MRI Bias correction" } {
@@ -311,9 +311,9 @@ namespace eval EMSegmenterPreProcessingTcl {
     proc N4ITKBiasFieldCorrectionCLI { subjectNode subjectICCMaskNode } {
         variable SCENE
         variable LOGIC
-         $LOGIC PrintText "TCLMRI: =========================================="
-         $LOGIC PrintText "TCLMRI: ==     N4ITKBiasFieldCorrectionCLI      =="
-         $LOGIC PrintText "TCLMRI: =========================================="
+        $LOGIC PrintText "TCLMRI: =========================================="
+        $LOGIC PrintText "TCLMRI: ==     N4ITKBiasFieldCorrectionCLI      =="
+        $LOGIC PrintText "TCLMRI: =========================================="
 
         set PLUGINS_DIR "$::env(Slicer3_HOME)/lib/Slicer3/Plugins"
         set CMD "${PLUGINS_DIR}/N4ITKBiasFieldCorrection "
@@ -355,7 +355,7 @@ namespace eval EMSegmenterPreProcessingTcl {
             $outputVolume Delete
 
             set outVolumeFileName [ CreateTemporaryFileName $outVolumeNode ]
-             $LOGIC PrintText "$outVolumeFileName"
+            $LOGIC PrintText "$outVolumeFileName"
             if { $outVolumeFileName == "" } {
                 return 1
             }
@@ -372,7 +372,7 @@ namespace eval EMSegmenterPreProcessingTcl {
             # set CMD "$CMD --outputbiasfield $outbiasVolumeFileName"
 
             # execute algorithm
-             $LOGIC PrintText "TCLMRI: Executing $CMD"
+            $LOGIC PrintText "TCLMRI: Executing $CMD"
             catch { eval exec $CMD } errmsg
              $LOGIC PrintText "TCLMRI: $errmsg"
 
@@ -386,7 +386,7 @@ namespace eval EMSegmenterPreProcessingTcl {
 
             # still in for loop, create a list of Volumes
             set result "${result}$outVolumeNode "
-             $LOGIC PrintText "TCLMRI: List of volume nodes: $result"
+            $LOGIC PrintText "TCLMRI: List of volume nodes: $result"
         }
         # return a newSubjectVolumeNodeList
         return "$result"
@@ -404,9 +404,9 @@ namespace eval EMSegmenterPreProcessingTcl {
         variable LOGIC
         variable GUI
         variable mrmlManager
-         $LOGIC PrintText "TCLMRI: =========================================="
-         $LOGIC PrintText "TCLMRI: == Update Intensity Distribution "
-         $LOGIC PrintText "TCLMRI: =========================================="
+        $LOGIC PrintText "TCLMRI: =========================================="
+        $LOGIC PrintText "TCLMRI: == Update Intensity Distribution "
+        $LOGIC PrintText "TCLMRI: =========================================="
 
         # return [$mrmlManager ComputeIntensityDistributionsFromSpatialPrior [$LOGIC GetModuleShareDirectory] [$preGUI GetApplication]]
         if { [$LOGIC ComputeIntensityDistributionsFromSpatialPrior $GUI] } {
@@ -444,12 +444,12 @@ namespace eval EMSegmenterPreProcessingTcl {
         # Setup
         # ----------------------------------------------------------------
         if { $outputAtlasNode == "" } {
-             $LOGIC PrintText "TCLMRI: Aligned Atlas was empty"
+            $LOGIC PrintText "TCLMRI: Aligned Atlas was empty"
             #  $LOGIC PrintText "TCLMRI: set outputAtlasNode \[ $mrmlManager CloneAtlasNode $inputAtlasNode \"AlignedAtlas\"\] "
             set outputAtlasNode [ $mrmlManager CloneAtlasNode $inputAtlasNode "Aligned"]
             $workingDN SetAlignedAtlasNodeID [$outputAtlasNode GetID]
         } else {
-             $LOGIC PrintText "TCLMRI: Atlas was just synchronized"
+            $LOGIC PrintText "TCLMRI: Atlas was just synchronized"
             $mrmlManager SynchronizeAtlasNode $inputAtlasNode $outputAtlasNode "Aligned"
         }
 
@@ -533,7 +533,7 @@ namespace eval EMSegmenterPreProcessingTcl {
             # old Style
             set OffType [$mrmlManager GetRegistrationTypeFromString AtlasToTargetDeformableRegistrationOff]
 
-             $LOGIC PrintText "TCLMRI: Deformable registration $deformableType Off: $OffType"
+            $LOGIC PrintText "TCLMRI: Deformable registration $deformableType Off: $OffType"
             if { $deformableType == $OffType } {
                  $LOGIC PrintText "TCLMRI: Skipping deformable registration of atlas image"
             } else {
@@ -566,6 +566,7 @@ namespace eval EMSegmenterPreProcessingTcl {
             set backgroundLevel [$LOGIC GuessRegistrationBackgroundLevel $movingAtlasVolumeNode]
             set transformNode [BRAINSRegistration $fixedTargetVolumeNode $movingAtlasVolumeNode $outputAtlasVolumeNode $backgroundLevel "$registrationType" $fastFlag]
             if { $transformNode == "" } {
+                PrintError "RegisterAtlas: Transform node is null"
                 return 1
             }
         }
@@ -618,6 +619,12 @@ namespace eval EMSegmenterPreProcessingTcl {
         $workingDN SetAlignedAtlasNodeIsValid 1
         return 0
     }
+
+    proc PrintError { TEXT } {
+        variable LOGIC
+        $LOGIC PrintText "TCLMRI: ERROR: EMSegmenterPreProcessingTcl::${TEXT}"
+    }
+
 }
 
 
@@ -651,4 +658,9 @@ namespace eval EMSegmenterSimpleTcl {
     proc ValidateCheckList { } {
         return 0
     }
+
+    proc PrintError { TEXT } {
+         puts stderr "TCLMRI: ERROR:EMSegmenterSimpleTcl::${TEXT}"
+    }
 }
+
