@@ -1125,16 +1125,8 @@ int main(int argc, char** argv)
        }
      catch (...)
        {
-         throw std::runtime_error("ERROR: failed to run segmentation.");
+         throw std::runtime_error("ERROR: failed to run preprocessing/segmentation.");
        }
-
-     appLogic->Delete();
-     appLogic = NULL;  
-
-     app->Exit();
-     app->Delete();
-     app = NULL;
-
        
        }
     else 
@@ -1155,13 +1147,12 @@ int main(int argc, char** argv)
     }
   catch (std::runtime_error& e)
     {
-      std::cerr << e.what() << std::endl;
-      std::cerr << "Errors detected.  Segmentation failed." << std::endl;
+      std::cerr << "EMSegmentCommandline.cxx: Segmentation failed: " << e.what() << std::endl;
       segmentationSucceeded = false;
     }
   catch (...)
     {
-      std::cerr << "Unknown error detected.  Segmentation failed." << std::endl;
+      std::cerr << "EMSegmentCommandline.cxx: Unknown error detected.  Segmentation failed." << std::endl;
       segmentationSucceeded = false;
     }
    
@@ -1170,6 +1161,7 @@ int main(int argc, char** argv)
 
   if (segmentationSucceeded && !dontWriteResults)
     {
+
     //
     // save the results
     if (verbose) std::cerr << "Saving segmentation results..." << std::endl;
@@ -1267,6 +1259,12 @@ int main(int argc, char** argv)
   // clean up
   if (verbose) std::cerr << "Cleaning up...";
 
+  appLogic->Delete();
+  appLogic = NULL;  
+
+  app->Exit();
+  app->Delete();
+  app = NULL;
 
   // ------------------------------
   // DELETE
