@@ -629,8 +629,12 @@ void vtkMRMLScene::CopyRegisteredNodesToScene(vtkMRMLScene *scene)
 {
   if (scene) 
     {
-    scene->RegisteredNodeClasses = this->RegisteredNodeClasses;
-    scene->RegisteredNodeTags = this->RegisteredNodeTags;
+    vtkMRMLNode* node = NULL;
+    for (unsigned int i=0; i<this->RegisteredNodeClasses.size(); i++) 
+      {
+      node = this->RegisteredNodeClasses[i]->CreateNodeInstance();
+      scene->RegisterNodeClass(node);
+      }
     }
 }
 
@@ -902,7 +906,7 @@ int vtkMRMLScene::Commit(const char* url)
       {
       url = this->URL.c_str();
       }
-    else
+    else if (this->GetSaveToXMLString() == 0)
       {
       vtkErrorMacro("Commit: URL is not set");
       this->SetErrorCode(vtkErrorCode::GetErrorCodeFromString("CannotOpenFileError"));
