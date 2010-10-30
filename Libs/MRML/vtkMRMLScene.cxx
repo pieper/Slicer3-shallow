@@ -864,7 +864,12 @@ int vtkMRMLScene::LoadIntoScene(vtkCollection* nodeCollection)
         }
       }
     }
-  this->RootDirectory = vtksys::SystemTools::GetParentDirectory(this->GetURL());   
+
+  if (this->GetLoadFromXMLString()==0)
+    {
+    this->RootDirectory = vtksys::SystemTools::GetParentDirectory(this->GetURL()); 
+    }
+
   if ( this->RootDirectory[0] != '\0' )
     {
     this->RootDirectory = this->RootDirectory + vtksys_stl::string("/");
