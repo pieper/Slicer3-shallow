@@ -4514,8 +4514,8 @@ vtkEMSegmentMRMLManager::PrintVolumeInfo( vtkMRMLScene* mrmlScene)
     continue;
       } 
     // print volume node ID and name
-    vtkstd::cerr << "Volume Node ID / Name: " << volumeNode->GetID()
-              << " / " << volumeNode->GetName() << vtkstd::endl;
+    vtkstd::cerr << "Volume Node ID / Name / ImageData : " << volumeNode->GetID()
+         << " / " << volumeNode->GetName() << " / " << (volumeNode->GetImageData() ? "Defined" : "NULL")  << vtkstd::endl;
     // print display node id
     vtkstd::cerr << " Display Node ID: " 
               << (volumeNode->GetDisplayNode() ?
@@ -4527,7 +4527,7 @@ vtkEMSegmentMRMLManager::PrintVolumeInfo( vtkMRMLScene* mrmlScene)
     if (volumeNode->GetStorageNode()) 
       {
     vtkstd::cerr <<   (volumeNode->GetStorageNode()->GetID() ? volumeNode->GetStorageNode()->GetID() : "NULL") 
-                     << " " << (volumeNode->GetStorageNode()->GetFileName() ? volumeNode->GetStorageNode()->GetFileName() : "NULL") 
+                     << " / " << (volumeNode->GetStorageNode()->GetFileName() ? volumeNode->GetStorageNode()->GetFileName() : "NULL") 
                      << vtkstd::endl;
       } 
     else  

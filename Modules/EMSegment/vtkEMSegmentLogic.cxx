@@ -3220,8 +3220,7 @@ WritePackagedScene(vtkMRMLScene* scene)
       }
     if (volumeNode->GetImageData() == NULL)
       {
-      vtkWarningMacro("Volume data is null for volume node: " 
-                    << currentNode->GetID());
+    vtkWarningMacro("Volume data is null for volume node: " << currentNode->GetID() << " Name : " <<  (currentNode->GetName() ? currentNode->GetName(): "(none)" ));
       scene->RemoveNode(currentNode);
       allOK = false;
       continue;
