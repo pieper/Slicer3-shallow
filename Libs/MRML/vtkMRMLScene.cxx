@@ -634,6 +634,7 @@ void vtkMRMLScene::CopyRegisteredNodesToScene(vtkMRMLScene *scene)
       {
       node = this->RegisteredNodeClasses[i]->CreateNodeInstance();
       scene->RegisterNodeClass(node);
+      node->Delete();
       }
     }
 }
@@ -834,8 +835,8 @@ int vtkMRMLScene::Import()
 //------------------------------------------------------------------------------
 int vtkMRMLScene::LoadIntoScene(vtkCollection* nodeCollection)
 {
-  if (this->URL == "" && this->GetLoadFromXMLString()==0 || 
-      this->GetLoadFromXMLString() == 1 && this->GetSceneXMLString().empty()) 
+  if ((this->URL == "" && this->GetLoadFromXMLString()==0) || 
+      (this->GetLoadFromXMLString() == 1 && this->GetSceneXMLString().empty())) 
     {
     vtkErrorMacro("No URL specified");
     return 0;
