@@ -953,6 +953,175 @@ namespace eval EMSegmenterPreProcessingTcl {
         return [$SCENE GetNodeByID $transID]
     }
 
+    proc CMTKRegistration { fixedVolumeNode movingVolumeNode outVolumeNode backgroundLevel RegistrationType fastFlag} {
+        variable SCENE
+        variable LOGIC
+        variable GUI
+        $LOGIC PrintText "TCL: =========================================="
+        $LOGIC PrintText "TCL: == Image Alignment CommandLine: $RegistrationType "
+        $LOGIC PrintText "TCL: =========================================="
+
+        ## check arguments
+
+        if { $fixedVolumeNode == "" || [$fixedVolumeNode GetImageData] == "" } {
+            PrintError "CMTKRegistration: fixed volume node not correctly defined"
+            return ""
+        }
+
+        if { $movingVolumeNode == "" || [$movingVolumeNode GetImageData] == "" } {
+            PrintError "CMTKRegistration: moving volume node not correctly defined"
+            return ""
+        }
+
+        if { $outVolumeNode == "" } {
+            PrintError "CMTKRegistration: output volume node not correctly defined"
+            return ""
+        }
+
+        set fixedVolumeFileName [WriteDataToTemporaryDir $fixedVolumeNode Volume]
+        if { $fixedVolumeFileName == "" } {
+            # remove files
+            return ""
+        }
+        set RemoveFiles "$fixedVolumeFileName"
+
+
+        set movingVolumeFileName [WriteDataToTemporaryDir $movingVolumeNode Volume]
+        if { $movingVolumeFileName == "" } {
+            #remove files
+            return ""
+        }
+        set RemoveFiles "$RemoveFiles $movingVolumeFileName"
+
+
+        set outVolumeFileName [CreateTemporaryFileName $outVolumeNode]
+        if { $outVolumeFileName == "" } {
+            #remove files
+            return ""
+        }
+        set RemoveFiles "$RemoveFiles $outVolumeFileName"
+
+
+        # Do no worry about fileExtensions=".mat" type="linear" reference="movingVolume"
+        # these are set in vtkCommandLineModuleLogic.cxx automatically
+        if { [lsearch $RegistrationType "BSpline"] > -1 } {
+            set transformNode [vtkMRMLBSplineTransformNode New]
+            $transformNode SetName "EMSegmentBSplineTransform"
+            $SCENE AddNode $transformNode
+            set transID [$transformNode GetID]
+            set outTransformFileName [CreateTemporaryFileName $transformNode]
+            $transformNode Delete
+        } else {
+            set transformNode [vtkMRMLLinearTransformNode New]
+            $transformNode SetName "EMSegmentLinearTransform"
+            $SCENE AddNode $transformNode
+            set transID [$transformNode GetID]
+            set outTransformFileName [CreateTemporaryFileName $transformNode]
+            $transformNode Delete
+        }
+        set RemoveFiles "$RemoveFiles $outTransformFileName"
+
+
+        ## CMTK specific arguments
+
+        set PLUGINS_DIR "$::env(Slicer3_PLUGINS_DIR)"
+#        set CMD "${PLUGINS_DIR}/registration "
+
+        if { [lsearch $RegistrationType "BSpline"] > -1 } {
+            #TODO
+            set CMD "/home/domibel/Slicer3domibel/15383/CMTK4Slicer/warp"
+            set CMD "$CMD -o $outTransformFileName"
+        } else {
+            #TODO
+            set CMD "/home/domibel/Slicer3domibel/15383/CMTK4Slicer/registrationx"
+            set CMD "$CMD -o $outTransformFileName"
+            set CMD "$CMD --auto_multi_levels 0 "
+            set CMD "$CMD --delta_f_threshold 0 --sampling 1 --coarsest -1 --init fov --registration_metric nmi"
+            set CMD "$CMD --interpolation automatic --force_outside_value 0"
+        }
+
+
+        # Write Parameters
+        set fixedVolume [$fixedVolumeNode GetImageData]
+        set scalarType [$fixedVolume GetScalarTypeAsString]
+#        switch -exact "$scalarType" {
+#            "bit" { set CMD "$CMD --outputVolumePixelType binary" }
+#            "unsigned char" { set CMD "$CMD --outputVolumePixelType uchar" }
+#            "unsigned short" { set CMD "$CMD --outputVolumePixelType ushort" }
+#            "unsigned int" { set CMD "$CMD --outputVolumePixelType uint" }
+#            "short" -
+#            "int" -
+#            "float" { set CMD "$CMD --outputVolumePixelType $scalarType" }
+#            default {
+#                PrintError "CMTKRegistration: cannot resample a volume of type $scalarType"
+#                return ""
+#            }
+#        }
+
+        # Filter options - just set it here to make sure that if default values are changed this still works as it supposed to
+#        set CMD "$CMD --backgroundFillValue $backgroundLevel"
+#        set CMD "$CMD --interpolationMode Linear"
+#        set CMD "$CMD --maskProcessingMode  ROIAUTO --ROIAutoDilateSize 3.0 --maskInferiorCutOffFromCenter 500.0 "
+
+
+        if {$fastFlag} {
+#            set CMD "$CMD --numberOfSamples 1000"
+        } else {
+#            set CMD "$CMD --numberOfSamples 10000"
+        }
+
+        set CMD "$CMD --write-reformatted $outVolumeFileName"
+        set CMD "$CMD $fixedVolumeFileName"
+        set CMD "$CMD $movingVolumeFileName"
+
+
+        ## execute command
+
+        $LOGIC PrintText "TCL: Executing $CMD"
+        catch { eval exec $CMD } errmsg
+        $LOGIC PrintText "TCL: $errmsg"
+
+
+        ## Read results back to scene
+
+        # $::slicer3::ApplicationLogic RequestReadData [$outVolumeNode GetID] $outVolumeFileName 0 1
+        # Cannot do it that way bc vtkSlicerApplicationLogic needs a cachemanager,
+        # which is defined through vtkSlicerCacheAndDataIOManagerGUI.cxx
+        # instead:
+
+        # Test:
+        # ReadDataFromDisk $outVolumeNode /home/pohl/Slicer3pohl/463_vtkMRMLScalarVolumeNode17.nrrd Volume
+        if { [ReadDataFromDisk $outVolumeNode $outVolumeFileName Volume] == 0 } {
+            set nodeID [$SCENE GetNodeByID $transID]
+            if { $nodeID != "" } {
+                $SCENE RemoveNode $nodeID
+            }
+        }
+
+        # Test:
+        # ReadDataFromDisk [$SCENE GetNodeByID $transID] /home/pohl/Slicer3pohl/EMSegmentLinearTransform.mat Transform
+        if { [ReadDataFromDisk [$SCENE GetNodeByID $transID] $outTransformFileName Transform] == 0 } {
+            set nodeID [$SCENE GetNodeByID $transID]
+            if { $nodeID != "" } {
+                $SCENE RemoveNode $nodeID
+            }
+        }
+
+        # Test: 
+        # $LOGIC PrintText "==> [[$SCENE GetNodeByID $transID] Print]"
+
+        foreach NAME $RemoveFiles {
+            file delete -force $NAME
+        }
+
+        # Remove Transformation from image
+        $movingVolumeNode SetAndObserveTransformNodeID ""
+        $SCENE Edited
+
+        # return ID or ""
+        return [$SCENE GetNodeByID $transID]
+    }
+
     proc CheckAndCorrectClassCovarianceMatrix {parentNodeID } {
     variable mrmlManager
         variable LOGIC

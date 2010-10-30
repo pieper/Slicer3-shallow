@@ -564,7 +564,13 @@ namespace eval EMSegmenterPreProcessingTcl {
             }
 
             set backgroundLevel [$LOGIC GuessRegistrationBackgroundLevel $movingAtlasVolumeNode]
-            set transformNode [BRAINSRegistration $fixedTargetVolumeNode $movingAtlasVolumeNode $outputAtlasVolumeNode $backgroundLevel "$registrationType" $fastFlag]
+
+            if { 1 } {
+                set transformNode [BRAINSRegistration $fixedTargetVolumeNode $movingAtlasVolumeNode $outputAtlasVolumeNode $backgroundLevel "$registrationType" $fastFlag]
+            } else {
+                set transformNode [CMTKRegistration $fixedTargetVolumeNode $movingAtlasVolumeNode $outputAtlasVolumeNode $backgroundLevel "$registrationType" $fastFlag]
+            }
+
             if { $transformNode == "" } {
                 PrintError "RegisterAtlas: Transform node is null"
                 return 1
