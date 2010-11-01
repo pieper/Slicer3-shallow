@@ -2384,11 +2384,41 @@ ConvertGUIEnumToAlgorithmEnumInterpolationType(int guiEnumValue)
 }
 
 //----------------------------------------------------------------------------
-vtksys_stl::string  vtkEMSegmentLogic::GetTclTaskDirectory()
+vtksys_stl::string  vtkEMSegmentLogic::GetTclTaskDirectory(vtkSlicerApplication* app)
 {
   // Later do automatically
-  vtksys_stl::string file_path = this->GetModuleShareDirectory() + vtksys_stl::string("/Tasks");
-  return vtksys::SystemTools::ConvertToOutputPath(file_path.c_str());
+  vtksys_stl::string orig_task_dir = this->GetModuleShareDirectory() + vtksys_stl::string("/Tasks");
+
+
+  //workaround for the mrml library, we need to have write access to this folder
+  const char* tmp_dir = app->GetTemporaryDirectory();
+  if (tmp_dir)
+    {
+      std::string copied_task_dir(std::string(tmp_dir) + std::string("/EMSegmentTask"));
+
+      /**
+        * Copy content directory to another directory with all files and
+        * sub-directories.  If the "always" argument is true all files are
+        * always copied.  If it is false, only files that have changed or
+        * are new are copied.
+        */
+      // copy not always, only new files
+      if (!vtksys::SystemTools::CopyADirectory(orig_task_dir.c_str(), copied_task_dir.c_str(), false, true) )
+      {
+          vtkErrorMacro("GetTclTaskDirectory:: Couldn't copy task directory");
+          return vtksys::SystemTools::ConvertToOutputPath("");
+      }
+      return vtksys::SystemTools::ConvertToOutputPath(copied_task_dir.c_str());
+    }
+  else
+    {
+      // FIXME, make sure there is always a valid temporary directory
+      vtkErrorMacro("GetTclTaskDirectory:: Tcl Task Directory was not found, set temporary directory first");
+    }
+
+  // return empty string if not found
+  return vtksys::SystemTools::ConvertToOutputPath("");
+
 }
 
 //----------------------------------------------------------------------------
@@ -2517,7 +2547,7 @@ void vtkEMSegmentLogic::UpdateIntensityDistributionAuto(vtkKWApplication* app, v
   
 
   //
-  // propogate data to mrml node
+  // propagate data to mrml node
   //
 
   vtkMRMLEMSTreeParametersLeafNode* leafNode = this->MRMLManager->GetTreeNode(nodeID)->GetParametersNode()->GetLeafParametersNode();  
@@ -2563,6 +2593,7 @@ void  vtkEMSegmentLogic::AutoCorrectSpatialPriorWeight(vtkIdType nodeID)
 // cannot be moved to vtkEMSEgmentGUI bc of command line interface !
 vtksys_stl::string vtkEMSegmentLogic::GetTemporaryTaskDirectory(vtkSlicerApplication* app)
 {
+  // FIXME, what happens if user has no write permission to this directory
   std::string taskDir("");
   if (!app)
     {
@@ -2577,6 +2608,7 @@ vtksys_stl::string vtkEMSegmentLogic::GetTemporaryTaskDirectory(vtkSlicerApplica
     }
   else
     {
+      // FIXME, make sure there is always a valid temporary directory
       vtkErrorMacro("GetTemporaryTaskDirectory:: Temporary Directory was not defined");
     }
   return taskDir;
@@ -2586,7 +2618,7 @@ vtksys_stl::string vtkEMSegmentLogic::GetTemporaryTaskDirectory(vtkSlicerApplica
 // cannot be moved to vtkEMSEgmentGUI bc of command line interface !
 std::string vtkEMSegmentLogic::DefineTclTaskFullPathName(vtkSlicerApplication* app, const char* TclFileName)
 {
-  vtksys_stl::string tmp_full_file_path = this->GetTclTaskDirectory() + vtksys_stl::string("/") + vtksys_stl::string(TclFileName);
+  vtksys_stl::string tmp_full_file_path = this->GetTclTaskDirectory(app) + vtksys_stl::string("/") + vtksys_stl::string(TclFileName);
   vtksys_stl::string full_file_path = vtksys::SystemTools::ConvertToOutputPath(tmp_full_file_path.c_str());
   if (vtksys::SystemTools::FileExists(full_file_path.c_str()))
     {

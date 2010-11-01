@@ -1193,7 +1193,7 @@ void vtkEMSegmentParametersSetStep::DefineDefaultTasksList()
   this->DefinePreprocessingTasksName.clear();
   this->DefinePreprocessingTasksFile.clear();
 
-  this->AddDefaultTasksToList(this->GetGUI()->GetLogic()->GetTclTaskDirectory().c_str());
+  this->AddDefaultTasksToList(this->GetGUI()->GetLogic()->GetTclTaskDirectory(this->GetSlicerApplication()).c_str());
   this->AddDefaultTasksToList(this->GetGUI()->GetLogic()->GetTemporaryTaskDirectory(this->GetSlicerApplication()).c_str());
  
   if (!this->pssDefaultTasksFile.size()) 

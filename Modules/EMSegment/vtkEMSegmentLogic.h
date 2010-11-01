@@ -49,7 +49,7 @@ public:
 
 
   //BTX
-  std::string GetTclTaskDirectory();
+  std::string GetTclTaskDirectory(vtkSlicerApplication* app);
   std::string GetTclGeneralDirectory();
   std::string DefineTclTaskFileFromMRML(vtkSlicerApplication *app);
   std::string DefineTclTaskFullPathName(vtkSlicerApplication* app, const char* TclFileName);
