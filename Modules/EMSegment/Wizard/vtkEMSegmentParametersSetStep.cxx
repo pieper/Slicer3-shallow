@@ -201,6 +201,10 @@ void vtkEMSegmentParametersSetStep::ShowUserInterface()
 
 
   this->UpdateLoadedParameterSets();
+
+  // Don't show any tasks - call undocumented function from vtkKWMenu/vtkKWMenuButtonWithLabel
+  this->ParameterSetMenuButton->GetWidget()->GetMenu()->DeselectItem(0);
+
 }
 
 //----------------------------------------------------------------------------
@@ -656,7 +660,7 @@ void vtkEMSegmentParametersSetStep::UpdateLoadedParameterSets()
       if (name && strcmp(sel_value.c_str(), name) == 0)
         {
         menuButton->GetMenu()->SelectItem(index);
-        return;
+        break;
         }
       }
     }
