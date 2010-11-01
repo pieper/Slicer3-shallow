@@ -29,19 +29,6 @@
       <channel>input</channel>
     </image>
 
-    <!--
-    <string-enumeration>
-      <name>initializeTransformMode</name>
-      <longflag>initializeTransformMode</longflag>
-      <label>Intitialze Transform Mode</label>
-      <description>Determine how to initialize the transform center.  GeometryAlign on assumes that the center of the voxel lattice of the images represent similar structures.  MomentsAlign assumes that the center of mass of the images represent similar structures.  useCenterOfHeadAlign attempts to use the top of head and shape of neck to drive a center of mass estimate.  Off assumes that the physical space of the images are close, and that centering in terms of the image Origins is a good starting point.  This flag is mutually exclusive with the initialTransform flag.</description>
-      <default>useGeometryAlign</default>
-      <element>Off</element>
-      <element>useMomentsAlign</element>
-      <element>useCenterOfHeadAlign</element>
-      <element>useGeometryAlign</element>
-    </string-enumeration>
-    -->
 
   </parameters>
   <!-- -->
@@ -56,27 +43,19 @@
       <description>Filename of transform used to initialize the registration.  This CAN NOT be used with either CenterOfHeadLAlign, MomentsAlign, GeometryAlign, or initialTransform file.</description>
       <channel>input</channel>
     </transform>
-    <boolean>
-       <name>useMomentsAlign</name>
-       <longflag>useMomentsAlign</longflag>
-       <label>Initialize with MomentsAlign registration phase</label>
-       <description>MomentsAlign assumes that the center of mass of the images represent similar structures.  Perform a MomentsAlign registration as part of the sequential registration steps.   This option MUST come first, and CAN NOT be used with either CenterOfHeadLAlign, GeometryAlign, or initialTransform file.  This family of options superceeds the use of transformType if any of them are set.</description>
-       <default>false</default>
-    </boolean>
-    <boolean>
-       <name>useGeometryAlign</name>
-       <longflag>useGeometryAlign</longflag>
-       <label>Initialize with GeometryCenterAlign registration phase</label>
-       <description>GeometryAlign on assumes that the center of the voxel lattice of the images represent similar structures. Perform a GeometryCenterAlign registration as part of the sequential registration steps.   This option MUST come first, and CAN NOT be used with either MomentsAlign, CenterOfHeadAlign, or initialTransform file.  This family of options superceeds the use of transformType if any of them are set.</description>
-       <default>false</default>
-    </boolean>
-    <boolean>
-       <name>useCenterOfHeadAlign</name>
-       <longflag>useCenterOfHeadAlign</longflag>
-       <label>Initialize with CenterOfHeadAlign registration phase</label>
-       <description>CenterOfHeadAlign attempts to find a hemisphere full of foreground voxels from the superior direction as an estimate of where the center of a head shape would be to drive a center of mass estimate.  Perform a CenterOfHeadAlign registration as part of the sequential registration steps.   This option MUST come first, and CAN NOT be used with either MomentsAlign, GeometryAlign, or initialTransform file.  This family of options superceeds the use of transformType if any of them are set.</description>
-       <default>false</default>
-    </boolean>
+
+    <string-enumeration>
+      <name>initializeTransformMode</name>
+      <longflag>initializeTransformMode</longflag>
+      <label>Intitialze Transform Mode</label>
+      <description>Determine how to initialize the transform center.  GeometryAlign on assumes that the center of the voxel lattice of the images represent similar structures.  MomentsAlign assumes that the center of mass of the images represent similar structures.  useCenterOfHeadAlign attempts to use the top of head and shape of neck to drive a center of mass estimate.  Off assumes that the physical space of the images are close, and that centering in terms of the image Origins is a good starting point.  This flag is mutually exclusive with the initialTransform flag.</description>
+      <default>Off</default>
+      <element>Off</element>
+      <element>useMomentsAlign</element>
+      <element>useCenterOfHeadAlign</element>
+      <element>useGeometryAlign</element>
+    </string-enumeration>
+
     <boolean>
        <name>useRigid</name>
        <longflag>useRigid</longflag>
@@ -210,8 +189,8 @@
     </integer>
 
     <double-vector>
-      <name>minimumStepSize</name>
-      <longflag>minimumStepSize</longflag>
+      <name>minimumStepLength</name>
+      <longflag deprecatedalias="minimumStepSize">minimumStepLength</longflag>
       <label>Minimum Step Size</label>
       <description>Each step in the optimization takes steps at least this big.  When none are possible, registration is complete.</description>
       <default>0.005</default>
@@ -300,12 +279,13 @@
       <name>interpolationMode</name>
       <longflag>interpolationMode</longflag>
       <label>Interpolation Mode</label>
-      <description>Type of interpolation to be used when applying transform to moving volume.  Options are Linear, NearestNeighbor, BSpline, or WindowedSinc</description>
+      <description>Type of interpolation to be used when applying transform to moving volume.  Options are Linear, NearestNeighbor, BSpline, WindowedSinc, or RigidInPlace.  The RigidInPlace option will create an image with the same discrete voxel values and will adjust the origin and direction of the physical space interpretation.</description>
       <default>Linear</default>
       <element>NearestNeighbor</element>
       <element>Linear</element>
       <element>BSpline</element>
       <element>WindowedSinc</element>
+      <element>RigidInPlace</element>
     </string-enumeration>
   </parameters>
   <!-- -->
@@ -444,6 +424,14 @@
     </double>
 
     <double>
+      <name>ROIAutoClosingSize</name>
+      <longflag>ROIAutoClosingSize</longflag>
+      <label> ROIAuto Closing Size</label>
+      <description>This flag is only relavent when using ROIAUTO mode for initializing masks.  It defines the hole closing size in mm.  It is rounded up to the nearest whole pixel size in each direction. The default is to use a closing size of 9mm.  For mouse data this value may need to be reset to 0.9 or smaller.</description>
+      <default>9.0</default>
+    </double>
+
+    <double>
       <name>relaxationFactor</name>
       <longflag>relaxationFactor</longflag>
       <label>Relaxation Factor</label>
@@ -452,8 +440,8 @@
     </double>
 
     <double>
-      <name>maximumStepSize</name>
-      <longflag>maximumStepSize</longflag>
+      <name>maximumStepLength</name>
+      <longflag deprecatedalias="maximumStepSize">maximumStepLength</longflag>
       <label>Maximum Step Size</label>
       <description>Internal debugging parameter, and should probably never be used from the command line.  This will be removed in the future.</description>
       <default>0.2</default>
@@ -523,6 +511,28 @@
   <parameters advanced="true">
     <label>Risky Expert-only Parameters</label>
 
+    <boolean>
+       <name>useMomentsAlign</name>
+       <longflag deprecatedalias="useMomentsAlign">NEVER_USE_THIS_FLAG_IT_IS_OUTDATED_00</longflag>
+       <label>Initialize with MomentsAlign registration phase</label>
+       <description>MomentsAlign assumes that the center of mass of the images represent similar structures.  Perform a MomentsAlign registration as part of the sequential registration steps.   This option MUST come first, and CAN NOT be used with either CenterOfHeadLAlign, GeometryAlign, or initialTransform file.  This family of options superceeds the use of transformType if any of them are set.</description>
+       <default>false</default>
+    </boolean>
+    <boolean>
+       <name>useGeometryAlign</name>
+       <longflag deprecatedalias="useGeometryAlign">NEVER_USE_THIS_FLAG_IT_IS_OUTDATED_01</longflag>
+       <label>Initialize with GeometryCenterAlign registration phase</label>
+       <description>GeometryAlign on assumes that the center of the voxel lattice of the images represent similar structures. Perform a GeometryCenterAlign registration as part of the sequential registration steps.   This option MUST come first, and CAN NOT be used with either MomentsAlign, CenterOfHeadAlign, or initialTransform file.  This family of options superceeds the use of transformType if any of them are set.</description>
+       <default>false</default>
+    </boolean>
+    <boolean>
+       <name>useCenterOfHeadAlign</name>
+       <longflag deprecatedalias="useCenterOfHeadAlign">NEVER_USE_THIS_FLAG_IT_IS_OUTDATED_02</longflag>
+       <label>Initialize with CenterOfHeadAlign registration phase</label>
+       <description>CenterOfHeadAlign attempts to find a hemisphere full of foreground voxels from the superior direction as an estimate of where the center of a head shape would be to drive a center of mass estimate.  Perform a CenterOfHeadAlign registration as part of the sequential registration steps.   This option MUST come first, and CAN NOT be used with either MomentsAlign, GeometryAlign, or initialTransform file.  This family of options superceeds the use of transformType if any of them are set.</description>
+       <default>false</default>
+    </boolean>
+
     <integer-vector>
       <name>permitParameterVariation</name>
       <longflag>permitParameterVariation</longflag>
@@ -530,24 +540,16 @@
       <description>A bit vector to permit linear transform parameters to vary under optimization.  The vector order corresponds with transform parameters, and beyond the end ones fill in as a default.  For instance, you can choose to rotate only in x (pitch) with 1,0,0;  this is mostly for expert use in turning on and off individual degrees of freedom in rotation, translation or scaling without multiplying the number of transform representations; this trick is probably meaningless when tried with the general affine transform.</description>
       <default></default>
     </integer-vector>
-<!-- //No longer in use
-    <integer-vector>
-      <name>fixedVolumeOrigin</name>
-      <longflag>fixedVolumeOrigin</longflag>
-      <label>Fixed Image Origin</label>
-      <description>The coordinates of the origin of the fixed image.  This will over-ride the information read from disk and is VERY DANGEROUS.</description>
-      <default>0,0,0</default>
-    </integer-vector>
-
-    <integer-vector>
-      <name>movingVolumeOrigin</name>
-      <longflag>movingVolumeOrigin</longflag>
-      <label>Moving Image Origin</label>
-      <description>The coordinates of the origin of the moving image.  This will over-ride the information read from disk and is VERY DANGEROUS.</description>
-      <default>0,0,0</default>
-    </integer-vector>
-    -->
-
+    <string-enumeration>
+        <name>costMetric</name>
+        <longflag>costMetric</longflag>
+        <label>Cost Metric</label>
+        <description>The cost metric to be used during fitting. Options are MSE (Mean Square Error), MMI (Mattes Mutual Information), NC (Normalized Correlation)</description>
+        <default>MMI</default>
+        <element>MMI</element>
+        <element>MSE</element>
+        <element>NC</element>
+    </string-enumeration>
   </parameters>
 
 </executable>
