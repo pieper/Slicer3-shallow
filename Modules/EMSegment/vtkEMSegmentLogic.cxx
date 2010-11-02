@@ -2535,7 +2535,7 @@ void vtkEMSegmentLogic::UpdateIntensityDistributionAuto(vtkKWApplication* app, v
    // Sample
   {
     vtksys_stl::stringstream CMD ;
-    CMD <<  "::EMSegmenterAutoSampleTcl::EMSegmentGaussCurveCalculationFromID " << vtkKWTkUtilities::GetTclNameFromPointer(app->GetMainInterp(), this->MRMLManager) << " 0.95 1 { " ;
+    CMD <<  "::EMSegmenterAutoSampleTcl::EMSegmentGaussCurveCalculationFromID " << vtkKWTkUtilities::GetTclNameFromPointer(app->GetMainInterp(), this) << " " << vtkKWTkUtilities::GetTclNameFromPointer(app->GetMainInterp(), this->MRMLManager) << " 0.95 1 { " ;
     for (int i = 0 ; i < numTargetImages; i++) {
       CMD << workingTarget->GetNthVolumeNodeID(i) << " " ;
     }

@@ -5201,8 +5201,6 @@ void  vtkEMSegmentMRMLManager::SetTreeNodeDistributionLogCovarianceOffDiagonal(v
     }
 }
 
-
-
 bool vtkEMSegmentMRMLManager::IsTreeNodeDistributionLogCovarianceWithCorrectionInvertableAndSemiDefinite(vtkIdType nodeID)
 {
  vtkMRMLEMSTreeParametersLeafNode* node = this->GetTreeParametersLeafNode(nodeID);
@@ -5249,5 +5247,26 @@ bool vtkEMSegmentMRMLManager::IsTreeNodeDistributionLogCovarianceWithCorrectionI
   delete[] invMatrix;
   delete[] matrix;
   return flag;
+}
+
+
+void vtkEMSegmentMRMLManager::ResetLogCovarianceCorrectionOfAllNodes()
+{
+  this->ResetLogCovarianceCorrectionsOfAllNodes(this->GetTreeRootNodeID());
+} 
+
+void vtkEMSegmentMRMLManager::ResetLogCovarianceCorrectionsOfAllNodes(vtkIdType rootID)
+{
+  if (this->GetTreeParametersLeafNode(rootID))
+    {
+      this->ResetTreeNodeDistributionLogCovarianceCorrection(rootID);
+    }
+
+  int numChildren = this->GetTreeNodeNumberOfChildren(rootID); 
+  for (int i = 0; i < numChildren; ++i)
+      {
+    vtkIdType childID = this->GetTreeNodeChildNodeID(rootID, i);
+    this->ResetLogCovarianceCorrectionsOfAllNodes(childID);
+      }
 }
 

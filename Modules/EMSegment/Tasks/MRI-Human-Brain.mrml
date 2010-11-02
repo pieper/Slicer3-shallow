@@ -64,7 +64,7 @@
  <EMSClassInteractionMatrix
   id="vtkMRMLEMSClassInteractionMatrixNode6"  name="vtkMRMLEMSClassInteractionMatrixNode6"  hideFromEditors="false"  selectable="true"  selected="false"   West=""    North=""    Up=""    East=""    South=""    Down=""  ></EMSClassInteractionMatrix>
  <EMSTreeParametersLeaf
-  id="vtkMRMLEMSTreeParametersLeafNode6"  name="vtkMRMLEMSTreeParametersLeafNode6"  hideFromEditors="false"  selectable="true"  selected="false" PrintQuality="0"  IntensityLabel="5"  LogMean="3.51908 0 "  LogMeanCorrection="6.09801e-06 0 "  LogCovariance="0.324704 0 | 0 0 "  LogCovarianceCorrection="0.3247 0 | 0 0 "  DistributionSpecificationMethod="0"  DistributionSamplePointsRAS=""  ></EMSTreeParametersLeaf>
+  id="vtkMRMLEMSTreeParametersLeafNode6"  name="vtkMRMLEMSTreeParametersLeafNode6"  hideFromEditors="false"  selectable="true"  selected="false" PrintQuality="0"  IntensityLabel="5"  LogMean="3.51908 0 "  LogMeanCorrection="6.09801e-06 0 "  LogCovariance="0.324704 0 | 0 0 "  LogCovarianceCorrection="0 0 | 0 0 "  DistributionSpecificationMethod="0"  DistributionSamplePointsRAS=""  ></EMSTreeParametersLeaf>
  <EMSTree
   id="vtkMRMLEMSTreeNode7"  name="GM"  hideFromEditors="false"  selectable="true"  selected="false"  ParentNodeID="vtkMRMLEMSTreeNode5"  TreeParametersNodeID="vtkMRMLEMSTreeParametersNode7"  Label="NULL"  ChildNodeIDs=""  ></EMSTree>
  <EMSTreeParameters
@@ -74,7 +74,7 @@
  <EMSClassInteractionMatrix
   id="vtkMRMLEMSClassInteractionMatrixNode7"  name="vtkMRMLEMSClassInteractionMatrixNode7"  hideFromEditors="false"  selectable="true"  selected="false"   West=""    North=""    Up=""    East=""    South=""    Down=""  ></EMSClassInteractionMatrix>
  <EMSTreeParametersLeaf
-  id="vtkMRMLEMSTreeParametersLeafNode7"  name="vtkMRMLEMSTreeParametersLeafNode7"  hideFromEditors="false"  selectable="true"  selected="false" PrintQuality="0"  IntensityLabel="9"  LogMean="4.19372 0 "  LogMeanCorrection="-3.87765e-06 0 "  LogCovariance="0.0402972 0 | 0 0 "  LogCovarianceCorrection="0.040297 0 | 0 0 "  DistributionSpecificationMethod="0"  DistributionSamplePointsRAS=""  ></EMSTreeParametersLeaf>
+  id="vtkMRMLEMSTreeParametersLeafNode7"  name="vtkMRMLEMSTreeParametersLeafNode7"  hideFromEditors="false"  selectable="true"  selected="false" PrintQuality="0"  IntensityLabel="9"  LogMean="4.19372 0 "  LogMeanCorrection="-3.87765e-06 0 "  LogCovariance="0.0402972 0 | 0 0 "  LogCovarianceCorrection="0 0 | 0 0 "  DistributionSpecificationMethod="0"  DistributionSamplePointsRAS=""  ></EMSTreeParametersLeaf>
  <EMSTree
   id="vtkMRMLEMSTreeNode8"  name="WM"  hideFromEditors="false"  selectable="true"  selected="false"  ParentNodeID="vtkMRMLEMSTreeNode5"  TreeParametersNodeID="vtkMRMLEMSTreeParametersNode8"  Label="NULL"  ChildNodeIDs=""  ></EMSTree>
  <EMSTreeParameters
@@ -84,7 +84,7 @@
  <EMSClassInteractionMatrix
   id="vtkMRMLEMSClassInteractionMatrixNode8"  name="vtkMRMLEMSClassInteractionMatrixNode8"  hideFromEditors="false"  selectable="true"  selected="false"   West=""    North=""    Up=""    East=""    South=""    Down=""  ></EMSClassInteractionMatrix>
  <EMSTreeParametersLeaf
-  id="vtkMRMLEMSTreeParametersLeafNode8"  name="vtkMRMLEMSTreeParametersLeafNode8"  hideFromEditors="false"  selectable="true"  selected="false" PrintQuality="0"  IntensityLabel="10"  LogMean="4.56121 0 "  LogMeanCorrection="-3.80523e-06 0 "  LogCovariance="0.00485309 0 | 0 0 "  LogCovarianceCorrection="0.0048531 0 | 0 0 "  DistributionSpecificationMethod="0"  DistributionSamplePointsRAS=""  ></EMSTreeParametersLeaf>
+  id="vtkMRMLEMSTreeParametersLeafNode8"  name="vtkMRMLEMSTreeParametersLeafNode8"  hideFromEditors="false"  selectable="true"  selected="false" PrintQuality="0"  IntensityLabel="10"  LogMean="4.56121 0 "  LogMeanCorrection="-3.80523e-06 0 "  LogCovariance="0.00485309 0 | 0 0 "  LogCovarianceCorrection="0 0 | 0 0 "  DistributionSpecificationMethod="0"  DistributionSamplePointsRAS=""  ></EMSTreeParametersLeaf>
  <EMSGlobalParameters
   id="vtkMRMLEMSGlobalParametersNode1"  name="vtkMRMLEMSGlobalParametersNode1"  hideFromEditors="false"  selectable="true"  selected="false"  NumberOfTargetInputChannels="1"   InputChannelNames="T1 "   WorkingDirectory="NULL"   SegmentationBoundaryMin="1 1 1"   SegmentationBoundaryMax="-1 -1 -1"   RegistrationAffineType="6"   RegistrationDeformableType="5"   RegistrationInterpolationType="0"   RegistrationAtlasVolumeKey="atlas_registration_image0 "   RegistrationTargetVolumeKey=""   EnableTargetToTargetRegistration="0"   SaveIntermediateResults="0"   SaveSurfaceModels="0"   MultithreadingEnabled="1"   UpdateIntermediateData="1"   IntensityNormalizationParameterNodeIDs="vtkMRMLEMSIntensityNormalizationParametersNode1 vtkMRMLEMSIntensityNormalizationParametersNode2 "   Colormap="vtkMRMLColorTableNodeFileSlicer3_2010_Brain_Labels.txt"  ></EMSGlobalParameters>
  <EMSIntensityNormalizationParameters

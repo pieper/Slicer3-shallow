@@ -467,6 +467,8 @@ public:
   virtual void     ResetTreeNodeDistributionLogMeanCorrection(vtkIdType nodeID); 
 
   void ResetTreeNodeDistributionLogCovarianceCorrection(vtkIdType nodeID); 
+  // Resets the LogCovariance of the entire tree
+  void ResetLogCovarianceCorrectionOfAllNodes();
   void SetTreeNodeDistributionLogCovarianceWithCorrection(vtkIdType nodeID, int rowIndex, int columnIndex, double value);
 
   //
@@ -683,6 +685,10 @@ private:
                                                         int rowIndex,
                                                         int columnIndex);
   int TreeNodeDistributionLogCovarianceCorrectionEnabled(vtkIdType nodeID);
+
+  // Reset the correction of the node as well as subtree 
+  void ResetLogCovarianceCorrectionsOfAllNodes(vtkIdType rootID);
+
   //ETX
 
 };

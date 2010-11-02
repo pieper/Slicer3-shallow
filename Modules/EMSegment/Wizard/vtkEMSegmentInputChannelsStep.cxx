@@ -323,16 +323,22 @@ void vtkEMSegmentInputChannelsStep::Validate()
 
    //-----------------------------------------------
    // decide if the number of target volumes changed
-   if (this->GetNumberOfInputChannels() != mrmlManager->GetGlobalParametersNode()->GetNumberOfTargetInputChannels() && 
-       !vtkKWMessageDialog::PopupYesNo(this->GetApplication(), NULL, "Change the number of input channels?",
-                       "Are you sure you want to change the number of input images?", 
-                       vtkKWMessageDialog::WarningIcon | vtkKWMessageDialog::InvokeAtPointer))
-     {
-       // don't change number of volumes; stay on this step
-       wizard_workflow->PushInput(vtkKWWizardStep::GetValidationFailedInput());
-       wizard_workflow->ProcessInputs();
-       return;
-     }
+  if (this->GetNumberOfInputChannels() != mrmlManager->GetGlobalParametersNode()->GetNumberOfTargetInputChannels())
+    { 
+      if (!vtkKWMessageDialog::PopupYesNo(this->GetApplication(), NULL, "Change the number of input channels?", "Are you sure you want to change the number of input images?", 
+                                          vtkKWMessageDialog::WarningIcon | vtkKWMessageDialog::InvokeAtPointer))
+       {
+         // don't change number of volumes; stay on this step
+         wizard_workflow->PushInput(vtkKWWizardStep::GetValidationFailedInput());
+         wizard_workflow->ProcessInputs();
+         return;
+       } 
+     else  
+       {
+     // reset intensity correction otherwise can cause problem as the covariance matrix of the new input channels is zero ! 
+         mrmlManager->ResetLogCovarianceCorrectionOfAllNodes(); 
+       }
+    }
 
    //-----------------------------------------------
    // Check if currently defined input volumes are non-negative

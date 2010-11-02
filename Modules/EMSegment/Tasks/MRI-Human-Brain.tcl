@@ -544,7 +544,7 @@ namespace eval EMSegmenterPreProcessingTcl {
             }
         } else {
             # New type
-            set registrationType "CenterOfHeadAlign Rigid  ScaleVersor3D ScaleSkewVersor3D Affine"
+            set registrationType "Rigid  ScaleVersor3D ScaleSkewVersor3D Affine"
             set fastFlag 0
             if { $affineFlag } {
                 if { $affineType == [$mrmlManager GetRegistrationTypeFromString AtlasToTargetAffineRegistrationRigidMMIFast] } {

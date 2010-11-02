@@ -57,20 +57,20 @@ proc EMSegmentCutOutRegion {ThreshInstance MathInstance ResultVolume ProbVolume 
 # string VolDataType is the type of the volumes in MRIVolumeList
 # .END
 #-------------------------------------------------------------------------------
-proc EMSegmentGaussCurveCalculationFromID {mrmlManager CutOffProbability LogGaussFlag MRIVolumeIDList ProbVolumeID ClassName} {
+proc EMSegmentGaussCurveCalculationFromID {LOGIC mrmlManager CutOffProbability LogGaussFlag MRIVolumeIDList ProbVolumeID ClassName} {
     global EMSegment
 
     set SCENE [$mrmlManager GetMRMLScene ]
 
     set ProbNode  [$SCENE GetNodeByID $ProbVolumeID]
     if { $ProbNode == "" } {
-       puts stderr "ERROR:EMSegmentGaussCurveCalculationFromID: No  ProbNode with  $ProbVolumeID defined!" 
+       EMSegmentPrint $LOGIC "EMSegmentGaussCurveCalculationFromID: No  ProbNode with  $ProbVolumeID defined!" 1
        return 1
     }
 
     set ProbVolume  [$ProbNode GetImageData]
     if { $ProbVolume == "" } {
-    puts stderr "ERROR:EMSegmentGaussCurveCalculationFromID: No  ProbVolume defined" 
+       EMSegmentPrint $LOGIC "EMSegmentGaussCurveCalculationFromID: No  ProbVolume defined"  1
     return 1
     }
 
@@ -83,7 +83,7 @@ proc EMSegmentGaussCurveCalculationFromID {mrmlManager CutOffProbability LogGaus
     }
 
     if { [EMSegmentGaussCurveCalculation $CutOffProbability $LogGaussFlag "$MRIVolumeList" $ProbVolume $VolDataType] } {
-       puts stderr "EMSegmentGaussCurveCalculationFromID: Error occured in calculating Guassian parameters for $ClassName"
+       EMSegmentPrint $LOGIC "EMSegmentGaussCurveCalculationFromID: Error occured in calculating Guassian parameters for $ClassName" 1
        return 1
     }
     # -----------------------------------------
@@ -91,30 +91,29 @@ proc EMSegmentGaussCurveCalculationFromID {mrmlManager CutOffProbability LogGaus
     # -----------------------------------------
     set NumInputChannel [llength $MRIVolumeList] 
 
-    puts "Check for Class $ClassName"
-    puts "  Atlas      : [$ProbNode GetName]"
-    puts -nonewline "  Scans      : "
+    EMSegmentPrint $LOGIC "Check for Class $ClassName" 0
+    EMSegmentPrint $LOGIC "  Atlas      : [$ProbNode GetName]" 0
+    set text "  Scans      : "
     foreach ID $MRIVolumeIDList {
-        puts -nonewline "[[$SCENE GetNodeByID $ID] GetName] "
+        set text "${text}[[$SCENE GetNodeByID $ID] GetName] "
     }
-    puts "" 
-    puts "  LogGauss   : $LogGaussFlag"
-    puts "  CutOffProb : $::EMSegment(GaussCurveCalc,CutOffAbsolut) (Absolut) -- [format %5.2f $EMSegment(GaussCurveCalc,CutOffPercent)] % (Percent)"
-    puts "  MaxProbVal : $::EMSegment(GaussCurveCalc,MaxProb)"
-    puts "  Samples    : $::EMSegment(GaussCurveCalc,Sum)"
-    puts -nonewline "  GreyExtrima: "
-    for {set y 0} {$y <  $NumInputChannel} {incr y} {puts -nonewline "($EMSegment(GaussCurveCalc,GreyMin,$y), $EMSegment(GaussCurveCalc,GreyMax,$y)) "}
-    puts " "
-    puts -nonewline "  Mean       : "
-    for {set y 0} {$y < $NumInputChannel} {incr y} {puts -nonewline "[format %.3f $EMSegment(GaussCurveCalc,Mean,$y)] "} 
-    puts " "  
-    puts -nonewline "  Covariance : "
+    EMSegmentPrint $LOGIC  "$text" 0
+    EMSegmentPrint $LOGIC "  LogGauss   : $LogGaussFlag" 0
+    EMSegmentPrint $LOGIC "  CutOffProb : $::EMSegment(GaussCurveCalc,CutOffAbsolut) (Absolut) -- [format %5.2f $EMSegment(GaussCurveCalc,CutOffPercent)] % (Percent)" 0
+    EMSegmentPrint $LOGIC "  MaxProbVal : $::EMSegment(GaussCurveCalc,MaxProb)" 0
+    EMSegmentPrint $LOGIC "  Samples    : $::EMSegment(GaussCurveCalc,Sum)" 0
+    set text "  GreyExtrima: "
+    for {set y 0} {$y <  $NumInputChannel} {incr y} {set text "${text}($EMSegment(GaussCurveCalc,GreyMin,$y), $EMSegment(GaussCurveCalc,GreyMax,$y)) "}
+    EMSegmentPrint $LOGIC  "$text" 0
+    set text "  Mean       : "
+    for {set y 0} {$y < $NumInputChannel} {incr y} {set text "${text}[format %.3f $EMSegment(GaussCurveCalc,Mean,$y)] "} 
+    EMSegmentPrint $LOGIC  "$text" 0
+    set text "  Covariance : "
     for {set y 0} {$y < $NumInputChannel} {incr y} {
-    if {$y} {puts -nonewline "| "}
-    for {set x 0} {$x < $NumInputChannel} {incr x} {puts -nonewline "[format %.3f $EMSegment(GaussCurveCalc,Covariance,$y,$x)]  "}
+    if {$y} {set text "${text}| "}
+    for {set x 0} {$x < $NumInputChannel} {incr x} {set text "${text}[format %.3f $EMSegment(GaussCurveCalc,Covariance,$y,$x)]  "}
     }
-    puts " "
-    puts " "   
+    EMSegmentPrint $LOGIC  "$text\n\n" 0
     return 0
 }
 
@@ -449,3 +448,12 @@ proc ComputeCovarianceDeterminant { NumInputChannel } {
     return [Determinant "$MATRIX"]
 }
 }
+
+proc EMSegmentPrint { LOGIC TEXT errorFlag } {
+    if {$errorFlag }  {
+        $LOGIC PrintText "TCLAuto: ERROR: $TEXT" 
+    } else {
+    $LOGIC PrintText "TCLAuto: $TEXT" 
+    }
+}
+
