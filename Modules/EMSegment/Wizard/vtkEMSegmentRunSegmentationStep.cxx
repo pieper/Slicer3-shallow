@@ -346,7 +346,7 @@ void vtkEMSegmentRunSegmentationStep::ShowUserInterface()
     this->RunSegmentationDirectoryLabel->SetParent(this->RunSegmentationDirectorySubFrame);
     this->RunSegmentationDirectoryLabel->Create();
     this->RunSegmentationDirectoryLabel->SetWidth(EMSEG_WIDGETS_LABEL_WIDTH);
-    this->RunSegmentationDirectoryLabel->SetText("Select Working Directory: ");
+    this->RunSegmentationDirectoryLabel->SetText("Select Intermediate Directory: ");
     }
   this->Script( "pack %s -side left -anchor nw -padx 2 -pady 2", this->RunSegmentationDirectoryLabel->GetWidgetName());
 

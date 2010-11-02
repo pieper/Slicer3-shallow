@@ -23,6 +23,8 @@
 
 #include "vtkSlicerVolumesLogic.h"
 #include "vtkMRMLVolumeArchetypeStorageNode.h"
+#include "vtkSlicerColorLogic.h"
+#include "vtkMRMLLabelMapVolumeDisplayNode.h"
 
 // needed to translate between enums
 #include "EMLocalInterface.h"
@@ -5071,6 +5073,22 @@ void vtkEMSegmentMRMLManager::CreateOutputVolumeNode()
   ss << this->MRMLScene->GetUniqueNameByString("EM_Map");
   outputNode->SetName(ss.str().c_str());
   this->GetMRMLScene()->AddNode(outputNode);
+
+  vtkMRMLLabelMapVolumeDisplayNode* displayNode = vtkMRMLLabelMapVolumeDisplayNode::New();
+  displayNode->SetScene(this->GetMRMLScene());
+  this->GetMRMLScene()->AddNode(displayNode);
+  outputNode->SetAndObserveDisplayNodeID(displayNode->GetID());
+
+  const char* colorID = this->GetColormap();
+  if (  !colorID ) 
+    {
+      vtkSlicerColorLogic *colorLogic = vtkSlicerColorLogic::New();
+      colorID = colorLogic->GetDefaultLabelMapColorNodeID();
+      colorLogic->Delete();
+    }
+  displayNode->SetAndObserveColorNodeID(colorID ); 
+  displayNode->Delete();
+
   const char* ID = outputNode->GetID();
   outputNode->Delete();
   this->SetOutputVolumeMRMLID(ID);
