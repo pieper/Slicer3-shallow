@@ -894,7 +894,7 @@ namespace eval EMSegmenterPreProcessingTcl {
         # Filter options - just set it here to make sure that if default values are changed this still works as it supposed to
         set CMD "$CMD --backgroundFillValue $backgroundLevel"
         set CMD "$CMD --interpolationMode Linear"
-        set CMD "$CMD --maskProcessingMode  ROIAUTO --ROIAutoDilateSize 3.0 --maskInferiorCutOffFromCenter 65.0 -initializeTransformMode useCenterOfHeadAlign"
+        set CMD "$CMD --maskProcessingMode  ROIAUTO --ROIAutoDilateSize 3.0 --maskInferiorCutOffFromCenter 65.0 --initializeTransformMode useCenterOfHeadAlign"
 
         # might be still wrong
         foreach TYPE $RegistrationType {
