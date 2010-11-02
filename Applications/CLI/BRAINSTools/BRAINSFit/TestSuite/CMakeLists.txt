@@ -38,7 +38,7 @@ endif()
     --compareNumberOfPixelsTolerance 777
     BRAINSFitTest
     --costMetric MMI
-    --failureExitCode 0 --writeTransformOnFailure
+    --failureExitCode -1 --writeTransformOnFailure
     --numberOfIterations 2500
     --numberOfHistogramBins 200
     --numberOfSamples 131072
@@ -66,7 +66,7 @@ endif()
     --compareNumberOfPixelsTolerance 777
     BRAINSFitTest
     --costMetric MMI
-    --failureExitCode 0 --writeTransformOnFailure
+    --failureExitCode -1 --writeTransformOnFailure
     --numberOfIterations 2500
     --numberOfHistogramBins 200
     --numberOfSamples 131072
@@ -90,7 +90,7 @@ endif()
     --compareNumberOfPixelsTolerance 1000
     BRAINSFitTest
     --costMetric MMI
-    --failureExitCode 0 --writeTransformOnFailure
+    --failureExitCode -1 --writeTransformOnFailure
     --numberOfIterations 2500
     --numberOfHistogramBins 200
     --numberOfSamples 72000
@@ -117,7 +117,7 @@ endif()
     --compareNumberOfPixelsTolerance 1000
     BRAINSFitTest
     --costMetric MMI
-    --failureExitCode 0 --writeTransformOnFailure
+    --failureExitCode -1 --writeTransformOnFailure
     --numberOfIterations 2500
     --numberOfHistogramBins 200
     --numberOfSamples 72000
@@ -141,7 +141,7 @@ endif()
     --compareNumberOfPixelsTolerance 777
     BRAINSFitTest
     --costMetric MSE
-    --failureExitCode 0 --writeTransformOnFailure
+    --failureExitCode -1 --writeTransformOnFailure
     --numberOfIterations 2500
     --numberOfHistogramBins 200
     --numberOfSamples 72000
@@ -168,7 +168,7 @@ endif()
     --compareNumberOfPixelsTolerance 777
     BRAINSFitTest
     --costMetric MSE
-    --failureExitCode 0 --writeTransformOnFailure
+    --failureExitCode -1 --writeTransformOnFailure
     --numberOfIterations 2500
     --numberOfHistogramBins 200
     --numberOfSamples 72000
@@ -193,7 +193,7 @@ endif()
     --compareNumberOfPixelsTolerance 1000
     BRAINSFitTest
     --costMetric MMI
-    --failureExitCode 0 --writeTransformOnFailure
+    --failureExitCode -1 --writeTransformOnFailure
     --numberOfIterations 2500,2500,2500,500
     --numberOfHistogramBins 200
     --splineGridSize 7,5,6
@@ -220,7 +220,7 @@ endif()
     --compareNumberOfPixelsTolerance 1000
     BRAINSFitTest
     --costMetric MMI
-    --failureExitCode 0 --writeTransformOnFailure
+    --failureExitCode -1 --writeTransformOnFailure
     --numberOfIterations 1500
     --numberOfHistogramBins 200
     --splineGridSize 7,5,6
@@ -251,7 +251,7 @@ endif()
     --compareNumberOfPixelsTolerance 1000
     BRAINSFitTest
     --costMetric MMI
-    --failureExitCode 0 --writeTransformOnFailure
+    --failureExitCode -1 --writeTransformOnFailure
     --numberOfIterations 1500
     --numberOfHistogramBins 200
     --splineGridSize 7,5,6
@@ -278,7 +278,7 @@ endif()
     --compareNumberOfPixelsTolerance 1000
     BRAINSFitTest
     --costMetric MMI
-    --failureExitCode 0 --writeTransformOnFailure
+    --failureExitCode -1 --writeTransformOnFailure
     --numberOfIterations 2500,2500,500
     --numberOfHistogramBins 200
     --splineGridSize 7,5,6
@@ -306,7 +306,7 @@ endif()
     --compareNumberOfPixelsTolerance 1000
     BRAINSFitTest
     --costMetric MMI
-    --failureExitCode 0 --writeTransformOnFailure
+    --failureExitCode -1 --writeTransformOnFailure
     --numberOfIterations 2500,2500,500
     --numberOfHistogramBins 50
     --numberOfMatchPoints 10
@@ -336,7 +336,7 @@ endif()
     --compareNumberOfPixelsTolerance 777
     BRAINSFitTest
     --costMetric MMI
-    --failureExitCode 0 --writeTransformOnFailure
+    --failureExitCode -1 --writeTransformOnFailure
     --fixedVolume ${BRAINSCommonLib_DATA_DIRS}/ANON0006_20_T1_dbg_splayed.nii.gz
     --movingVolume ${BRAINSCommonLib_DATA_DIRS}/ANON0006_20_T1_sag_twisted.nii.gz
     --fixedVolumeTimeIndex 0 --movingVolumeTimeIndex 0
@@ -356,7 +356,7 @@ endif()
     --compareNumberOfPixelsTolerance 777
     BRAINSFitTest
     --costMetric MMI
-    --failureExitCode 0 --writeTransformOnFailure
+    --failureExitCode -1 --writeTransformOnFailure
     --numberOfIterations 2500
     --numberOfHistogramBins 200
     --numberOfSamples 72000
@@ -381,7 +381,7 @@ endif()
     --compareNumberOfPixelsTolerance 777
     BRAINSFitTest
     --costMetric MMI
-    --failureExitCode 0 --writeTransformOnFailure
+    --failureExitCode -1 --writeTransformOnFailure
     --numberOfIterations 2500
     --numberOfHistogramBins 200
     --numberOfSamples 144000
@@ -405,7 +405,7 @@ endif()
     --compareNumberOfPixelsTolerance 1000
     BRAINSFitTest
     --costMetric MMI
-    --failureExitCode 0 --writeTransformOnFailure
+    --failureExitCode -1 --writeTransformOnFailure
     --numberOfIterations 2500
     --numberOfHistogramBins 200
     --numberOfSamples 72000
@@ -429,7 +429,7 @@ endif()
     --compareNumberOfPixelsTolerance 777
     BRAINSFitTest
     --costMetric MMI
-    --failureExitCode 0 --writeTransformOnFailure
+    --failureExitCode -1 --writeTransformOnFailure
     --numberOfIterations 2500
     --numberOfHistogramBins 200
     --numberOfSamples 72000
@@ -454,7 +454,7 @@ endif()
     --compareNumberOfPixelsTolerance 777
     BRAINSFitTest
     --costMetric MMI
-    --failureExitCode 0 --writeTransformOnFailure
+    --failureExitCode -1 --writeTransformOnFailure
     --numberOfIterations 2500
     --numberOfHistogramBins 200
     --numberOfSamples 72000
@@ -481,7 +481,7 @@ endif()
     --compareNumberOfPixelsTolerance 777
     BRAINSFitTest
     --costMetric MMI
-    --failureExitCode 0 --writeTransformOnFailure
+    --failureExitCode -1 --writeTransformOnFailure
     --numberOfIterations 2500
     --numberOfHistogramBins 200
     --numberOfSamples 72000
@@ -506,7 +506,7 @@ endif()
     --compareNumberOfPixelsTolerance 1000
     BRAINSFitTest
     --costMetric MMI
-    --failureExitCode 0 --writeTransformOnFailure
+    --failureExitCode -1 --writeTransformOnFailure
     --numberOfIterations 2500,2500
     --numberOfHistogramBins 200
     --numberOfSamples 72000
@@ -531,7 +531,7 @@ endif()
     --compareNumberOfPixelsTolerance 1000
     BRAINSFitTest
     --costMetric MMI
-    --failureExitCode 0 --writeTransformOnFailure
+    --failureExitCode -1 --writeTransformOnFailure
     --numberOfIterations 2500
     --numberOfHistogramBins 200
     --numberOfSamples 131072
@@ -558,7 +558,7 @@ endif()
     --compareNumberOfPixelsTolerance 1000
     BRAINSFitTest
     --costMetric MMI
-    --failureExitCode 0 --writeTransformOnFailure
+    --failureExitCode -1 --writeTransformOnFailure
     --numberOfIterations 2500
     --numberOfHistogramBins 200
     --numberOfSamples 131072
@@ -582,7 +582,7 @@ endif()
     --compareNumberOfPixelsTolerance 1200
     BRAINSFitTest
     --costMetric MMI
-    --failureExitCode 0 --writeTransformOnFailure
+    --failureExitCode -1 --writeTransformOnFailure
     --numberOfIterations 2500
     --numberOfHistogramBins 200
     --numberOfSamples 72000
@@ -609,7 +609,7 @@ endif()
     --compareNumberOfPixelsTolerance 1000
     BRAINSFitTest
     --costMetric MMI
-    --failureExitCode 0 --writeTransformOnFailure
+    --failureExitCode -1 --writeTransformOnFailure
     --numberOfIterations 2500
     --numberOfHistogramBins 200
     --numberOfSamples 72000
@@ -633,7 +633,7 @@ endif()
     --compareNumberOfPixelsTolerance 777
     BRAINSFitTest
     --costMetric MMI
-    --failureExitCode 0 --writeTransformOnFailure
+    --failureExitCode -1 --writeTransformOnFailure
     --numberOfIterations 2500
     --numberOfHistogramBins 200
     --numberOfSamples 72000
@@ -659,7 +659,7 @@ endif()
     --compareNumberOfPixelsTolerance 777
     BRAINSFitTest
     --costMetric MMI
-    --failureExitCode 0 --writeTransformOnFailure
+    --failureExitCode -1 --writeTransformOnFailure
     --numberOfIterations 2500
     --numberOfHistogramBins 200
     --numberOfSamples 72000
@@ -685,7 +685,7 @@ endif()
     --compareNumberOfPixelsTolerance 1000
     BRAINSFitTest
     --costMetric MMI
-    --failureExitCode 0 --writeTransformOnFailure
+    --failureExitCode -1 --writeTransformOnFailure
     --numberOfIterations 2500
     --numberOfHistogramBins 200
     --numberOfSamples 131072
@@ -712,7 +712,7 @@ endif()
     --compareNumberOfPixelsTolerance 1000
     BRAINSFitTest
     --costMetric MMI
-    --failureExitCode 0 --writeTransformOnFailure
+    --failureExitCode -1 --writeTransformOnFailure
     --numberOfIterations 2500
     --numberOfHistogramBins 200
     --numberOfSamples 131072
@@ -736,7 +736,7 @@ endif()
     --compareNumberOfPixelsTolerance 1000
     BRAINSFitTest
     --costMetric MMI
-    --failureExitCode 0 --writeTransformOnFailure
+    --failureExitCode -1 --writeTransformOnFailure
     --numberOfIterations 2500
     --numberOfHistogramBins 200
     --numberOfSamples 72000
@@ -763,7 +763,7 @@ endif()
     --compareNumberOfPixelsTolerance 1000
     BRAINSFitTest
     --costMetric MMI
-    --failureExitCode 0 --writeTransformOnFailure
+    --failureExitCode -1 --writeTransformOnFailure
     --numberOfIterations 2500
     --numberOfHistogramBins 200
     --numberOfSamples 72000
