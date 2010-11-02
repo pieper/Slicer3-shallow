@@ -1808,9 +1808,9 @@ int vtkEMSegmentLogic::StartSegmentationWithoutPreprocessing(vtkSlicerApplicatio
   // save intermediate results
   if (this->MRMLManager->GetSaveIntermediateResults())
     {
-    std::cerr << "Saving intermediate results...";
+    vtkstd::cerr << "[Start] Saving intermediate results..." << vtkstd::endl;
     bool savedResults = this->SaveIntermediateResults(app,appLogic);
-    std::cerr << "DONE" << std::endl;
+    vtkstd::cerr << "[Done]  Saving intermediate results." << vtkstd::endl;
     if (!savedResults)
       {
       ErrorMsg = "Error writing intermediate results";
@@ -2394,7 +2394,7 @@ vtksys_stl::string  vtkEMSegmentLogic::GetTclTaskDirectory(vtkSlicerApplication*
   const char* tmp_dir = app->GetTemporaryDirectory();
   if (tmp_dir)
     {
-      std::string copied_task_dir(std::string(tmp_dir) + std::string("/EMSegmentTask"));
+      std::string copied_task_dir(std::string(tmp_dir) + std::string("/EMSegmentTaskCopy"));
 
       /**
         * Copy content directory to another directory with all files and
@@ -2764,7 +2764,7 @@ void vtkEMSegmentLogic::RemoveDataIOFromScene(vtkMRMLScene* mrmlScene, vtkDataIO
   mrmlScene->SetUserTagTable( NULL );
 }
 
-bool vtkEMSegmentLogic::PackageAndWriteData(vtkSlicerApplication* app, vtkSlicerApplicationLogic *appLogic, const char* packageDirectory)
+bool vtkEMSegmentLogic::PackageAndWriteData(vtkSlicerApplication* app, vtkSlicerApplicationLogic* appLogic, const char* packageDirectory)
 {
   //
   // create a scene and copy the EMSeg related nodes to it
@@ -2775,11 +2775,11 @@ bool vtkEMSegmentLogic::PackageAndWriteData(vtkSlicerApplication* app, vtkSlicer
     }
 
   std::string outputDirectory(packageDirectory);
-  std::string mrmlURL(outputDirectory + "/EMSegmenterScene.mrml");
+  std::string mrmlURL(outputDirectory + "/_EMSegmenterScene.mrml");
 
   vtkMRMLScene* newScene = vtkMRMLScene::New();
 
-  vtkDataIOManagerLogic *dataIOManagerLogic = vtkDataIOManagerLogic::New();
+  vtkDataIOManagerLogic* dataIOManagerLogic = vtkDataIOManagerLogic::New();
   this->AddDataIOToScene(newScene,app,appLogic,dataIOManagerLogic);
 
   newScene->SetRootDirectory(outputDirectory.c_str());
