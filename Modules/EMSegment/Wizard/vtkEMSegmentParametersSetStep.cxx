@@ -230,14 +230,14 @@ void vtkEMSegmentParametersSetStep::UpdateTasksCallback()
   const char* tmpDir = this->GetSlicerApplication()->GetTemporaryDirectory();
   if (!tmpDir)
     {
-      vtkErrorMacro("UpdateTasksCallback: Termporary directory is not defined!");
+      vtkErrorMacro("UpdateTasksCallback: Temporary directory is not defined!");
       return;
     }
   // also add the manifest filename
   std::string tmpManifestFilename(std::string(tmpDir) + std::string("/EMSegmentTasksManifest.html"));
   std::string manifestFilename = vtksys::SystemTools::ConvertToOutputPath(tmpManifestFilename.c_str());
 
-  // and add the EmSegmentTask directory
+  // and add the EMSegmentTask directory
   std::string taskDir = this->GetGUI()->GetLogic()->GetTemporaryTaskDirectory(this->GetSlicerApplication());
   //
   // ** HTTP ACCESS **
@@ -249,7 +249,7 @@ void vtkEMSegmentParametersSetStep::UpdateTasksCallback()
   // (o_o) who cares about traffic or the tcp/ip ports? *g
   httpHandler->SetForbidReuse(1);
 
-  // safe-check if the handler can really handle the hardcoded uri protocal
+  // safe-check if the handler can really handle the hardcoded uri protocol
   if (!httpHandler->CanHandleURI(taskRepository.c_str()))
     {
     vtkErrorMacro("UpdateTasksCallback: Invalid URI specified and you can't do anything about it bcuz it is *hardcoded*!")
@@ -1023,7 +1023,7 @@ int vtkEMSegmentParametersSetStep::LoadDefaultTask(int index, bool warningFlag)
   vtkEMSegmentMRMLManager *mrmlManager = this->GetGUI()->GetMRMLManager();
   if (this->LoadDefaultData(pssDefaultTasksFile[index].c_str(),warningFlag))
     {
-      // Error occured 
+      // Error occurred
       return 1;
     }
 
