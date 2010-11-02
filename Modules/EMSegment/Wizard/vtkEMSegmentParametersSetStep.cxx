@@ -1128,7 +1128,7 @@ void vtkEMSegmentParametersSetStep::AddDefaultTasksToList(const char* FilePath)
       if (!vtksys::SystemTools::FileIsDirectory(fullFileName.c_str()))
         {
      
-      if (!strcmp(vtksys::SystemTools::GetFilenameExtension(filename.c_str()).c_str(), ".mrml"))
+    if (!strcmp(vtksys::SystemTools::GetFilenameExtension(filename.c_str()).c_str(), ".mrml") && (filename.compare(0,1,"_") ) )
         {
               // Generate Name of Task from File name
               vtksys_stl::string taskName = this->GetGUI()->GetMRMLManager()->TurnDefaultMRMLFileIntoTaskName(filename.c_str());
