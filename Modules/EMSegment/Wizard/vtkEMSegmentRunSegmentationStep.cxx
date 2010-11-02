@@ -722,7 +722,7 @@ void vtkEMSegmentRunSegmentationStep::StartSegmentationCallback()
       "Segmentation Error", error_msg.c_str(),
       vtkKWMessageDialog::WarningIcon | vtkKWMessageDialog::InvokeAtPointer
     );
-    cerr << "Pre-processing did not execute correctly" << endl;
+    vtkErrorMacro(<< "Segmentation did not execute correctly"); 
     return;
     }
 
