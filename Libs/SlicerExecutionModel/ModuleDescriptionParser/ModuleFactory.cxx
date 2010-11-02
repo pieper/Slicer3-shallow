@@ -792,10 +792,10 @@ ModuleFactory
               }
             else
               {
-//               std::cout << "Symbols not found." << std::endl;
-//               std::cout << "xmlFunction: " << (void*)xmlFunction << std::endl;
-//               std::cout << "entryPoint: " << (void*)entryPoint <<
-//               std::endl;
+               //std::cout << "Symbols not found in " << filename << "." << std::endl;
+               //std::cout << "xmlFunction: " << (void*)xmlFunction << std::endl;
+               //std::cout << "entryPoint: " << (void*)entryPoint <<
+               //std::endl;
 
               // not a plugin, doesn't have the symbols, close the library
               itksys::DynamicLoader::CloseLibrary(lib);
@@ -988,128 +988,124 @@ ModuleFactory
             // "something" when presented with a "--xml" argument
             // (note that it may have just printed out that it did
             // not understand --xml)
-            if (itksysProcess_GetExitValue(process) == 0)
+            if (itksysProcess_GetExitValue(process) != 0)
               {
-              // executable exited without errors, check if it
-              // generated a valid xml description
-              if (stdoutbuffer.compare(0, 5, "<?xml") == 0)
+              information << filename << " (exited with errors but checking for xml anyway)." << std::endl;
+              }
+            // executable exited check if it
+            // generated a valid xml description
+            if (stdoutbuffer.compare(0, 5, "<?xml") == 0)
+              {
+              //std::cout << "\t" << filename << " is a plugin." << std::endl;
+              this->InternalFileMap->insert( commandName );
+            
+              // Construct and configure the module object
+              ModuleDescription module;
+              module.SetType("CommandLineModule");
+              if (executable != NULL)
                 {
-                //std::cout << "\t" << filename << " is a plugin." << std::endl;
-                this->InternalFileMap->insert( commandName );
-              
-                // Construct and configure the module object
-                ModuleDescription module;
-                module.SetType("CommandLineModule");
-                if (executable != NULL)
-                  {
-                  // includes the exec with the bare command name
-                  std::string newcommand = std::string(executable) + std::string(" ") + commandName;
-                  // std::cout << "ScanForCommandLineModulesByExecuting: Setting location to " << executable << ", target to " << newcommand.c_str() << "\n";
-                  //module.SetTarget(newcommand);
-                  // use location to point to the executable used to run the command in commandName
-                  module.SetLocation(executable);
-                  module.SetTarget(commandName);
-                  }
-                else
-                  {
-                  module.SetTarget(commandName);
-                  module.SetLocation( commandName );
-                  }
-
-                // Parse the xml to build the description of the module
-                // and the parameters
-                ModuleDescriptionParser parser;
-                parser.Parse(stdoutbuffer, module);
-
-                // Check to make sure the module is not already in the
-                // list
-                ModuleDescriptionMap::iterator mit
-                  = this->InternalMap->find(module.GetTitle());
-
-                std::string splash_msg("Discovered ");
-                splash_msg +=  module.GetTitle();
-                splash_msg += " Module (adding to cache)...";
-                this->ModuleDiscoveryMessage(splash_msg.c_str());
-              
-                if (mit == this->InternalMap->end())
-                  {
-                  // See if the module has a logo, if so, store it in
-                  // the module description
-                  this->GetLogoForCommandLineModuleByExecuting(module);
-
-                  // Store the module in the list
-                  (*this->InternalMap)[module.GetTitle()] =  module ;
-                  information << "ScanForCommandLineModulesByExecuting: A module named \"" << module.GetTitle()
-                              << "\" has been discovered at "
-                              << module.GetLocation() 
-                              << "(" << module.GetTarget() << ")"
-                              << std::endl;
-                    
-                  numberFound++;
-                  }
-                else
-                  {
-                  // module already exists, set the alternative type,
-                  // location, and target if not already set
-                  if ((*mit).second.GetAlternativeType().empty()
-                      && (*mit).second.GetType() != module.GetType())
-                    {
-                    (*mit).second.SetAlternativeType( module.GetType() );
-                    (*mit).second.SetAlternativeLocation(module.GetLocation());
-                    (*mit).second.SetAlternativeTarget( module.GetTarget() );
-                    }
-
-                  information << "A module named \"" << module.GetTitle()
-                              << "\" has already been discovered." << std::endl
-                              << "    First discovered at "
-                              << (*mit).second.GetLocation()
-                              << "(" << (*mit).second.GetTarget() << ")"
-                              << std::endl
-                              << "    Then discovered at "
-                              << module.GetLocation()
-                              << "(" << module.GetTarget() << ")"
-                              << std::endl
-                              << "    Keeping first module." << std::endl;
-                  }
-
-                // Put the module in the cache
-                ModuleCacheEntry entry;
-                entry.Location = commandName;
-                entry.ModifiedTime = commandModifiedTime;
-                entry.Type = "CommandLineModule";
-                entry.XMLDescription = stdoutbuffer;
-                
-                if (module.GetLogo().GetBufferLength() != 0)
-                  {
-                  entry.LogoWidth = module.GetLogo().GetWidth();
-                  entry.LogoHeight = module.GetLogo().GetHeight();
-                  entry.LogoPixelSize = module.GetLogo().GetPixelSize();
-                  entry.LogoLength = module.GetLogo().GetBufferLength();
-                  //entry.Logo = std::string((const unsigned char *)module.GetLogo().GetLogo());
-                  entry.Logo = std::string(module.GetLogo().GetLogo());
-                  }
-                else
-                  {
-                  entry.LogoWidth = 0;
-                  entry.LogoHeight = 0;
-                  entry.LogoPixelSize = 0;
-                  entry.LogoLength = 0;
-                  entry.Logo = "None";
-                  }
-                
-                (*this->InternalCache)[entry.Location] = entry;
-                this->CacheModified = true;
+                // includes the exec with the bare command name
+                std::string newcommand = std::string(executable) + std::string(" ") + commandName;
+                // std::cout << "ScanForCommandLineModulesByExecuting: Setting location to " << executable << ", target to " << newcommand.c_str() << "\n";
+                //module.SetTarget(newcommand);
+                // use location to point to the executable used to run the command in commandName
+                module.SetLocation(executable);
+                module.SetTarget(commandName);
                 }
               else
                 {
-                isAPlugin = false;
-                information << filename << " is not a plugin (did not generate an XML description)." << std::endl;
+                module.SetTarget(commandName);
+                module.SetLocation( commandName );
                 }
+
+              // Parse the xml to build the description of the module
+              // and the parameters
+              ModuleDescriptionParser parser;
+              parser.Parse(stdoutbuffer, module);
+
+              // Check to make sure the module is not already in the
+              // list
+              ModuleDescriptionMap::iterator mit
+                = this->InternalMap->find(module.GetTitle());
+
+              std::string splash_msg("Discovered ");
+              splash_msg +=  module.GetTitle();
+              splash_msg += " Module (adding to cache)...";
+              this->ModuleDiscoveryMessage(splash_msg.c_str());
+            
+              if (mit == this->InternalMap->end())
+                {
+                // See if the module has a logo, if so, store it in
+                // the module description
+                this->GetLogoForCommandLineModuleByExecuting(module);
+
+                // Store the module in the list
+                (*this->InternalMap)[module.GetTitle()] =  module ;
+                information << "ScanForCommandLineModulesByExecuting: A module named \"" << module.GetTitle()
+                            << "\" has been discovered at "
+                            << module.GetLocation() 
+                            << "(" << module.GetTarget() << ")"
+                            << std::endl;
+                  
+                numberFound++;
+                }
+              else
+                {
+                // module already exists, set the alternative type,
+                // location, and target if not already set
+                if ((*mit).second.GetAlternativeType().empty()
+                    && (*mit).second.GetType() != module.GetType())
+                  {
+                  (*mit).second.SetAlternativeType( module.GetType() );
+                  (*mit).second.SetAlternativeLocation(module.GetLocation());
+                  (*mit).second.SetAlternativeTarget( module.GetTarget() );
+                  }
+
+                information << "A module named \"" << module.GetTitle()
+                            << "\" has already been discovered." << std::endl
+                            << "    First discovered at "
+                            << (*mit).second.GetLocation()
+                            << "(" << (*mit).second.GetTarget() << ")"
+                            << std::endl
+                            << "    Then discovered at "
+                            << module.GetLocation()
+                            << "(" << module.GetTarget() << ")"
+                            << std::endl
+                            << "    Keeping first module." << std::endl;
+                }
+
+              // Put the module in the cache
+              ModuleCacheEntry entry;
+              entry.Location = commandName;
+              entry.ModifiedTime = commandModifiedTime;
+              entry.Type = "CommandLineModule";
+              entry.XMLDescription = stdoutbuffer;
+              
+              if (module.GetLogo().GetBufferLength() != 0)
+                {
+                entry.LogoWidth = module.GetLogo().GetWidth();
+                entry.LogoHeight = module.GetLogo().GetHeight();
+                entry.LogoPixelSize = module.GetLogo().GetPixelSize();
+                entry.LogoLength = module.GetLogo().GetBufferLength();
+                //entry.Logo = std::string((const unsigned char *)module.GetLogo().GetLogo());
+                entry.Logo = std::string(module.GetLogo().GetLogo());
+                }
+              else
+                {
+                entry.LogoWidth = 0;
+                entry.LogoHeight = 0;
+                entry.LogoPixelSize = 0;
+                entry.LogoLength = 0;
+                entry.Logo = "None";
+                }
+              
+              (*this->InternalCache)[entry.Location] = entry;
+              this->CacheModified = true;
               }
             else
               {
               isAPlugin = false;
-              information << filename << " is not a plugin (exited with errors)." << std::endl;
+              information << filename << " is not a plugin (did not generate an XML description)." << std::endl;
               }
             }
           else if (result == itksysProcess_State_Expired)
