@@ -362,7 +362,7 @@ void vtkEMSegmentRunSegmentationStep::ShowUserInterface()
       vtkKWIcon::IconFolderOpen);
     this->RunSegmentationDirectoryButton->TrimPathFromFileNameOn();
     this->RunSegmentationDirectoryButton->SetBalloonHelpString(
-      "Select the working directory");
+      "Select the directory where the intermediate results should be saved in");
     this->RunSegmentationDirectoryButton->SetCommand(
       this, "SelectDirectoryCallback");
     this->RunSegmentationDirectoryButton->GetLoadSaveDialog()->ChooseDirectoryOn();
@@ -685,7 +685,7 @@ void vtkEMSegmentRunSegmentationStep::StartSegmentationCallback()
     std::string errorMessage = 
       "Scalar type mismatch for input images; all image scalar types must be "
       "the same (including input channels and aligned/resampled/casted atlas images).";
-
+    vtkErrorMacro(<< errorMessage);
     vtkKWMessageDialog::PopupMessage(this->GetApplication(),
                                      NULL,
                                      "Input Image Error",
@@ -695,6 +695,31 @@ void vtkEMSegmentRunSegmentationStep::StartSegmentationCallback()
     return;
     }
 
+
+  if (mrmlManager->GetSaveIntermediateResults() && (!mrmlManager->GetSaveWorkingDirectory() || !vtksys::SystemTools::FileExists(mrmlManager->GetSaveWorkingDirectory())))  
+   {
+     std::string errorMessage = 
+       "Saving Intermediate Results is turned on but " ;
+     if (!mrmlManager->GetSaveWorkingDirectory() || !strcmp(mrmlManager->GetSaveWorkingDirectory(),"NULL")) 
+      {
+      errorMessage += "no intermediate directory is selected!";
+      }
+     else
+       {
+     errorMessage += "the intermediate directory " + std::string(mrmlManager->GetSaveWorkingDirectory()) + " does not exist!";
+       }
+
+     vtkErrorMacro(<< errorMessage);
+     vtkKWMessageDialog::PopupMessage(this->GetApplication(),
+                                     NULL,
+                                     "Save Intermediate Result Error",
+                                     errorMessage.c_str(),
+                                     vtkKWMessageDialog::ErrorIcon | 
+                                     vtkKWMessageDialog::InvokeAtPointer);    
+     
+    return;
+
+    }
   // Compute Number of Training Samples if they are not set
   if (this->GetGUI()->GetMRMLManager()->GetAtlasNumberOfTrainingSamples() <= 0 )
     {
