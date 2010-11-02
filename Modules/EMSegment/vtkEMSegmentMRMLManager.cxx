@@ -2002,8 +2002,8 @@ ResetTargetSelectedVolumes(const std::vector<vtkIdType>& volumeIDs)
   // propogate change if the number of channels is different
   int targetNewNumImages = this->GetTargetInputNode()->GetNumberOfVolumes();
 
-  std::cerr << "Old number of images: " << targetOldNumImages << std::endl;
-  std::cerr << "New number of images: " << targetNewNumImages << std::endl;
+  std::cout << "Old number of images: " << targetOldNumImages << std::endl;
+  std::cout << "New number of images: " << targetNewNumImages << std::endl;
 
   if (targetNewNumImages > targetOldNumImages)
     {
@@ -2018,7 +2018,7 @@ ResetTargetSelectedVolumes(const std::vector<vtkIdType>& volumeIDs)
     int numRemovedImages = targetOldNumImages - targetNewNumImages;
     for (int i = 0; i < numRemovedImages; ++i)
       {
-      std::cerr << "removing an image: " << targetOldNumImages-1-i 
+      std::cout << "removing an image: " << targetOldNumImages-1-i 
                 << std::endl;
       this->PropogateRemovalOfSelectedTargetImage(targetOldNumImages-1-i);
       }
@@ -2161,13 +2161,13 @@ DoTargetAndAtlasDataTypesMatch(vtkMRMLEMSTargetNode* targetNode, vtkMRMLEMSAtlas
 {
   if (targetNode == NULL || atlasNode == NULL)
     {
-    std::cerr << "Target or atlas node is null!" << std::endl;
+    std::cout << "Target or atlas node is null!" << std::endl;
     return false;
     }
 
   if (targetNode->GetNumberOfVolumes() == 0)
     {
-    std::cerr << "Target node is empty!" << std::endl;
+    std::cout << "Target node is empty!" << std::endl;
     return (atlasNode->GetNumberOfVolumes() == 0);
     }
 
@@ -2180,7 +2180,7 @@ DoTargetAndAtlasDataTypesMatch(vtkMRMLEMSTargetNode* targetNode, vtkMRMLEMSAtlas
       targetNode->GetNthVolumeNode(i)->GetImageData()->GetScalarType();      
     if (currentScalarDataType != standardScalarDataType)
       {
-      std::cerr << "Target volume " << i << ": scalar type does not match!" 
+      std::cout << "Target volume " << i << ": scalar type does not match!" 
                 << std::endl;
       return false;
       }
@@ -2192,7 +2192,7 @@ DoTargetAndAtlasDataTypesMatch(vtkMRMLEMSTargetNode* targetNode, vtkMRMLEMSAtlas
       atlasNode->GetNthVolumeNode(i)->GetImageData()->GetScalarType();      
     if (currentScalarDataType != standardScalarDataType)
       {
-      std::cerr << "Atlas volume " << i << ": scalar type does not match!" 
+      std::cout << "Atlas volume " << i << ": scalar type does not match!" 
                 << std::endl;
       return false;
       }
@@ -4459,39 +4459,39 @@ PrintTree(vtkIdType rootID, vtkIndent indent)
 
   if (rnode == NULL)
     {
-    vtkstd::cerr << indent << "Node is null for id=" << rootID << std::endl;
+    vtkstd::cout << indent << "Node is null for id=" << rootID << std::endl;
     }
   else
     {
-    vtkstd::cerr << indent << "Label: " << (label ? label : "(null)") 
+    vtkstd::cout << indent << "Label: " << (label ? label : "(null)") 
                  << vtkstd::endl;
-    vtkstd::cerr << indent << "Name: " << (name ? name : "(null)") 
+    vtkstd::cout << indent << "Name: " << (name ? name : "(null)") 
                  << vtkstd::endl;
-    vtkstd::cerr << indent << "ID: "    << rootID 
+    vtkstd::cout << indent << "ID: "    << rootID 
                  << " MRML ID: " << rnode->GetID()
                  << " From Map: " << mrmlID << vtkstd::endl;
-    vtkstd::cerr << indent << "Is Leaf: " << this->GetTreeNodeIsLeaf(rootID) 
+    vtkstd::cout << indent << "Is Leaf: " << this->GetTreeNodeIsLeaf(rootID) 
                  << vtkstd::endl;
     int numChildren = this->GetTreeNodeNumberOfChildren(rootID); 
-    vtkstd::cerr << indent << "Num. Children: " << numChildren << vtkstd::endl;
-    vtkstd::cerr << indent << "Child IDs from parent: ";
+    vtkstd::cout << indent << "Num. Children: " << numChildren << vtkstd::endl;
+    vtkstd::cout << indent << "Child IDs from parent: ";
     for (int i = 0; i < numChildren; ++i)
       {
-      vtkstd::cerr << rnode->GetNthChildNodeID(i) << " ";
+      vtkstd::cout << rnode->GetNthChildNodeID(i) << " ";
       }
-    vtkstd::cerr << vtkstd::endl;
-    vtkstd::cerr << indent << "Child IDs from children: ";
+    vtkstd::cout << vtkstd::endl;
+    vtkstd::cout << indent << "Child IDs from children: ";
     for (int i = 0; i < numChildren; ++i)
       {
-      vtkstd::cerr << rnode->GetNthChildNode(i)->GetID() << " ";
+      vtkstd::cout << rnode->GetNthChildNode(i)->GetID() << " ";
       }
-    vtkstd::cerr << vtkstd::endl;
+    vtkstd::cout << vtkstd::endl;
 
     indent = indent.GetNextIndent();
     for (int i = 0; i < numChildren; ++i)
       {
       vtkIdType childID = this->GetTreeNodeChildNodeID(rootID, i);
-      vtkstd::cerr << indent << "Child " << i << " (" << childID 
+      vtkstd::cout << indent << "Child " << i << " (" << childID 
                    << ") of node " << rootID << vtkstd::endl;
       this->PrintTree(childID, indent);
       }
@@ -4514,25 +4514,25 @@ vtkEMSegmentMRMLManager::PrintVolumeInfo( vtkMRMLScene* mrmlScene)
     continue;
       } 
     // print volume node ID and name
-    vtkstd::cerr << "Volume Node ID / Name / ImageData : " << volumeNode->GetID()
+    vtkstd::cout << "Volume Node ID / Name / ImageData : " << volumeNode->GetID()
          << " / " << volumeNode->GetName() << " / " << (volumeNode->GetImageData() ? "Defined" : "NULL")  << vtkstd::endl;
     // print display node id
-    vtkstd::cerr << " Display Node ID: " 
+    vtkstd::cout << " Display Node ID: " 
               << (volumeNode->GetDisplayNode() ?
                   volumeNode->GetDisplayNode()->GetID() : "NULL")
               << vtkstd::endl;
 
     // print storage node id and filename
-    vtkstd::cerr << " Storage Node ID / Filename: ";
+    vtkstd::cout << " Storage Node ID / Filename: ";
     if (volumeNode->GetStorageNode()) 
       {
-    vtkstd::cerr <<   (volumeNode->GetStorageNode()->GetID() ? volumeNode->GetStorageNode()->GetID() : "NULL") 
+    vtkstd::cout <<   (volumeNode->GetStorageNode()->GetID() ? volumeNode->GetStorageNode()->GetID() : "NULL") 
                      << " / " << (volumeNode->GetStorageNode()->GetFileName() ? volumeNode->GetStorageNode()->GetFileName() : "NULL") 
                      << vtkstd::endl;
       } 
     else  
       {
-        vtkstd::cerr <<  "Not Defined" << vtkstd::endl;
+        vtkstd::cout <<  "Not Defined" << vtkstd::endl;
       }
     }
 }
