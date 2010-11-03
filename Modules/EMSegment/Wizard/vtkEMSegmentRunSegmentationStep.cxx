@@ -536,7 +536,8 @@ void vtkEMSegmentRunSegmentationStep::SelectTemplateFileCallback()
    if (mrmlManager)
         {
           mrmlManager->SetSaveTemplateFilename(filename.c_str());
-          mrmlManager->CreateTemplateFile();
+          vtkSlicerApplication *app = vtkSlicerApplication::SafeDownCast(this->GetGUI()->GetApplication());
+          mrmlManager->CreateTemplateFile(app->GetTemporaryDirectory());
         }
 }
 

@@ -1,8 +1,8 @@
 #include "vtkObjectFactory.h"
 
 #include "vtkEMSegmentMRMLManager.h"
-#include "vtkEMSegmentLogic.h"
 #include "vtkEMSegment.h"
+#include <time.h>
 
 #include "vtkMRMLScene.h"
 
@@ -21,10 +21,10 @@
 #include "vtkMatrix4x4.h"
 #include "vtkMath.h"
 
-#include "vtkSlicerVolumesLogic.h"
 #include "vtkMRMLVolumeArchetypeStorageNode.h"
 #include "vtkSlicerColorLogic.h"
 #include "vtkMRMLLabelMapVolumeDisplayNode.h"
+#include "vtkSlicerVolumesLogic.h"
 
 // needed to translate between enums
 #include "EMLocalInterface.h"
@@ -4541,8 +4541,7 @@ vtkEMSegmentMRMLManager::PrintVolumeInfo( vtkMRMLScene* mrmlScene)
 
 //-----------------------------------------------------------------------------
 // this returns only the em tree - only works when Import correctly works - however I am not sure if that is the case 
-void
-vtkEMSegmentMRMLManager::CreateTemplateFile()
+void vtkEMSegmentMRMLManager::CreateTemplateFile(const char* TemporaryCacheDirectory)
 {
   cout << "vtkEMSegmentMRMLManager::CreateTemplateFile()" << endl;
   if (!this->GetSaveTemplateFilename())
@@ -4611,7 +4610,7 @@ vtkEMSegmentMRMLManager::CreateTemplateFile()
 
   cScene->SetRootDirectory(outputDirectory.c_str());
   cScene->SetURL(fileName.c_str());
-  this->CopyEMRelatedNodesToMRMLScene(cScene);
+  this->CopyEMRelatedNodesToMRMLScene(cScene,TemporaryCacheDirectory);
   cout << "Write Template to  " << fileName.c_str() << " ..." << endl;
   cScene->Commit(fileName.c_str());
   cout << "... finished" << endl;
@@ -4664,13 +4663,12 @@ vtkEMSegmentMRMLManager::RemoveNodesFromMRMLScene(vtkMRMLNode* node)
 //-----------------------------------------------------------------------------
 void
 vtkEMSegmentMRMLManager::
-CopyEMRelatedNodesToMRMLScene(vtkMRMLScene* newScene)
+CopyEMRelatedNodesToMRMLScene(vtkMRMLScene* newScene, const char* TemporaryCacheDirectory)
 {
- 
+
   //
   // copy over nodes from the current scene to the new scene
   //
-
   vtkMRMLScene*   currentScene = this->GetMRMLScene();
   vtkMRMLEMSNode* emNode       = this->GetEMSNode();
   if (currentScene == NULL || emNode == NULL)
@@ -4678,7 +4676,124 @@ CopyEMRelatedNodesToMRMLScene(vtkMRMLScene* newScene)
     return;
     }
 
+  if (currentScene->IsFilePathRelative(TemporaryCacheDirectory))
+    {
+      // if not absolute can cause problems when writing scene to file 
+      vtkErrorMacro("TemporaryCacheDirectory has to be absolute!");
+      return;
+    }
+
+  if (currentScene->IsFilePathRelative(newScene->GetRootDirectory()))
+    {
+      // if not absolute can cause problems when writing scene to file 
+      vtkErrorMacro("Root Directory of newScene has to be absolute!");
+      return;
+    }
+
+
+  // ------------------------------------------------------------------------
+  // Do to bug 1036 we first have to save all nodes that have not been saved  - only defined for for volumes right now
+  // Copied these lines from vtkSlicerMRMLSaveDataWidget
+  std::string tempCacheDirectory(TemporaryCacheDirectory);
+  if (tempCacheDirectory[tempCacheDirectory.size()-1] != '/')
+    {
+      tempCacheDirectory += "/";
+    }
+
+  srand(time(0));
+  std::stringstream rndNum;
+  rndNum << rand()%10000;
+  tempCacheDirectory +=  std::string("EMSegTemp_") +  rndNum.str() +  "/";
+  
+  cout <<"Creating directory " << tempCacheDirectory << endl;
+
+  vtksys::SystemTools::MakeDirectory(tempCacheDirectory.c_str());  
+
+  int nnodes = currentScene->GetNumberOfNodesByClass("vtkMRMLVolumeNode");
+  for (int n=0; n<nnodes; n++)
+    {
+      
+      vtkMRMLVolumeNode *node = vtkMRMLVolumeNode::SafeDownCast(currentScene->GetNthNodeByClass(n, "vtkMRMLVolumeNode"));
+      vtkMRMLStorageNode* snode = node->GetStorageNode();
+      int saveFlag = 0; 
+      std::stringstream name;
+
+      // Define file name to write to temp directory 
+      if (!snode || !snode->GetFileName() ||  !strcmp(snode->GetFileName(),"") ) 
+      {
+    // cout << "===> Creating new filename for " << node->GetID() << endl;
+        name << tempCacheDirectory <<  node->GetName();
+       
+    vtkMRMLStorageNode* storageNode = node->CreateDefaultStorageNode();
+        const char* ext = storageNode->GetDefaultWriteFileExtension();
+        if (ext) 
+        {
+          name << "." << ext;
+        }
+        storageNode->Delete(); 
+        saveFlag = 1;
+      } 
+    else 
+      { 
+    // cout << "<<<< Current filename for " << node->GetID() << " " << snode->GetFileName() << endl;  
+        // Setting all files to their absolute path is important as we change the root directory later
+        if (currentScene->IsFilePathRelative(snode->GetFileName()))
+        {
+          name << currentScene->GetRootDirectory();
+          if (name.str()[name.str().size()-1] != '/')
+          {
+            name << "/";
+          }
+          name <<  snode->GetFileName();
+          snode->SetFileName(name.str().c_str());
+          snode->SetURI(NULL);
+        } 
+        else 
+      {
+        name << snode->GetFileName();
+      }
+        saveFlag = node->GetModifiedSinceRead();
+      }
+      // Write Data To File otherwise causes issues when executing GetReferencedSubScene bc it reads from file 
+      if (saveFlag) 
+    {
+      // cout << "===>Save " << name.str().c_str() << " " << node->GetID() << endl;
+      vtkSlicerVolumesLogic *volLogic = vtkSlicerVolumesLogic::New();
+      volLogic->SetMRMLScene(currentScene);
+          volLogic->SaveArchetypeVolume(name.str().c_str(),node);
+          volLogic->Delete();
+          node->SetModifiedSinceRead(0);
+    }
+    }
+
+  std::string origURL(currentScene->GetURL());
+  std::string origRootDir(currentScene->GetRootDirectory());
+
+  // Create Temp MRML name 
+  std::string fileName(vtksys::SystemTools::GetFilenameName(origURL.c_str()));
+  std::stringstream tmpFileName;
+  tmpFileName << newScene->GetRootDirectory();
+
+  if ( tmpFileName.str()[ tmpFileName.str().size()-1] != '/')
+    {
+      tmpFileName <<"/";
+    }
+
+  tmpFileName << "_" << rand() % 10000   <<  "_" <<  fileName; 
+
+  currentScene->SetRootDirectory(newScene->GetRootDirectory());  
+  currentScene->Commit(tmpFileName.str().c_str());
+  // cout << "Wrote temporary file name to " <<  tmpFileName.str().c_str() << endl;
+  // this->PrintVolumeInfo(currentScene);
+
+  //-------------------------------------------------------
+  // End of addition due to bug 
+
   currentScene->GetReferencedSubScene(emNode, newScene);
+
+  // Reset to old standard 
+  currentScene->SetRootDirectory(origRootDir.c_str());
+  currentScene->SetURL(origURL.c_str());
 
   return;
 
@@ -4961,14 +5076,19 @@ void vtkEMSegmentMRMLManager::SetTreeNodeDistributionLogCovarianceWithCorrection
 
    if (!this->TreeNodeDistributionLogCovarianceCorrectionEnabled(nodeID))
      {
-        // Have to copy values over 
         vtkstd::vector<vtkstd::vector<double> > logCov =  node->GetLogCovariance();
+       //make sure it is not because of a rounding error 
+    if (fabs( value - logCov[rowIndex][columnIndex]) < 0.001)
+     {
+       return;
+     }
+        // Have to copy values over 
         for (int i = 0; i < n; ++i)
         {
           for (int j = 0; j < n; ++j)
-      {
-        node->SetLogCovarianceCorrection(i,j, logCov[i][j]);
-      }
+          {
+             node->SetLogCovarianceCorrection(i,j, logCov[i][j]);
+          }
         }
      }
    node->SetLogCovarianceCorrection(rowIndex,columnIndex, value);
