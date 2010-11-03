@@ -453,6 +453,25 @@ if(NOT DISABLE_CXX_TESTING)
     PASS_REGULAR_EXPRESSION
     "ERROR: Number of input channels")
 
+  # Does the option --intermediateResultsDirectory work?
+  add_test(
+    EMSegCL_IntermediateResults
+    ${Slicer3_EXE} ${WRAPPED_EXE_PREFIX}/EMSegmentCommandLine
+    --no-error-popup
+    --verbose --mrmlSceneFileName
+    ${EMSegment_TUTORIAL_DIR}/Template_small.mrml
+    --targetVolumeFileNames
+    ${EMSegment_TUTORIAL_DIR}/VolumeData/targetT1Normed_small.mhd,${EMSegment_TUTORIAL_DIR}/VolumeData/targetT2Normed_small.mhd
+    --intermediateResultsDirectory
+    /tmp
+    )
+  set_tests_properties(
+    EMSegCL_IntermediateResults
+    PROPERTIES
+    FAIL_REGULAR_EXPRESSION
+    "Error writing intermediate results"
+    )
+
   # Does it fail elegently when a bogus result standard is specified?
   add_test(
     EMSegCL_EFBogusResultStandardImage
