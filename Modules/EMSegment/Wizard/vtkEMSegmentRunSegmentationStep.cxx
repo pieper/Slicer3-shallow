@@ -311,6 +311,7 @@ void vtkEMSegmentRunSegmentationStep::ShowUserInterface()
       GetWidget()->SetCommand(this, "SaveIntermediateCallback");
     }
 
+  // TODO: Uncomment the call to activate this check button
   // this->Script("pack %s -side top -anchor nw -padx 2 -pady 2", this->RunSegmentationSaveIntermediateCheckButton->GetWidgetName());
 
   this->RunSegmentationSaveIntermediateCheckButton->
@@ -332,7 +333,8 @@ void vtkEMSegmentRunSegmentationStep::ShowUserInterface()
       this->RunSegmentationDirectorySubFrame->Create();
     }
 
-  this->Script("pack %s -side top -anchor nw -fill x -padx 0 -pady 0", this->RunSegmentationDirectorySubFrame->GetWidgetName());
+  // TODO: Uncomment the call to activate this frame
+  // this->Script("pack %s -side top -anchor nw -fill x -padx 0 -pady 0", this->RunSegmentationDirectorySubFrame->GetWidgetName());
 
 
   if (!this->RunSegmentationDirectoryLabel)
@@ -347,7 +349,9 @@ void vtkEMSegmentRunSegmentationStep::ShowUserInterface()
     this->RunSegmentationDirectoryLabel->SetWidth(EMSEG_WIDGETS_LABEL_WIDTH);
     this->RunSegmentationDirectoryLabel->SetText("Select Intermediate Directory: ");
     }
-  this->Script( "pack %s -side left -anchor nw -padx 2 -pady 2", this->RunSegmentationDirectoryLabel->GetWidgetName());
+
+  // TODO: Uncomment the call to activate this label
+  // this->Script( "pack %s -side left -anchor nw -padx 2 -pady 2", this->RunSegmentationDirectoryLabel->GetWidgetName());
 
   if (!this->RunSegmentationDirectoryButton)
     {
@@ -386,7 +390,9 @@ void vtkEMSegmentRunSegmentationStep::ShowUserInterface()
   this->RunSegmentationDirectoryButton->SetEnabled(
     mrmlManager->HasGlobalParametersNode() ? enabled : 0);
 
-  this->Script("pack %s -side left -anchor nw -fill x -padx 2 -pady 2", this->RunSegmentationDirectoryButton->GetWidgetName());
+
+  // TODO: Uncomment the call to activate this button
+  // this->Script("pack %s -side left -anchor nw -fill x -padx 2 -pady 2", this->RunSegmentationDirectoryButton->GetWidgetName());
 
 
   // Create the run frame
