@@ -311,8 +311,7 @@ void vtkEMSegmentRunSegmentationStep::ShowUserInterface()
       GetWidget()->SetCommand(this, "SaveIntermediateCallback");
     }
 
-  this->Script(
-    "pack %s -side top -anchor nw -padx 2 -pady 2", this->RunSegmentationSaveIntermediateCheckButton->GetWidgetName());
+  // this->Script("pack %s -side top -anchor nw -padx 2 -pady 2", this->RunSegmentationSaveIntermediateCheckButton->GetWidgetName());
 
   this->RunSegmentationSaveIntermediateCheckButton->
     GetWidget()->SetSelectedState(
