@@ -28,6 +28,7 @@ namespace eval EMSegmenterPreProcessingTcl {
     variable CheckButtonSize 2
     variable VolumeMenuButtonSize 0
     variable TextEntrySize 0
+    variable UseBRAINS 1
 
     # Check Button
     variable atlasAlignedFlagID 0
@@ -427,6 +428,8 @@ namespace eval EMSegmenterPreProcessingTcl {
         variable subjectNode
         variable inputAtlasNode
         variable outputAtlasNode
+        variable UseBRAINS
+
 
         set affineFlag [expr ([$mrmlManager GetRegistrationAffineType] != [$mrmlManager GetRegistrationTypeFromString AtlasToTargetAffineRegistrationOff])]
         set bSplineFlag [expr ([$mrmlManager GetRegistrationDeformableType] != [$mrmlManager GetRegistrationTypeFromString AtlasToTargetDeformableRegistrationOff])]
@@ -564,7 +567,7 @@ namespace eval EMSegmenterPreProcessingTcl {
             }
 
             set backgroundLevel [$LOGIC GuessRegistrationBackgroundLevel $movingAtlasVolumeNode]
-            set UseBRAINS 1
+
             if { $UseBRAINS } {
                 set transformNode [BRAINSRegistration $fixedTargetVolumeNode $movingAtlasVolumeNode $outputAtlasVolumeNode $backgroundLevel "$registrationType" $fastFlag]
                 if { $transformNode == "" } {
