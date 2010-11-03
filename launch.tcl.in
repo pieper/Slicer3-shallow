@@ -1093,6 +1093,12 @@ proc launch_ImportModulePaths {} {
       return
     }
 
+    # sanity check output from slicer executable
+    # if the strings are not a valid set of paths, bail out
+    if { [catch "foreach line $::globallines {}"] } {
+      return
+    }
+
     # 
     # find just the line that has the actual path in it the one that contains \@SVN\@
     # - ignore other lines that might be error messages or diagnotics
