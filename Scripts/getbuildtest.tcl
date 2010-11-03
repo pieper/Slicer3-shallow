@@ -47,6 +47,7 @@ proc Usage { {msg ""} } {
     set msg "$msg\n   --rpm : optional, specify CPack RPM generator for packaging"
     set msg "$msg\n   --deb : optional, specify CPack DEB generator for packaging"
     set msg "$msg\n   -e --extend : optional, build external modules using the extend script"
+    set msg "$msg\n   --ext-dir : optional, where to copy extensions after building"
     set msg "$msg\n   -32 -64 : Set if we want to build Slicer 32 or 64 bits" 
     set msg "$msg\n            : The default on Solaris is the current bitness of the underlying kernel (isainfo -b)"
     set msg "$msg\n            : The default on Linux is the current bitness of the underlying kernel"
@@ -74,6 +75,7 @@ set ::GETBUILDTEST(buildList) ""
 set ::GETBUILDTEST(cpack-generator) ""
 set ::GETBUILDTEST(rpm-spec) ""
 set ::GETBUILDTEST(extend) "false"
+set ::GETBUILDTEST(ext-dir) ""
 set ::GETBUILDTEST(compiler) ""
 set ::GETBUILDTEST(bitness) "32"
 switch $::tcl_platform(os) {
@@ -156,6 +158,14 @@ for {set i 0} {$i < $argc} {incr i} {
                 Usage "Missing pack-dir argument"
             } else {
                 set ::GETBUILDTEST(pack-dir) [lindex $argv $i]
+            }
+        }
+        "--ext-dir" {
+            incr i
+            if { $i == $argc } {
+                Usage "Missing ext-dir argument"
+            } else {
+                set ::GETBUILDTEST(ext-dir) [lindex $argv $i]
             }
         }
         "--upload" {
@@ -677,6 +687,9 @@ if { $::GETBUILDTEST(extend) == "true" } {
   # build the slicer3 extensions
   cd $::Slicer3_HOME
   set cmd "sh ./Scripts/extend.tcl $::GETBUILDTEST(release)"
+  if { $::GETBUILDTEST(ext-dir) != "" } {
+    set cmd "$cmd --ext-dir $::GETBUILDTEST(ext-dir)"
+  }
   eval runcmd $cmd
 }
 
