@@ -523,6 +523,11 @@ int main(int argc, char** argv)
      tgVtkDefineMacro(appLogic,vtkSlicerApplicationLogic);
      app->Script ("namespace eval slicer3 set ApplicationLogic %s", appLogicTcl.c_str());
 
+     // set BinDir to make functionality like GetSvnRevision available
+     std::string slicerBinDir = slicerHome + "/bin";
+     slicerBinDir = vtksys::SystemTools::CollapseFullPath(slicerBinDir.c_str());
+     app->SetBinDir(slicerBinDir.c_str());
+
     // =======================================================================
     //
     //  Setting up initial Scene 
