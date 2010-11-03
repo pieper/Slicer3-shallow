@@ -33,6 +33,7 @@ proc Usage { {msg ""} } {
     set msg "$msg\n   --quiet : turns off debugging messages"
     set msg "$msg\n   --no-extension-update : disables svn checkout for the extension"
     set msg "$msg\n   --upload : upload the script to the extension server"
+    set msg "$msg\n   --ext-dir : directory root of extensions"
     puts stderr $msg
 }
 
@@ -43,6 +44,7 @@ set ::EXTEND(test-type) ""
 set ::EXTEND(buildList) ""
 set ::EXTEND(no-extension-update) ""
 set ::EXTEND(upload) "false"
+set ::EXTEND(ext-dir) ""
 
 if {[info exists ::env(CVS)]} {
     set ::CVS "{$::env(CVS)}"
@@ -92,6 +94,14 @@ for {set i 0} {$i < $argc} {incr i} {
         }
         "--upload" {
             set ::EXTEND(upload) "true"
+        }
+        "--ext-dir" {
+            incr i
+            if { $i == $argc } {
+                Usage "Missing ext-dir argument"
+            } else {
+                set ::EXTEND(ext-dir) [lindex $argv $i]
+            }
         }
         "--help" -
         "-h" {
@@ -343,6 +353,31 @@ proc upload {fileName} {
 }
 
 ################################################################################
+# helper
+# - copies the named file into to the extension directory
+
+proc copyToDir {fileName} {
+
+  vputs "Copying $fileName to $::EXTEND(ext-dir)..."
+  flush stdout
+
+  set name [file tail $fileName]
+
+  set dir $::EXTEND(ext-dir)
+  if { ![file isdir $dir] } { file mkdir $dir }
+  set dir $dir/[file tail $::EXTEND(slicerSVNSubpath)]
+  if { ![file isdir $dir] } { file mkdir $dir }
+  set dir $dir/$::EXTEND(slicerSVNRevision)-$::env(BUILD)
+  if { ![file isdir $dir] } { file mkdir $dir }
+  
+  set copyTarget "$dir/[file tail $name]"
+  file copy -force $fileName $copyTarget
+
+  vputs "copied $fileName to $copyTarget"
+  flush stdout
+}
+
+################################################################################
 #
 # before building, sort the ext files based on the dependencies they need
 # - load the s3ext file parameters into array "ext"
@@ -452,7 +487,8 @@ while { $rearranged } {
 # - run the tests
 # - run the install target
 # - make the zip file
-# - upload it 
+# - upload it (optional)
+# - copy it (optional)
 #
 
 proc buildExtension {s3ext} {
@@ -641,6 +677,14 @@ proc buildExtension {s3ext} {
   if { $::EXTEND(upload) } {
     upload $::ext(zipFileName)  
     upload $s3ext
+  }
+
+  # copy it
+  # - put the files into a directory tree with correct versioning structure
+  #
+  if { $::EXTEND(ext-dir) != "" } {
+    copyToDir $::ext(zipFileName)  
+    copyToDir $s3ext
   }
 }
 
