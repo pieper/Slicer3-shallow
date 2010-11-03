@@ -579,50 +579,7 @@ namespace eval EMSegmenterPreProcessingTcl {
         lappend ValueList "String interpolationMode Linear"
 
         # Start calling function
-        set module ""
-
-        foreach gui [vtkCommandLineModuleGUI ListInstances] {
-            if { [$gui GetGUIName] == "BRAINSResample" } {
-                set module $gui
-                break
-            }
-        }
-        if { $module == "" } {
-            return [BRAINSResampleCLI $inputVolumeNode $referenceVolumeNode $outVolumeNode $transformationNode "$ValueList"]
-        }
-
-        lappend ValueList "String inputVolume [$inputVolumeNode GetID]"
-        lappend ValueList "String referenceVolume [$referenceVolumeNode GetID]"
-        lappend ValueList "String warpTransform [$transformationNode GetID]"
-        lappend ValueList "String outputVolume [$outVolumeNode GetID]"
-
-         $LOGIC PrintText "TCL: =========================================="
-         $LOGIC PrintText "TCL: == Resample Image: [$inputVolumeNode GetName]"
-         $LOGIC PrintText "TCL: =========================================="
-
-        $module Enter
-
-        set cmdNode [$::slicer3::MRMLScene CreateNodeByClass vtkMRMLCommandLineModuleNode]
-        $SCENE AddNode $cmdNode
-        $cmdNode SetModuleDescription "BRAINSResample"
-        $module SetCommandLineModuleNode $cmdNode
-        [$module GetLogic] SetCommandLineModuleNode $cmdNode
-
-        foreach ATT $ValueList {
-            eval $cmdNode SetParameterAs[lindex $ATT 0] "[lindex $ATT 1]" "[lindex $ATT 2]"
-        }
-
-        # Filter options - just set it here to make sure that if default values are changed this still works as it supposed to
-
-        [$module GetLogic] LazyEvaluateModuleTarget $cmdNode
-        [$module GetLogic] ApplyAndWait $cmdNode
-
-        # Clean Up
-        $::slicer3::MRMLScene RemoveNode $cmdNode
-        DeleteCommandLine $cmdNode
-        $module Exit
-
-        return 0
+        return [BRAINSResampleCLI $inputVolumeNode $referenceVolumeNode $outVolumeNode $transformationNode "$ValueList"]
     }
 
     proc BRAINSResampleCLI { inputVolumeNode referenceVolumeNode outVolumeNode transformationNode  ValueList } {
