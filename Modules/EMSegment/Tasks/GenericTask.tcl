@@ -682,8 +682,12 @@ namespace eval EMSegmenterPreProcessingTcl {
 
 
         set CMD "[$::slicer3::Application GetExtensionsInstallPath]"
-        set CMD "$CMD/[$::slicer3::Application GetSvnRevision]/"
-        set CMD "$CMD/15383/"
+        set svnrevision [$::slicer3::Application GetSvnRevision]
+        if { $svnrevision == "" } {
+            set CMD "$CMD/15383"
+        } else {
+            set CMD "$CMD/$svnrevision"
+        }
         set CMD "$CMD/CMTK4Slicer/warp"
 
         set bgValue 0
@@ -1052,8 +1056,12 @@ namespace eval EMSegmenterPreProcessingTcl {
         ## CMTK specific arguments
 
         set CMD "[$::slicer3::Application GetExtensionsInstallPath]"
-        set CMD "$CMD/[$::slicer3::Application GetSvnRevision]/"
-        set CMD "$CMD/15383/"
+        set svnrevision [$::slicer3::Application GetSvnRevision]
+        if { $svnrevision == "" } {
+            set CMD "$CMD/15383"
+        } else {
+            set CMD "$CMD/$svnrevision"
+        }
         set CMD "$CMD/CMTK4Slicer/registration "
 
         set CMD "$CMD --verbose --initxlate --exploration 8.0 --dofs 6 --dofs 9"
@@ -1099,8 +1107,12 @@ namespace eval EMSegmenterPreProcessingTcl {
         if { $bSplineFlag } {
 
             set CMD "[$::slicer3::Application GetExtensionsInstallPath]"
-            set CMD "$CMD/[$::slicer3::Application GetSvnRevision]/"
-            set CMD "$CMD/15383/"
+            set svnrevision [$::slicer3::Application GetSvnRevision]
+            if { $svnrevision == "" } {
+                set CMD "$CMD/15383"
+            } else {
+                set CMD "$CMD/$svnrevision"
+            }
             set CMD "$CMD/CMTK4Slicer/warp"
 
             set outNonLinearTransformDirName /tmp/bspline.xform
