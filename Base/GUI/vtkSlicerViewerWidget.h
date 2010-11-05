@@ -158,6 +158,8 @@ public:
   virtual void UngridWidget ( );
   void ColorAxisLabelActors ( double r, double g, double b);
   
+  void AddMRMLSceneObservers();
+
   /// 
   /// Updates Actors based on models in the scene
   void UpdateFromMRML();
@@ -372,6 +374,7 @@ protected:
   int IsRendering;
 
   int CameraNodeUpdatePending;
+  int UpdatingCameraNode;
   
 private:
   

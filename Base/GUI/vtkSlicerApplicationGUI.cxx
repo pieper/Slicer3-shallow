@@ -2611,10 +2611,55 @@ void vtkSlicerApplicationGUI::UpdateMain3DViewers()
 
   vtksys_stl::map<vtkMRMLViewNode*, int> view_nodes;
 
+  int numViewerNeeded = 1;
+  vtkMRMLLayoutNode *layout = this->GetGUILayoutNode();
+  if (layout)
+    {
+    int lay = layout->GetViewArrangement();
+    if (lay == vtkMRMLLayoutNode::SlicerLayoutDual3DView)
+      {
+      numViewerNeeded = 2;
+      }
+    if (lay == vtkMRMLLayoutNode::SlicerLayoutTriple3DEndoscopyView)
+      {
+      numViewerNeeded = 3;
+      }
+    }
+
+  // make sure that we have no more than numViewerNeeded visible View nodes
+  int numVisible = 0;
+  int n;
+  int nnodes = this->MRMLScene->GetNumberOfNodesByClass("vtkMRMLViewNode");
+  for (n = 0; n < nnodes; n++)
+    {
+    vtkMRMLViewNode *node = vtkMRMLViewNode::SafeDownCast (
+      this->MRMLScene->GetNthNodeByClass(n, "vtkMRMLViewNode"));
+    if (node && node->GetVisibility())
+      {
+      numVisible++;
+      }
+    if (numVisible > numViewerNeeded)
+      {
+      node->SetVisibility(0);
+      }
+  }
+
+  std::list<vtkSlicerViewerWidget *> nodelessViewers;
+  int nViewers = this->Internals->ViewerWidgets.size();
+  for (int i=0; i<nViewers; i++) 
+    {
+    if (this->Internals->ViewerWidgets[i]->GetViewNode() == NULL)
+      {
+      nodelessViewers.push_back(this->Internals->ViewerWidgets[i]);
+      }
+    }
+   
+
+
   int nb_added = 0;
   int nb_fidlist_added = 0;
   vtkMRMLViewNode *node = NULL;
-  int n, nnodes = this->MRMLScene->GetNumberOfNodesByClass("vtkMRMLViewNode");
+  nnodes = this->MRMLScene->GetNumberOfNodesByClass("vtkMRMLViewNode");
   for (n = 0; n < nnodes; n++)
     {
     node = vtkMRMLViewNode::SafeDownCast (
@@ -2624,21 +2669,40 @@ void vtkSlicerApplicationGUI::UpdateMain3DViewers()
       view_nodes[node] = 1;
       if (!this->GetViewerWidgetForNode(node))
         {
-        vtkSlicerViewerWidget *viewer_widget = vtkSlicerViewerWidget::New();
-        viewer_widget->SetApplication(app);
-        viewer_widget->SetParent(this->MainSlicerWindow);
-        viewer_widget->SetAndObserveViewNode(node);
-        viewer_widget->SetMRMLScene(this->MRMLScene);
-        viewer_widget->Create();
-        viewer_widget->UpdateFromMRML();
-        viewer_widget->SetApplicationLogic(this->GetApplicationLogic());
-        this->Internals->ViewerWidgets.push_back(viewer_widget);
-        node->InvokeEvent(
-          vtkMRMLViewNode::GraphicalResourcesCreatedEvent, viewer_widget);
-        nb_added++;
+        // try to re-use an existing viewer first
+        vtkSlicerViewerWidget *viewer_widget = NULL;
+        if (nodelessViewers.size() > 0)
+          {
+          viewer_widget = nodelessViewers.front();
+          viewer_widget->SetMRMLScene(this->MRMLScene);
+          viewer_widget->SetAndObserveViewNode(node);
+          viewer_widget->AddMRMLSceneObservers();
+          viewer_widget->UpdateFromMRML();
+          viewer_widget->SetApplicationLogic(this->GetApplicationLogic());
+          node->InvokeEvent(
+              vtkMRMLViewNode::GraphicalResourcesCreatedEvent, viewer_widget);
+
+          nodelessViewers.pop_front();
+          }
+        else
+          {
+          viewer_widget = vtkSlicerViewerWidget::New();
+          viewer_widget->SetApplication(app);
+          viewer_widget->SetParent(this->MainSlicerWindow);
+          viewer_widget->SetAndObserveViewNode(node);
+          viewer_widget->SetMRMLScene(this->MRMLScene);
+          viewer_widget->Create();
+          viewer_widget->UpdateFromMRML();
+          viewer_widget->SetApplicationLogic(this->GetApplicationLogic());
+          this->Internals->ViewerWidgets.push_back(viewer_widget);
+          node->InvokeEvent(
+            vtkMRMLViewNode::GraphicalResourcesCreatedEvent, viewer_widget);
+          nb_added++;
+          }
         }
       if (!this->GetFiducialListWidgetForNode(node))
         {
+        // TODO: try to re-use an existing viewer first, see above
         vtkSlicerFiducialListWidget *fidlist_widget = vtkSlicerFiducialListWidget::New();
         fidlist_widget->SetApplication(app);
         fidlist_widget->SetParent(this->MainSlicerWindow);
@@ -3561,6 +3625,34 @@ void vtkSlicerApplicationGUI::PackTriple3DEndoscopyView ()
 
     // Do we need to make some more 3D viewer nodes?
     // We will need 3 for this layout.
+
+    // Make sure that we have 3 ViewNodes visible
+    // find first one visible and make one more visible
+    int numViewNodes = this->MRMLScene->GetNumberOfNodesByClass("vtkMRMLViewNode");
+    vtkMRMLViewNode *viewNodeVisible = NULL;
+    for (int i=0; i<numViewNodes; i++) 
+      {
+      vtkMRMLViewNode *viewNode = (vtkMRMLViewNode *)this->MRMLScene->GetNthNodeByClass(i,"vtkMRMLViewNode");
+      if (viewNode && viewNode->GetVisibility())
+        {
+        viewNodeVisible = viewNode;
+        }
+      }
+    int countVisible = 1;
+    for (int i=0; i<numViewNodes; i++) 
+      {
+      vtkMRMLViewNode *viewNode = (vtkMRMLViewNode *)this->MRMLScene->GetNthNodeByClass(i,"vtkMRMLViewNode");
+      if (viewNode && viewNode->GetVisibility() == 0 && viewNode != viewNodeVisible)
+        {
+        viewNode->SetVisibility(1);
+        countVisible++;
+        if (countVisible == 3)
+          {
+          break;
+          }
+        }
+      }
+
     if (GetNumberOfVisibleViewNodes() < 3)
       {
       vtkMRMLViewNode *vnode;
@@ -3574,6 +3666,8 @@ void vtkSlicerApplicationGUI::PackTriple3DEndoscopyView ()
         this->OnViewNodeAdded(vnode);
         }
       }
+
+    this->UpdateMain3DViewers();
 
     // Pack the 3D viewers
     for (size_t i=0; i < (this->Internals->ViewerWidgets.size() > 3 ? 3 : this->Internals->ViewerWidgets.size()); i++)
@@ -3651,6 +3745,30 @@ void vtkSlicerApplicationGUI::PackDual3DView ( )
 
 
     // Do we need to make another 3D viewer node?
+
+    // Make sure that we have 2 ViewNodes visible
+    // find first one visible and make one more visible
+    int numViewNodes = this->MRMLScene->GetNumberOfNodesByClass("vtkMRMLViewNode");
+    vtkMRMLViewNode *viewNodeVisible = NULL;
+    for (int i=0; i<numViewNodes; i++) 
+      {
+      vtkMRMLViewNode *viewNode = (vtkMRMLViewNode *)this->MRMLScene->GetNthNodeByClass(i,"vtkMRMLViewNode");
+      if (viewNode && viewNode->GetVisibility())
+        {
+        viewNodeVisible = viewNode;
+        break;
+        }
+      }
+    for (int i=0; i<numViewNodes; i++) 
+      {
+      vtkMRMLViewNode *viewNode = (vtkMRMLViewNode *)this->MRMLScene->GetNthNodeByClass(i,"vtkMRMLViewNode");
+      if (viewNode && viewNode->GetVisibility() == 0 && viewNode != viewNodeVisible)
+        {
+        viewNode->SetVisibility(1);
+        break;
+        }
+      }
+
     if (GetNumberOfVisibleViewNodes() < 2)
       {
       // Need another view node.  When the view node is added to the
@@ -3660,6 +3778,8 @@ void vtkSlicerApplicationGUI::PackDual3DView ( )
       second->Delete();
       this->OnViewNodeAdded(second);
       }
+
+    this->UpdateMain3DViewers();
 
     // Pack the 3D viewers
     for (size_t i=0; i < (this->Internals->ViewerWidgets.size() > 2 ? 2 : this->Internals->ViewerWidgets.size()); i++)
@@ -4669,6 +4789,20 @@ void vtkSlicerApplicationGUI::UnpackTriple3DEndoscopyView()
       this->MainSlicerWindow->GetSecondarySplitFrame()->SetFrame1Visibility(0);
       }
     }
+
+  int nViewers = this->Internals->ViewerWidgets.size();
+  if (nViewers > 1)
+    {
+    for (int i=1; i<nViewers; i++) 
+      {
+      if (this->Internals->ViewerWidgets[i]->GetViewNode())
+        {
+        this->Internals->ViewerWidgets[i]->GetViewNode()->SetVisibility(0);
+        this->Internals->ViewerWidgets[i]->SetAndObserveMRMLScene(NULL);
+        }
+      }
+    }
+
 }
 
 
@@ -4705,6 +4839,19 @@ void vtkSlicerApplicationGUI::UnpackDual3DView()
     if ( this->MainSlicerWindow->GetSecondarySplitFrame() )
       {
       this->MainSlicerWindow->GetSecondarySplitFrame()->SetFrame1Visibility(0);
+      }
+    }
+
+  int nViewers = this->Internals->ViewerWidgets.size();
+  if (nViewers > 1)
+    {
+    for (int i=1; i<nViewers; i++) 
+      {
+      if (this->Internals->ViewerWidgets[i]->GetViewNode())
+        {
+        this->Internals->ViewerWidgets[i]->GetViewNode()->SetVisibility(0);
+        this->Internals->ViewerWidgets[i]->SetAndObserveMRMLScene(NULL);
+        }
       }
     }
 }

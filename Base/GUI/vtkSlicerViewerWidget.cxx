@@ -127,6 +127,7 @@ vtkSlicerViewerWidget::vtkSlicerViewerWidget ( )
   this->UpdatingAxis = 0;
   this->IsRendering = 0;
   this->CameraNodeUpdatePending = 0;
+  this->UpdatingCameraNode = 0;
 
 }
 
@@ -748,6 +749,10 @@ void vtkSlicerViewerWidget::ProcessMRMLEvents ( vtkObject *caller,
     {
     return;
     }
+  if (this->GetMRMLScene() == 0)
+    {
+    return;
+    }
 
   this->ProcessingMRMLEvent = event;
 
@@ -1010,6 +1015,13 @@ void vtkSlicerViewerWidget::UpdateCameraNode()
     return;
     }
 
+  if (this->UpdatingCameraNode)
+    {
+    return;
+    }
+
+  this->UpdatingCameraNode = 1;
+
   if ( this->CameraNodeUpdatePending )
     {
     this->CameraNodeUpdatePending = 0;
@@ -1111,6 +1123,7 @@ void vtkSlicerViewerWidget::UpdateCameraNode()
     {
     // I'm already pointing to it
     vtkDebugMacro("UpdateCamera: camera node " << camera_node->GetID() << " is already pointing to my view node and I'm observing it, CameraNode = " << this->CameraNode->GetID());
+    this->UpdatingCameraNode = 0;
     return;
     }
 
@@ -1167,7 +1180,7 @@ void vtkSlicerViewerWidget::UpdateCameraNode()
       if (unassignedCamera != NULL)
         {
         // swap!
-        vtkWarningMacro("Stealing an unasigned camera node " << unassignedCamera->GetID() << " for view node " << this->ViewNode->GetID());
+        //vtkWarningMacro("Stealing an unasigned camera node " << unassignedCamera->GetID() << " for view node " << this->ViewNode->GetID());
         unassignedCamera->SetActiveTag(this->ViewNode->GetID());
         this->SetAndObserveCameraNode(unassignedCamera);
         }
@@ -1276,7 +1289,7 @@ void vtkSlicerViewerWidget::UpdateCameraNode()
     // camera is never set to synch up with a new ActiveCamera.
     this->UpdateAxis(); 
     }
-
+  this->UpdatingCameraNode = 0;
   this->InvokeEvent(vtkSlicerViewerWidget::ActiveCameraChangedEvent, NULL);
 }
 
@@ -1480,6 +1493,16 @@ void vtkSlicerViewerWidget::CreateWidget ( )
     
 
   // observe scene for add/remove nodes
+ this->AddMRMLSceneObservers();
+
+  this->CreateClipSlices();
+  this->CreateAxis();
+  this->MainViewer->ResetCamera ( );
+}
+//---------------------------------------------------------------------------
+void vtkSlicerViewerWidget::AddMRMLSceneObservers()
+{
+  // observe scene for add/remove nodes
   vtkIntArray *events = vtkIntArray::New();
   events->InsertNextValue(vtkMRMLScene::SceneCloseEvent);
   events->InsertNextValue(vtkMRMLScene::SceneClosingEvent);
@@ -1491,15 +1514,15 @@ void vtkSlicerViewerWidget::CreateWidget ( )
   events->InsertNextValue(vtkMRMLScene::SceneRestoredEvent);
   this->SetAndObserveMRMLSceneEvents(this->MRMLScene, events);
   events->Delete();
-
-  this->CreateClipSlices();
-  this->CreateAxis();
-  this->MainViewer->ResetCamera ( );
 }
 
 //---------------------------------------------------------------------------
 void vtkSlicerViewerWidget::UpdateFromMRML()
 {
+  if (this->GetMRMLScene() == 0)
+    {
+    return;
+    }
   this->UpdateViewNode();
 
   this->AddCameraObservers();
