@@ -62,6 +62,8 @@ class VTK_PROSTATENAV_EXPORT vtkMRMLProstateNavManagerNode : public vtkMRMLNode
   // Get and Set Macros
   //----------------------------------------------------------------
 
+  static const char* GetProstateNavModuleVersion();
+  static int GetProstateNavWorkingCopyRevision();
 
   //----------------------------------------------------------------
   // Standard methods for MRML nodes

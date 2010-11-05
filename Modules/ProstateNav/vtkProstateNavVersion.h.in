@@ -12,16 +12,9 @@
 
 ==========================================================================*/
 
-/* 
- * Here is where system computed values get stored.
- * These values should only change when the target compile platform changes.
- */
+// Module version identifiers
+// These values are not defined in vtkProstateNavConfigure.h.in because vtkProstateNavConfigure.h.in is included
+// in every file, and so change in the working copy revision would cause recompilation of all source files.
 
-#if defined(WIN32) && !defined(VTKSLICER_STATIC)
-  #pragma warning ( disable : 4275 )
-#endif
-
-#cmakedefine BUILD_SHARED_LIBS
-#ifndef BUILD_SHARED_LIBS
-  #define VTKSLICER_STATIC
-#endif
+#define ProstateNav_REVISION @ProstateNav_WC_REVISION@
+#define PROSTATE_NAV_MODULE_VERSION "2.0.2"

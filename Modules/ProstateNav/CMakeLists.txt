@@ -59,6 +59,10 @@ configure_file(
   ${CMAKE_CURRENT_SOURCE_DIR}/vtkProstateNavConfigure.h.in 
   ${CMAKE_CURRENT_BINARY_DIR}/vtkProstateNavConfigure.h
   )
+configure_file(
+  ${CMAKE_CURRENT_SOURCE_DIR}/vtkProstateNavVersion.h.in 
+  ${CMAKE_CURRENT_BINARY_DIR}/vtkProstateNavVersion.h
+  )
 
 #
 # Installation

@@ -12,6 +12,8 @@ Version:   $Revision: 1.2 $
 
 =========================================================================auto=*/
 
+#include "vtkProstateNavVersion.h"
+
 #include "vtkObjectFactory.h"
 
 #include "vtkMRMLProstateNavManagerNode.h"
@@ -118,7 +120,7 @@ void vtkMRMLProstateNavManagerNode::WriteXML(ostream& of, int nIndent)
 
   vtkIndent indent(nIndent);
 
-  of << indent << " ProstateNavModuleVersion=\"" << PROSTATE_NAV_MODULE_VERSION << "\"";
+  of << indent << " ProstateNavModuleVersion=\"" << GetProstateNavModuleVersion() << "\"";
   of << indent << " CurrentWorkflowStep=\"" << this->CurrentStep << "\"";    
 
   of << indent << " CurrentNeedleIndex=\"" << this->CurrentNeedleIndex << "\"";
@@ -1066,4 +1068,14 @@ NeedleDescriptorStruct* vtkMRMLProstateNavManagerNode::GetNeedle(vtkProstateNavT
   }
   // not found
   return NULL;
+}
+
+const char* vtkMRMLProstateNavManagerNode::GetProstateNavModuleVersion()
+{
+  return PROSTATE_NAV_MODULE_VERSION;
+}
+
+int vtkMRMLProstateNavManagerNode::GetProstateNavWorkingCopyRevision()
+{
+  return ProstateNav_REVISION;
 }
