@@ -40,6 +40,7 @@ proc Usage { {msg ""} } {
     set msg "$msg\n   --tag : same as version-patch"
     set msg "$msg\n   --pack : run cpack after building (default: off)"
     set msg "$msg\n   --pack-dir : where to copy the package after build"
+    set msg "$msg\n   --pack-prune : delete the package after building; use with pack-dir or upload (default: off)"
     set msg "$msg\n   --upload : set the upload string for the binary, used if pack is true"
     set msg "$msg\n            : snapshot (default), nightly, release"
     set msg "$msg\n   --doxy : just do an svn update on Slicer3 and run doxygen"
@@ -67,6 +68,7 @@ set ::GETBUILDTEST(test-type) "Experimental"
 set ::GETBUILDTEST(version-patch) ""
 set ::GETBUILDTEST(pack) "false"
 set ::GETBUILDTEST(pack-dir) ""
+set ::GETBUILDTEST(pack-prune) "false"
 set ::GETBUILDTEST(upload) "false"
 set ::GETBUILDTEST(uploadFlag) "nightly"
 set ::GETBUILDTEST(doxy) "false"
@@ -159,6 +161,9 @@ for {set i 0} {$i < $argc} {incr i} {
             } else {
                 set ::GETBUILDTEST(pack-dir) [lindex $argv $i]
             }
+        }
+        "--pack-prune" {
+                set ::GETBUILDTEST(pack-prune) "true"            
         }
         "--ext-dir" {
             incr i
@@ -677,6 +682,17 @@ if { $::GETBUILDTEST(pack) && $::GETBUILDTEST(pack-dir) != "" } {
   set destination $::GETBUILDTEST(pack-dir)/$fileName
   puts "Copying $package to $destination"
   file copy -force $package $destination
+}
+
+#
+# if pack-prune is specified, delete the package on the assumption that it has
+# been copied or uploaded (user beware!)
+#
+if { $::GETBUILDTEST(pack) && $::GETBUILDTEST(pack-prune) } {
+  set fileName "$::GETBUILDTEST(binary-filename)$::GETBUILDTEST(cpack-extension)"
+  set package "$::Slicer3_BUILD/$fileName"
+  puts "Deleting $package"
+  file delete -force $package
 }
 
 #
