@@ -305,6 +305,8 @@ itcl::body GrowCutSegmentEffect::apply {} {
     set cubeIndex [expr 1.0/3.0]
     
     set oSize [expr round([expr pow($voxelnumber,$cubeIndex)] )]
+
+    set objectSize 1
     
     $o(growCutFilter) SetObjectSize $oSize
     $o(growCutFilter) SetContrastNoiseRatio $contrastNoiseRatio
