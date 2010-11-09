@@ -171,7 +171,11 @@ void vtkITKImageGrowCutExecute3D(vtkImageData *inData,
   //debugger<<" Background Label Color "<<backgroundColor<<std::endl;
   //  std::cout<<" Background Label Color "<<backgroundColor<<std::endl;
 
-  
+  typename OutImageType::IndexType roiStart;
+  typename OutImageType::IndexType roiEnd;
+  roiStart[0] = roiStart[1] = roiStart[2] = 0;
+  roiEnd[0] = roiEnd[1] = roiEnd[2] = 0;
+ 
   for(weight.GoToBegin(), label.GoToBegin(); !weight.IsAtEnd(); 
       ++weight, ++label)
     {
@@ -181,7 +185,7 @@ void vtkITKImageGrowCutExecute3D(vtkImageData *inData,
          weight.Set(0.0);
       }
       else{
-  weight.Set( ContrastNoiseRatio );
+        weight.Set( ContrastNoiseRatio );
       }
     }
 
@@ -308,32 +312,9 @@ void ExecuteGrowCut( vtkITKGrowCutSegmentationImageFilter *self,
 
   std::cout<<" Input2 type is "<<input2->GetScalarType()<<std::endl;
 
-  if(input2->GetScalarType() != input3->GetScalarType() ) {
-    
-    double inputRange2[2];
-    //double inputRange3[2];
-    
-    vtkDataArray *tmpArray2;
-    input2->GetArrayPointerForExtent(tmpArray2, outExt);
-    tmpArray2->GetRange( inputRange2 );
-    std::cout<<" data range "<<inputRange2[0]<<" "<<inputRange2[1]<<std::endl;
-    //vtkDataArray *tmpArray3;
-    //input3->GetArrayPointerForExtent(tmpArray3, outExt);
-    
-    //tmpArray2->GetRange( inputRange2 );
-    
-    // tmpArray3->GetRange( inputRange3 );
-  
-    //double range[2];
-    //range[0] = (inputRange2[0] < inputRange3[0]) ? 
-    //  inputRange2[0] : inputRange3[0];
-    //range[1] = (inputRange2[1] > inputRange3[1]) ? 
-    // inputRange2[1] : inputRange3[1];
-
-    //bool select2 = ((input2->GetScalarTypeMin() <= range[0]) && 
-    //        (input2->GetScalarTypeMax() >= range[1])) ? 
-    // true : false;
-    
+  if(input2->GetScalarType() != input3->GetScalarType() ) 
+    {
+        
     bool select2 = true;
 
     if( select2) {
