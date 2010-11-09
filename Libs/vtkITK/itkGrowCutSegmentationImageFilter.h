@@ -279,7 +279,6 @@ template<class TInputImage,
   //itkGetConstMacro( UseSlow, bool );
 
   /** Set/Get the ROI start and End **/
-
   void SetROIStart( const OutputIndexType &start)
   {
     //for (unsigned d = 0; d < InputImageDimension; d++)
@@ -390,7 +389,7 @@ template<class TInputImage,
 
   void InitializeDistancesImage( TInputImage *input, WeightImageType *distance);
 
-  //void GetRegionOfInterest();
+  void GetRegionOfInterest();
   
   //OutputIndexType GetSeed( OutputImageType *state, vcl_vector< OutputIndexType> &prevSeeds, OutputPixelType labelType); 
 
