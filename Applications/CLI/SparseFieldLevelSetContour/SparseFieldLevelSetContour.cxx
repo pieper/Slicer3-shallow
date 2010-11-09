@@ -31,12 +31,15 @@ int run_test(vtkPolyData* polyDataOutput, vtkPolyData* polyDataBaseline)
   // polyDataBaseline, polyDataOutput
 
   if( polyDataOutput->GetNumberOfPoints() != polyDataBaseline->GetNumberOfPoints() ) {
-    return 1;
+    std::cerr<<"Warning, incorrect number of points?... \n";
+    return 0;
   } 
   else {
       if ( (polyDataOutput->GetPointData()->GetArray("activeContourVertIdx") == NULL) ||
             (polyDataBaseline->GetPointData()->GetArray("activeContourVertIdx") == NULL ) ) {
-        return 1;
+               std::cerr<<"Warning, activeContourVertIdx doesn't exist ? \n";
+      } else {
+               std::cerr<<"activeContourVertIdx exists and number of points is consistent, great! \n";
       }
     return 0;
   }
@@ -96,8 +99,10 @@ int main(int argc, char* argv[] )
     }
     vtkSmartPointer<vtkPolyData> polyDataBaseline = reader->GetOutput();
       int iOut = run_test( polyDataOutput, polyDataBaseline);
-      return_value = iOut; //  (iOut > 0 ) ? 2 : 1 ;  // Doh! Chudy: 0 is "good" !
+      return_value = iOut;
+      std::cerr<<"return value about to be sent back is: " << return_value << "\n";
   }
+  
   vtkSmartPointer<vtkXMLPolyDataWriter> writer = vtkSmartPointer<vtkXMLPolyDataWriter>::New();
   std::string commentWrite = "Writing output model " + OutputModel;
   vtkPluginFilterWatcher watchWriter(writer,
