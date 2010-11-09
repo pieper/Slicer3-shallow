@@ -32,6 +32,8 @@ if {[info exists ::env(SVN)]} {
 # - write the file
 # 
 
+set ::come_from_versioner "1"
+
 set cwd [pwd]
 cd [file dirname [info script]]
 cd ..
