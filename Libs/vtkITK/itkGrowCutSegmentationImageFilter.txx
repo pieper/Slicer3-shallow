@@ -79,7 +79,7 @@ template< class TInputImage, class TOutputImage, class TWeightPixelType>
 
   m_ConfThresh = 0.2;
   
-  m_MaxIterations = 10000;
+  m_MaxIterations = 1000;
   m_ObjectRadius = 10;
   
   m_SeedStrength = 1.0;
@@ -314,7 +314,7 @@ GrowCutSegmentationImageFilter<TInputImage, TOutputImage, TWeightPixelType>
   }
   
   /*
-  if(stateImage->GetBufferedRegion().GetNumberOfPixels() == 0)
+    if(stateImage->GetBufferedRegion().GetNumberOfPixels() == 0)
     {
       m_StateImage->CopyInformation(m_LabelImage);
       m_StateImage->SetBufferedRegion( m_LabelImage->GetBufferedRegion() );
@@ -749,6 +749,7 @@ GrowCutSegmentationImageFilter<TInputImage, TOutputImage, TWeightPixelType>
   
   float threshSaturation = .96; //.999; // Determine the saturation according to the size of the object
   float threshUnchanged = 0.05;
+  float threshUnlabeledLimit = 0;
   
   //  OutputImagePointer tmpLabels = OutputImageType::New();
   // tmpLabels->CopyInformation( output );
@@ -769,6 +770,7 @@ GrowCutSegmentationImageFilter<TInputImage, TOutputImage, TWeightPixelType>
   //typedef GrowCutSegmentationUpdateFilter< InputImageType, OutputImageType> GrowCutUpdateFilterType;
   //typename GrowCutUpdateFilterType::Pointer updateFilter = GrowCutUpdateFilterType::New();
   
+  unsigned prevModifiedPix = 0;
   
   while (iter < m_MaxIterations && !converged)
     {
@@ -812,9 +814,17 @@ GrowCutSegmentationImageFilter<TInputImage, TOutputImage, TWeightPixelType>
   (static_cast<unsigned > (totalROIVolume) -(currLocallySaturatedPix + 
                currSaturatedPix + changeablePix)) : 0;
       
+      unsigned currModified = changeablePix + currLocallySaturatedPix + currSaturatedPix;
+      
       converged = (unlabeled/totalROIVolume < threshUnchanged && 
        ((currSaturatedPix+currLocallySaturatedPix)/totalROIVolume > threshSaturation));
       
+      if(!converged)
+  {
+    converged = (unlabeled <= threshUnlabeledLimit && 
+           prevModifiedPix - currModified == 0);
+  }
+      prevModifiedPix = currModified;
       
       if((iter % 40 == 0) || converged)
   {
