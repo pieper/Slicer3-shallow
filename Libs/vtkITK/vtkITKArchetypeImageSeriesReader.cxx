@@ -318,12 +318,6 @@ void vtkITKArchetypeImageSeriesReader::ExecuteInformation()
   // Test whether the input file is a DICOM file
   bool isDicomFile = dicomIO->CanReadFile(this->Archetype);
 
-unsigned int kk;
-for (kk = 0; kk < this->FileNames.size(); kk++)
-  {
-  cerr << this->FileNames[kk] << "\n";
-  }
-
   // if user already set up FileNames, we do not try to find candidate files
   if ( this->GetNumberOfFileNames() > 0 )  
   {
@@ -1199,12 +1193,6 @@ int vtkITKArchetypeImageSeriesReader::AssembleVolumeContainingArchetype( )
         fileNameLocations.insert( fileNameLocations.end(), this->SliceLocation[k] );
         }
     }
-  }
-
-unsigned int kk;
-for (kk = 0; kk < this->FileNames.size(); kk++)
-  {
-  cerr << this->FileNames[kk] << " " << fileNameLocations[kk] << "\n";
   }
 
   return this->FileNames.size();
