@@ -318,6 +318,12 @@ void vtkITKArchetypeImageSeriesReader::ExecuteInformation()
   // Test whether the input file is a DICOM file
   bool isDicomFile = dicomIO->CanReadFile(this->Archetype);
 
+unsigned int kk;
+for (kk = 0; kk < this->FileNames.size(); kk++)
+  {
+  cerr << this->FileNames[kk] << "\n";
+  }
+
   // if user already set up FileNames, we do not try to find candidate files
   if ( this->GetNumberOfFileNames() > 0 )  
   {
@@ -1123,6 +1129,14 @@ unsigned int vtkITKArchetypeImageSeriesReader::AddFileName( const char* filename
 void vtkITKArchetypeImageSeriesReader::ResetFileNames( )
 {
   this->FileNames.resize( 0 );
+  this->AllFileNames.resize( 0 );
+  this->SeriesInstanceUIDs.resize( 0 );
+  this->ContentTime.resize( 0 );
+  this->TriggerTime.resize( 0 );
+  this->EchoNumbers.resize( 0 );
+  this->DiffusionGradientOrientation.resize( 0 );
+  this->SliceLocation.resize( 0 );
+  this->ImageOrientationPatient.resize( 0 );
 }
 
 int vtkITKArchetypeImageSeriesReader::AssembleVolumeContainingArchetype( )
@@ -1147,6 +1161,9 @@ int vtkITKArchetypeImageSeriesReader::AssembleVolumeContainingArchetype( )
   long int iArchetypeDiffusion = this->IndexDiffusionGradientOrientation[this->IndexArchetype];
   long int iArchetypeOrientation =  this->IndexImageOrientationPatient[this->IndexArchetype];
 
+  // keep track of the locations for the selected files
+  std::vector<double> fileNameLocations;
+
   for (unsigned int k = 0; k < this->AllFileNames.size(); k++)
   {
   if ( (this->IndexSeriesInstanceUIDs[k] != iArchetypeSeriesUID &&
@@ -1161,8 +1178,33 @@ int vtkITKArchetypeImageSeriesReader::AssembleVolumeContainingArchetype( )
     }
     else
     {
-      this->FileNames.push_back( this->AllFileNames[k] );
+      // do a simple insertion sort so filenames are ordered by slice location
+      std::vector<std::string>::iterator nameiter = this->FileNames.begin();
+      std::vector<double>::iterator lociter = fileNameLocations.begin();
+      unsigned int kk;
+      for (kk = 0; kk < this->FileNames.size(); kk++)
+        {
+        if ( this->SliceLocation[k] < fileNameLocations[kk] )
+          {
+          this->FileNames.insert(nameiter, this->AllFileNames[k] );
+          fileNameLocations.insert(lociter, this->SliceLocation[k] );
+          break;
+          }
+        ++nameiter;
+        ++lociter;
+        }
+      if ( kk == this->FileNames.size() )
+        {
+        this->FileNames.insert( this->FileNames.end(), this->AllFileNames[k] );
+        fileNameLocations.insert( fileNameLocations.end(), this->SliceLocation[k] );
+        }
     }
+  }
+
+unsigned int kk;
+for (kk = 0; kk < this->FileNames.size(); kk++)
+  {
+  cerr << this->FileNames[kk] << " " << fileNameLocations[kk] << "\n";
   }
 
   return this->FileNames.size();

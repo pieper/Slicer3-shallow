@@ -38,3 +38,9 @@ TARGET_LINK_LIBRARIES (VTKITKBSplineTransform
   vtkITK)
 ADD_TEST (VTKITKBSplineTransform
   ${Slicer3_EXE} --launch ${WRAPPED_EXE_PREFIX}/VTKITKBSplineTransform)
+
+ADD_EXECUTABLE (VTKITKArchetypeTest vtkITKArchetypeImageSeriesReaderTest.cxx)
+TARGET_LINK_LIBRARIES (VTKITKArchetypeTest
+  vtkITK)
+ADD_TEST (VTKITKArchetypeTest
+  ${Slicer3_EXE} --launch ${WRAPPED_EXE_PREFIX}/VTKITKArchetypeTest ${Slicer3_SOURCE_DIR}/Testing/Data/Input/DCE_single_serie)
