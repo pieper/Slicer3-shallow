@@ -327,6 +327,7 @@ void vtkSlicerApplicationGUI::TearDownViewers()
 {
   // Called by Slicer3.cxx on exit
 
+  this->Built = false;
   this->UnpackMainViewer();
 
   this->DestroyMain3DViewer ( );
@@ -2908,7 +2909,10 @@ void vtkSlicerApplicationGUI::UpdateActiveViewerWidgetDependencies(
   
 #ifndef VIEWCONTROL_DEBUG
   vtkSlicerViewControlGUI *vcGUI = this->GetViewControlGUI ( );
-  vcGUI->SetViewNode(active_viewer ? active_viewer->GetViewNode() : NULL);
+  if ( vcGUI )
+    {
+    vcGUI->SetViewNode(active_viewer ? active_viewer->GetViewNode() : NULL);
+    }
   //this->InitializeViewControlGUI();
 #endif
 
@@ -2919,7 +2923,7 @@ void vtkSlicerApplicationGUI::UpdateActiveViewerWidgetDependencies(
     }
 
   vtkMRMLLayoutNode *layout = this->GetGUILayoutNode();
-  if (layout)
+  if (layout && this->Built)
     {
     // Since neither UpdateLayout or RepackMainViewer can be called
     // correctly on their own...
