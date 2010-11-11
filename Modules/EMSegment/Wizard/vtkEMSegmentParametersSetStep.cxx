@@ -58,7 +58,7 @@ vtkCxxRevisionMacro(vtkEMSegmentParametersSetStep, "$Revision: 1.2 $");
 //----------------------------------------------------------------------------
 vtkEMSegmentParametersSetStep::vtkEMSegmentParametersSetStep()
 {
-  this->SetName("1/9. Define Task");
+  this->SetName("1. Define Task");
   this->SetDescription("Select a (new) task.");
 
   this->ParameterSetFrame       = NULL;
