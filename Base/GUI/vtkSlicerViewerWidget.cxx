@@ -914,6 +914,14 @@ void vtkSlicerViewerWidget::ProcessMRMLEvents ( vtkObject *caller,
         {
         vtkMRMLDisplayNode *dnode = dnodes[i];
         int visibility = dnode->GetVisibility();
+        const char *viewerVisibility = dnode->GetAttribute(this->ViewNode->GetID());
+        if ( viewerVisibility )
+          {
+          // check if the display node has an attribute corresponding to ID of the View Node
+          // for this viewer - if so, then the displayable is only shown if it is
+          // visible and if the attribute is nonzero
+          visibility = visibility && atoi( viewerVisibility );
+          }
         //if (hdnode)
         //  {
         //  visibility = hdnode->GetVisibility();
