@@ -84,6 +84,7 @@ class EndoscopyGUI(ScriptedModuleGUI):
 
         self.CameraNodeSelector.SetNodeClass("vtkMRMLCameraNode","","","")
         self.CameraNodeSelector.SetParent(moduleFrame.GetFrame())
+        self.CameraNodeSelector.SetShowHidden(1)
         self.CameraNodeSelector.Create()
         self.CameraNodeSelector.SetMRMLScene(self.GetLogic().GetMRMLScene())
         self.CameraNodeSelector.UpdateMenu()

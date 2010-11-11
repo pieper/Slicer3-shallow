@@ -126,7 +126,9 @@ extern "C" {
 //#define SCRIPTEDMODULE_DEBUG
 //#define SLICESMODULE_DEBUG
 
-//#define CAMERA_DEBUG
+// Disable the camera module - it's was meant to 
+// allow swapping of cameras/views but never really worked
+#define CAMERA_DEBUG
 
 #include <LoadableModuleFactory.h>
 
