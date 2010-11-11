@@ -455,7 +455,7 @@ void vtkVolumeRenderingGUI::AddVolumeToViewers()
     {
       slicer_viewer_widget->GetMainViewer()->GetRenderWindow()->AddObserver(vtkCommand::AbortCheckEvent, (vtkCommand*)this->GUICallbackCommand);
       slicer_viewer_widget->GetMainViewer()->GetRenderWindow()->AddObserver(vtkCommand::EndEvent, (vtkCommand*)this->GUICallbackCommand);
-      if ( ! (i > 0 && vspNode->GetCurrentVolumeMapper() == 1) ) 
+      if ( vspNode && !(i > 0 && vspNode->GetCurrentVolumeMapper() == 1) )
         {
         slicer_viewer_widget->GetMainViewer()->AddViewProp(this->GetLogic()->GetVolumeActor() );
         }
