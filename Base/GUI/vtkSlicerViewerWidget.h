@@ -234,10 +234,6 @@ public:
   ///
   /// get at the bounding box, to allow the default placement of widgets
   vtkGetObjectMacro(BoxAxisBoundingBox, vtkBoundingBox);
-  
-protected:
-  vtkSlicerViewerWidget();
-  virtual ~vtkSlicerViewerWidget();
 
   /// 
   /// Create the widget.
@@ -245,13 +241,7 @@ protected:
   
   void UpdateCameraNode();
   void UpdateViewNode();
-
-  vtkSlicerApplicationLogic *ApplicationLogic;
-  vtkKWRenderWidget *MainViewer;
-  vtkKWFrame *ViewerFrame;
-  int RenderPending;
-  int UpdateFromMRMLRequested;
-
+  
   void RemoveModelProps();
 
   void RemoveModelObservers(int clearCache);
@@ -312,6 +302,22 @@ protected:
 
   //ETX
 
+  /// 
+  /// Reset all the pick vars
+  void ResetPick();
+  
+protected:
+  vtkSlicerViewerWidget();
+  virtual ~vtkSlicerViewerWidget();
+
+
+  vtkSlicerApplicationLogic *ApplicationLogic;
+  vtkKWRenderWidget *MainViewer;
+  vtkKWFrame *ViewerFrame;
+  int RenderPending;
+  int UpdateFromMRMLRequested;
+
+
   vtkActor       *BoxAxisActor;
   vtkBoundingBox *BoxAxisBoundingBox;
 
@@ -360,10 +366,6 @@ protected:
   vtkIdType PickedCellID;
   vtkIdType PickedPointID;
 
-  /// 
-  /// Reset all the pick vars
-  void ResetPick();
-  
   vtkSlicerBoxWidget2         *BoxWidget;
   vtkSlicerBoxRepresentation  *BoxWidgetRepresentation;
 
