@@ -262,14 +262,14 @@ int vtkMRMLVolumeArchetypeStorageNode::ReadData(vtkMRMLNode *refNode)
       }
     }
   else 
-    #endif
+#endif
     if ( refNode->IsA("vtkMRMLScalarVolumeNode") ) 
-    {
-    volNode = dynamic_cast <vtkMRMLScalarVolumeNode *> (refNode);
-    reader = vtkSmartPointer<vtkITKArchetypeImageSeriesScalarReader>::New();  
-    reader->SetSingleFile( this->GetSingleFile() );
-    reader->SetUseOrientationFromFile( this->GetUseOrientationFromFile() );
-    }
+      {
+      volNode = dynamic_cast <vtkMRMLScalarVolumeNode *> (refNode);
+      reader = vtkSmartPointer<vtkITKArchetypeImageSeriesScalarReader>::New();  
+      reader->SetSingleFile( this->GetSingleFile() );
+      reader->SetUseOrientationFromFile( this->GetUseOrientationFromFile() );
+      }
 
   reader->AddObserver( vtkCommand::ProgressEvent,  this->MRMLCallbackCommand);
 
