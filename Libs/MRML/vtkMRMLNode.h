@@ -183,11 +183,14 @@ public:
   /// 
   /// Set a name value pair attribute
   void SetAttribute(const char* name, const char* value);
+  void SetNthAttribute(int i, const char* value);
 
   /// 
   /// Get value of a name value pair attribute
   /// or NULL if the name does not exists
   const char* GetAttribute(const char* name);
+  int GetNumberOfAttributes();
+  const char* GetNthAttributeName(int i);
 
   /// 
   /// Describes if the node is hidden

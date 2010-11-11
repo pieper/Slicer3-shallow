@@ -331,6 +331,25 @@ void vtkMRMLNode::SetAttribute(const char* name, const char* value)
 }
 
 //----------------------------------------------------------------------------
+void vtkMRMLNode::SetNthAttribute(int i, const char* value)
+{
+  int n, num = this->GetNumberOfAttributes();
+  if ( i >= num )
+    {
+    vtkErrorMacro("Trying to set attribute beyond end of map");
+    return;
+    }
+
+  std::map< std::string, std::string >::iterator iter = Attributes.begin();
+  for (n = 0; n < i; n++)
+    {
+    ++iter;
+    }
+  iter->second = std::string(value);
+}
+
+
+//----------------------------------------------------------------------------
 const char* vtkMRMLNode::GetAttribute(const char* name)
 {
   if ( name == NULL )
@@ -346,6 +365,31 @@ const char* vtkMRMLNode::GetAttribute(const char* name)
     {
     return iter->second.c_str();
     }
+}
+
+//----------------------------------------------------------------------------
+int vtkMRMLNode::GetNumberOfAttributes()
+{
+  return Attributes.size(); 
+}
+
+//----------------------------------------------------------------------------
+const char* vtkMRMLNode::GetNthAttributeName(int i)
+{
+  int n, num = this->GetNumberOfAttributes();
+  if ( i >= num )
+    {
+    vtkErrorMacro("Trying to get attribute name beyond end of map");
+    return NULL;
+    }
+
+  std::map< std::string, std::string >::iterator iter = Attributes.begin();
+  for (n = 0; n < i; n++)
+    {
+    ++iter;
+    }
+  --iter;
+  return iter->first.c_str();
 }
 
 //----------------------------------------------------------------------------
