@@ -72,6 +72,11 @@ public:
     virtual void TearDownGUI ( );
 
     // Description:
+    // Central spots to manage volume actors/mappers and render widgets
+    virtual void AddVolumeToViewers ( );
+    virtual void RemoveVolumeFromViewers ( );
+
+    // Description:
     // Methods for adding module-specific key bindings and
     // removing them.
     virtual void CreateModuleEventBindings ( );

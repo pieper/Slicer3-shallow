@@ -1672,6 +1672,8 @@ void vtkSlicerVolumeRenderingHelper::ProcessRenderingMethodEvents(int id)
     }
   }
 
+  this->Gui->RemoveVolumeFromViewers();
+
   vtkMRMLVolumeRenderingParametersNode* vspNode = this->Gui->GetCurrentParametersNode();
 
   vspNode->SetCurrentVolumeMapper(id);
@@ -1732,6 +1734,7 @@ void vtkSlicerVolumeRenderingHelper::ProcessRenderingMethodEvents(int id)
   char buf[4] = "";
   this->Gui->GetApplicationGUI()->SetExternalProgress(buf, 0.0);
   
+  this->Gui->AddVolumeToViewers();
   this->Gui->RequestRender();
 }
 
