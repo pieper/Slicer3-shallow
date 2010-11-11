@@ -51,6 +51,7 @@ int vtkMRMLVolumeArchetypeStorageNodeTest2(int argc, char * argv[])
   storageNode1->ResetFileNameList();
   storageNode1->SetUseOrientationFromFile(1);
  
+  // add the file names in-order for storage node 1
   for(ReaderType::FileNamesContainer::const_iterator fI = filenames.begin();
     fI!=filenames.end();++fI){
     storageNode1->AddFileName(fI->c_str());    
@@ -74,6 +75,8 @@ int vtkMRMLVolumeArchetypeStorageNodeTest2(int argc, char * argv[])
     vtkMRMLVolumeArchetypeStorageNode::New();
   storageNode2->SetFileName(filenames[filenames.size()-1].c_str());
   storageNode2->ResetFileNameList();
+
+  // add the file names in backwards order for storage node 2
   for(ReaderType::FileNamesContainer::const_iterator fI = filenames.end()-1;
     fI!=filenames.begin();--fI){
     storageNode2->AddFileName(fI->c_str());    
