@@ -1,6 +1,6 @@
 project(EMSegment)
 
-CMAKE_MINIMUM_REQUIRED(VERSION 2.6)
+CMAKE_MINIMUM_REQUIRED(VERSION 2.8)
 IF(COMMAND CMAKE_POLICY)
   CMAKE_POLICY(SET CMP0003 NEW)
 ENDIF(COMMAND CMAKE_POLICY)
@@ -64,15 +64,20 @@ install(
   DESTINATION ${Slicer3_INSTALL_MODULES_SHARE_DIR}/${PROJECT_NAME}/Tcl
 )
 
+## this code will be replaced by the cmake command 'file(COPY ....)' below 
+#file(GLOB TASKFILES RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "Tasks/*.tcl" "Tasks/*.mrml" "Tasks/*.nrrd" )
+#
+#foreach(file ${TASKFILES})
+# configure_file(
+#    ${CMAKE_CURRENT_SOURCE_DIR}/${file}
+#    ${CMAKE_BINARY_DIR}/${Slicer3_INSTALL_MODULES_SHARE_DIR}/${PROJECT_NAME}/${file}
+#    COPYONLY)
+#endforeach(file)
 
-file(GLOB TASKFILES RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "Tasks/*.tcl" "Tasks/*.mrml" "Tasks/*.nrrd" )
-
-foreach(file ${TASKFILES})
- configure_file(
-    ${CMAKE_CURRENT_SOURCE_DIR}/${file}
-    ${CMAKE_BINARY_DIR}/${Slicer3_INSTALL_MODULES_SHARE_DIR}/${PROJECT_NAME}/${file}
-    COPYONLY)
-endforeach(file)
+file(COPY Tasks
+  DESTINATION ${CMAKE_BINARY_DIR}/${Slicer3_INSTALL_MODULES_SHARE_DIR}/${PROJECT_NAME}/
+  PATTERN .svn EXCLUDE
+)
 
 install(
   FILES ${TASKFILES}
