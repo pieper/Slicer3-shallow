@@ -6,7 +6,9 @@
 
 # scm is source code manager (i.e. svn)
 scm       svn
-svnpath   https://skylla.ia.unc.edu/NeuroLib/Release/ARCTIC
+svnpath   https://www.nitrc.org/svn/arctic/trunk
+svnusername slicerbot
+svnpassword slicer
 
 # list dependencies 
 # - these should be names of other modules that have .s3ext files 
