@@ -487,6 +487,12 @@ void vtkSlicerDiffusionTestingWidget::RunDWI()
   //get the existing GUI of the "Diffusion Tensor Estimation Command Line Module" 
   vtkCommandLineModuleGUI *moduleGUI = vtkCommandLineModuleGUI::SafeDownCast(
     this->Application->GetModuleGUIByName("Diffusion Tensor Estimation"));
+  if ( moduleGUI == NULL )
+    {
+    vtkErrorMacro( "couldn't find tensor estimation module");
+    return;
+    }
+
   moduleGUI->Enter();
 
   //set command line node to GUI an logic
