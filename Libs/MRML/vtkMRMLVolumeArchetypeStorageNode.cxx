@@ -180,6 +180,11 @@ int vtkMRMLVolumeArchetypeStorageNode::ReadData(vtkMRMLNode *refNode)
     {
     return 1;
     }
+
+  if (this->GetScene() && this->GetScene()->GetReadDataOnLoad() == 0)
+    {
+    return 1;
+    }
    
   // test whether refNode is a valid node to hold a volume
   if ( !( refNode->IsA("vtkMRMLScalarVolumeNode") || refNode->IsA("vtkMRMLVectorVolumeNode" ) ) )

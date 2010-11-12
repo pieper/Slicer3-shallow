@@ -105,6 +105,11 @@ int vtkMRMLVolumePropertyStorageNode::ReadData(vtkMRMLNode *refNode)
     return 1;
     }
 
+  if (this->GetScene() && this->GetScene()->GetReadDataOnLoad() == 0)
+    {
+    return 1;
+    }
+
   if (!refNode->IsA("vtkMRMLVolumePropertyNode") ) 
     {
     //vtkErrorMacro("Reference node is not a vtkMRMLVolumePropertyNode");

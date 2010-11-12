@@ -120,6 +120,11 @@ int vtkMRMLFiducialListStorageNode::ReadData(vtkMRMLNode *refNode)
     return 1;
     }
 
+  if (this->GetScene() && this->GetScene()->GetReadDataOnLoad() == 0)
+    {
+    return 1;
+    }
+
   vtkDebugMacro("Reading Fiducial list data");
   // test whether refNode is a valid node to hold a fiducial list
   if ( !( refNode->IsA("vtkMRMLFiducialListNode"))

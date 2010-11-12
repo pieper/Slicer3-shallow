@@ -390,6 +390,8 @@ public:
   vtkSetMacro(SaveToXMLString,int);
   vtkGetMacro(SaveToXMLString,int);
 
+  vtkSetMacro(ReadDataOnLoad,int);
+  vtkGetMacro(ReadDataOnLoad,int);
 
 //BTX
   void SetErrorMessage(const std::string &error) {
@@ -542,6 +544,8 @@ protected:
   int LoadFromXMLString;
 
   int SaveToXMLString;
+
+  int ReadDataOnLoad;
 
   void UpdateNodeIDs();
 

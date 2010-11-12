@@ -120,40 +120,45 @@ int vtkMRMLModelStorageNode::ReadData(vtkMRMLNode *refNode)
 {
   // do not read if if we are not in the scene (for example inside snapshot)
   if ( !refNode->GetAddToScene() )
-  {
+    {
     return 1;
-  }
+    }
+
+  if (this->GetScene() && this->GetScene()->GetReadDataOnLoad() == 0)
+    {
+    return 1;
+    }
 
   if (!refNode->IsA("vtkMRMLModelNode") ) 
-  {
+    {
     //vtkErrorMacro("Reference node is not a vtkMRMLModelNode");
     return 0;
-  }
+    }
 
   Superclass::StageReadData(refNode);
   if ( this->GetReadState() != this->TransferDone )
-  {
+    {
     // remote file download hasn't finished
     return 0;
-  }
+    }
 
   vtkMRMLModelNode *modelNode = dynamic_cast <vtkMRMLModelNode *> (refNode);
 
   std::string fullName = this->GetFullNameFromFileName();
   if (fullName == std::string("")) 
-  {
+    {
     vtkErrorMacro("ReadData: File name not specified");
     return 0;
-  }
+    }
 
   // compute file prefix
   std::string name(fullName);
   std::string::size_type loc = name.find_last_of(".");
   if( loc == std::string::npos ) 
-  {
+    {
     vtkErrorMacro("ReadData: no file extension specified: " << name.c_str());
     return 0;
-  }
+    }
   std::string extension = name.substr(loc);
 
   vtkDebugMacro("ReadData: extension = " << extension.c_str());

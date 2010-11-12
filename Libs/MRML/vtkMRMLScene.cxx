@@ -124,6 +124,7 @@ vtkMRMLScene::vtkMRMLScene()
 
   this->SaveToXMLString = 0;
 
+  this->ReadDataOnLoad = 1;
 
   this->LastLoadedVersion = NULL;
   this->Version = NULL;

@@ -123,6 +123,11 @@ int vtkMRMLColorTableStorageNode::ReadData(vtkMRMLNode *refNode)
     return 1;
     }
 
+  if (this->GetScene() && this->GetScene()->GetReadDataOnLoad() == 0)
+    {
+    return 1;
+    }
+
   vtkDebugMacro("Reading ColorTable data");
   // test whether refNode is a valid node to hold a color table
   if ( !( refNode->IsA("vtkMRMLColorTableNode"))

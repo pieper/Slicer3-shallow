@@ -68,6 +68,11 @@ int vtkMRMLUnstructuredGridStorageNode::ReadData(vtkMRMLNode *refNode)
     return 1;
     }
 
+  if (this->GetScene() && this->GetScene()->GetReadDataOnLoad() == 0)
+    {
+    return 1;
+    }
+
   if (!refNode->IsA("vtkMRMLUnstructuredGridNode") ) 
     {
     //vtkErrorMacro("Reference node is not a vtkMRMLUnstructuredGridNode");
