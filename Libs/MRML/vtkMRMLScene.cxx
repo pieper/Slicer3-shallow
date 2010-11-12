@@ -2605,7 +2605,7 @@ vtkURIHandler * vtkMRMLScene::FindURIHandler(const char *URI)
 //-----------------------------------------------------------------------------
 void
 vtkMRMLScene::
-GetReferencedSubScene(vtkMRMLNode *rnode, vtkMRMLScene* newScene)
+GetReferencedSubScene(vtkMRMLNode *rnode, vtkMRMLScene* newScene, int loadData)
 {
   //
   // clear scene
@@ -2629,15 +2629,20 @@ GetReferencedSubScene(vtkMRMLNode *rnode, vtkMRMLScene* newScene)
 
   std::string url = std::string(newScene->GetURL());
   std::string root = std::string(newScene->GetRootDirectory());
+  int loadDataOld = newScene->GetReadDataOnLoad();
+
   newScene->SetURL(this->GetURL());
   newScene->SetRootDirectory(this->GetRootDirectory());
+  newScene->SetReadDataOnLoad(loadData);
 
   newScene->Connect();
 
   this->SetSaveToXMLString(0);
+
   newScene->SetLoadFromXMLString(0);
   newScene->SetURL(url.c_str());
   newScene->SetRootDirectory(root.c_str());
+  newScene->SetReadDataOnLoad(loadDataOld);
 
   // 
   // get all nodes associated with this node
