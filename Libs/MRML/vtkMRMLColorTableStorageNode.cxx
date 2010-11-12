@@ -238,21 +238,37 @@ int vtkMRMLColorTableStorageNode::ReadData(vtkMRMLNode *refNode)
       {
       std::stringstream ss;
       ss << lines[i];
-      int id;
+      int id = 0;
       std::string name;
-      double r, g, b, a;
+      double r = 0.0, g = 0.0, b = 0.0, a = 0.0;
       ss >> id;
       ss >> name;
       ss >> r;
       ss >> g;
       ss >> b;
-      ss >> a;
-      
+      // check that there's still something left in the stream
+      if (ss.str().length() == 0)
+        {
+        std::cout << "Error in parsing line " << i << ", no alpha information!" << std::endl;
+        }
+      else
+        {
+        ss >> a;
+        }
       // the file values are 0-255, colour look up table needs 0-1
       r = r / 255.0;
       g = g / 255.0;
       b = b / 255.0;
       a = a / 255.0;
+      // if the name has ticks around it, from copying from a mrml file, trim
+      // them off the string
+      if (name.find("'") != std::string::npos)
+        {
+        size_t firstnottick = name.find_first_not_of("'");
+        size_t lastnottick = name.find_last_not_of("'");
+        std::string withoutTicks = name.substr(firstnottick, (lastnottick-firstnottick) + 1);
+        name = withoutTicks;
+        }
       if (i < 10)
         {
         vtkDebugMacro("(first ten) Adding colour at id " << id << ", name = " << name.c_str() << ", r = " << r << ", g = " << g << ", b = " << b << ", a = " << a);
