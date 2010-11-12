@@ -1440,3 +1440,22 @@ void vtkSlicerSeedWidgetClass::SwapIndexIDs(int index1, int index2)
   this->PointIDToWidgetIndex[id1] = index2;
   this->PointIDToWidgetIndex[id2] = index1;
 }
+
+//--------------------------------------------------------------------------
+int vtkSlicerSeedWidgetClass::GetNumberOfSeeds()
+{
+  int numSeeds = 0;
+  if (!this->GetWidget() ||
+      !(this->GetWidget()->GetRepresentation()))
+    {
+    return numSeeds;
+    }
+  vtkSeedRepresentation *sr = vtkSeedRepresentation::SafeDownCast(this->GetWidget()->GetRepresentation());
+  if (!sr)
+    {
+    vtkErrorMacro("SetMaterialProperties: unable to get the seed representation on the widget.");
+    return numSeeds;
+    }
+  numSeeds = sr->GetNumberOfSeeds();
+  return numSeeds;
+}

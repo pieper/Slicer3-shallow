@@ -202,7 +202,11 @@ public:
   /// Swap two indices, called when two fiducials swap places in the fid list
   /// node. Each will need to be updated.
   void SwapIndexIDs(int index1, int index2);
-  
+
+  ///
+  /// Return the current number of seeds in the widget
+  int GetNumberOfSeeds();
+
 protected:
 
   vtkGetObjectMacro(Representation, vtkSeedRepresentation);

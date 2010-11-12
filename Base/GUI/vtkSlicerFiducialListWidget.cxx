@@ -561,7 +561,7 @@ void vtkSlicerFiducialListWidget::ProcessMRMLEvents ( vtkObject *caller,
   // event on a fid list, update
   else if (callerList != NULL && event == vtkCommand::ModifiedEvent)
     {
-    vtkDebugMacro("ProcessMRMLEvents: got a  modified on list " << event << ", calling update widget");  
+    vtkDebugMacro("ProcessMRMLEvents: got a  modified on list " << callerList->GetID() << ", calling update widget");  
     this->Update3DWidget(callerList);
     }
   
@@ -2034,6 +2034,19 @@ void vtkSlicerFiducialListWidget::Update3DWidget(vtkMRMLFiducialListNode *fiduci
   
   // for things that need to be set for each fiducial point
   int numFids = fiducialListNode->GetNumberOfFiducials();
+  int numSeeds = seedWidget->GetNumberOfSeeds();
+  if (numSeeds > numFids)
+    {
+    vtkDebugMacro("Update3DWidget: list " << fiducialListNode->GetID() <<   " has " << numFids << " fiducials in the list, but there are " << numSeeds << " seeds in the 3d widget");
+    // delete the extra ones, UpdateSeed will add any missing ones and
+    // adjust the remaining ones
+    // remove from the end, 0 based index
+    for (int r = numSeeds - 1; r >= numFids; r--)
+      {
+      seedWidget->RemoveSeed(r);
+      }
+    }
+  
   for (int i = 0; i < numFids; i++)
     {
     this->UpdateSeed(fiducialListNode, fiducialListNode->GetNthFiducialID(i));
