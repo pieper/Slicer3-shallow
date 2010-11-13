@@ -48,7 +48,7 @@ public:
   virtual void ProcessMRMLEvents ( vtkObject *caller, unsigned long event,
                                    void *callData );
 
-  void CreateTemplateFile(const char* TemporaryCacheDirectory);
+  void CreateTemplateFile();
 
   //
   // functions for getting and setting the current template builder
@@ -595,7 +595,7 @@ public:
 
   void  SetTreeNodeDistributionLogCovarianceOffDiagonal(vtkIdType nodeID, double value);
 
-  virtual void CopyEMRelatedNodesToMRMLScene(vtkMRMLScene* newScene, const char* TemporaryCacheDirectory);
+  virtual void CopyEMRelatedNodesToMRMLScene(vtkMRMLScene* newScene);
 
 
 
