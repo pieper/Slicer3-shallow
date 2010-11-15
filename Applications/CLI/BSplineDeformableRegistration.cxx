@@ -20,7 +20,6 @@
 
 #include "BSplineDeformableRegistrationCLP.h"
 
-
 #include "itkCommand.h"
 
 #include "itkImageRegistrationMethod.h"
@@ -146,6 +145,7 @@ template<class T> int DoIt( int argc, char * argv[], T )
   typedef TransformType::RegionType RegionType;
   typedef TransformType::SpacingType SpacingType;
   typedef TransformType::OriginType OriginType;
+  typedef TransformType::DirectionType DirectionType;
   typedef TransformType::ParametersType     ParametersType;  
 
 
@@ -179,49 +179,27 @@ template<class T> int DoIt( int argc, char * argv[], T )
       }
     }
 
-  
-  // Reorient to axials to avoid issues with registration metrics not
-  // transforming image gradients with the image orientation in
-  // calculating the derivative of metric wrt transformation
-  // parameters.
-  //
-  // Forcing image to be axials avoids this problem. Note, that
-  // reorientation only affects the internal mapping from index to
-  // physical coordinates.  The reoriented data spans the same
-  // physical space as the original data.  Thus, the registration
-  // transform calculated on the reoriented data is also the
-  // transform forthe original un-reoriented data. 
-  //
-  typename OrientFilterType::Pointer fixedOrient = OrientFilterType::New();
-  typename OrientFilterType::Pointer movingOrient = OrientFilterType::New();
-
-  fixedOrient->UseImageDirectionOn();
-  fixedOrient->SetDesiredCoordinateOrientationToAxial();
-  fixedOrient->SetInput (fixedImageReader->GetOutput());
-
-  movingOrient->UseImageDirectionOn();
-  movingOrient->SetDesiredCoordinateOrientationToAxial();
-  movingOrient->SetInput (movingImageReader->GetOutput());
-
   // Add a time probe
   itk::TimeProbesCollectorBase collector;
 
   collector.Start( "Read fixed volume" );
-  itk::PluginFilterWatcher watchOrientFixed(fixedOrient,
-                                            "Orient Fixed Image",
+  itk::PluginFilterWatcher watchFixedImageReader(fixedImageReader,
+                                            "Read Fixed Image",
                                             CLPProcessInformation,
                                             1.0/3.0, 0.0);
-  fixedOrient->Update();
+  fixedImageReader->Update();
   collector.Stop( "Read fixed volume" );
 
   collector.Start( "Read moving volume" );
-  itk::PluginFilterWatcher watchOrientMoving(movingOrient,
-                                            "Orient Moving Image",
+  itk::PluginFilterWatcher watchMovingImageReader(movingImageReader,
+                                            "Read Moving Image",
                                              CLPProcessInformation,
                                             1.0/3.0, 1.0/3.0);
-  movingOrient->Update();
+  movingImageReader->Update();
   collector.Stop( "Read moving volume" );
 
+  InputImageType::Pointer fixedImage=fixedImageReader->GetOutput();
+  InputImageType::Pointer movingImage=movingImageReader->GetOutput();
 
   // Setup BSpline deformation
   //
@@ -239,24 +217,35 @@ template<class T> int DoIt( int argc, char * argv[], T )
 
   bsplineRegion.SetSize( totalGridSize );
 
-  SpacingType spacing = fixedOrient->GetOutput()->GetSpacing();
-  OriginType origin = fixedOrient->GetOutput()->GetOrigin();;
+  SpacingType spacing = fixedImage->GetSpacing();
+  OriginType origin = fixedImage->GetOrigin();;
+  DirectionType direction = fixedImage->GetDirection();
 
   typename InputImageType::RegionType fixedRegion =
-    fixedOrient->GetOutput()->GetLargestPossibleRegion();
+    fixedImage->GetLargestPossibleRegion();
   typename InputImageType::SizeType fixedImageSize =
     fixedRegion.GetSize();
 
   for(unsigned int r=0; r<ImageDimension; r++)
     {
-    spacing[r] *= floor( static_cast<double>(fixedImageSize[r] - 1)  / 
-                  static_cast<double>(gridSizeOnImage[r] - 1) );
-    origin[r]  -=  spacing[r]; 
+    double spacingMultiplier=floor( static_cast<double>(fixedImageSize[r] - 1)  / 
+                static_cast<double>(gridSizeOnImage[r] - 1) );
+    if (spacingMultiplier<1)
+      {
+      std::cout << "Image size along dimension " << r << " is smaller than requested grid size " << gridSize << std::endl;
+      spacingMultiplier=1; // grid spacing should not be smaller than the pixel spacing (it would prevent deformation of first and last slices)
+      }
+    spacing[r] *= spacingMultiplier;
     }
+
+  // the second grid point shall be at the image origin,
+  // so the grid origin shall be shifted by one grid spacing distance (along grid axis directions)
+  origin -= direction*spacing;
 
   transform->SetGridSpacing ( spacing );
   transform->SetGridOrigin  ( origin );
   transform->SetGridRegion  ( bsplineRegion );
+  transform->SetGridDirection ( direction );
 
   const unsigned int numberOfParameters =
                transform->GetNumberOfParameters();
@@ -272,24 +261,24 @@ template<class T> int DoIt( int argc, char * argv[], T )
   //
   //
   typename TransformType::InputPointType centerFixed;
-  typename InputImageType::RegionType::SizeType sizeFixed = fixedOrient->GetOutput()->GetLargestPossibleRegion().GetSize();
+  typename InputImageType::RegionType::SizeType sizeFixed = fixedImage->GetLargestPossibleRegion().GetSize();
   // Find the center
   ContinuousIndexType indexFixed;
   for ( unsigned j = 0; j < 3; j++ )
     {
     indexFixed[j] = (sizeFixed[j]-1) / 2.0;
     }
-  fixedOrient->GetOutput()->TransformContinuousIndexToPhysicalPoint ( indexFixed, centerFixed );
+  fixedImage->TransformContinuousIndexToPhysicalPoint ( indexFixed, centerFixed );
 
   typename TransformType::InputPointType centerMoving;
-  typename InputImageType::RegionType::SizeType sizeMoving = movingOrient->GetOutput()->GetLargestPossibleRegion().GetSize();
+  typename InputImageType::RegionType::SizeType sizeMoving = movingImage->GetLargestPossibleRegion().GetSize();
   // Find the center
   ContinuousIndexType indexMoving;
   for ( unsigned j = 0; j < 3; j++ )
     {
     indexMoving[j] = (sizeMoving[j]-1) / 2.0;
     }
-  movingOrient->GetOutput()->TransformContinuousIndexToPhysicalPoint ( indexMoving, centerMoving );
+  movingImage->TransformContinuousIndexToPhysicalPoint ( indexMoving, centerMoving );
 
   typename AffineTransformType::Pointer centeringTransform;
   centeringTransform = AffineTransformType::New();
@@ -375,8 +364,8 @@ template<class T> int DoIt( int argc, char * argv[], T )
   // Registration
   //
   //
-  registration->SetFixedImage  ( fixedOrient->GetOutput()  );
-  registration->SetMovingImage ( movingOrient->GetOutput() );
+  registration->SetFixedImage  ( fixedImage  );
+  registration->SetMovingImage ( movingImage );
   registration->SetMetric      ( metric       );
   registration->SetOptimizer   ( optimizer    );
   registration->SetInterpolator( interpolator );
@@ -439,10 +428,10 @@ template<class T> int DoIt( int argc, char * argv[], T )
       1.0/3.0, 2.0/3.0);
     
     resample->SetTransform        ( transform );
-    resample->SetInput            ( movingImageReader->GetOutput() );
+    resample->SetInput            ( movingImage );    
     resample->SetDefaultPixelValue( DefaultPixelValue );
-    resample->SetOutputParametersFromImage ( fixedImageReader->GetOutput() );
-    
+    resample->SetOutputParametersFromImage ( fixedImage );
+
     collector.Start( "Resample" );
     resample->Update();
     collector.Stop( "Resample" );
