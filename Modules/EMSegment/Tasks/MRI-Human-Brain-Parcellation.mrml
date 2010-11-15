@@ -1,6 +1,6 @@
 <?xml version="1.0"?><MRML>
 <EMS
-  id="vtkMRMLEMSNode1"  name="MRI Human Brain Parcellation"  hideFromEditors="false"  selectable="true"  selected="false"  SegmenterNodeID="vtkMRMLEMSSegmenterNode1"  TemplateFilename=""  SaveTemplateAfterSegmentation="0"  TclTaskFilename="MRI-Human-Brain.tcl"  TaskPreprocessingSetting="|C1|C0" ></EMS>
+  id="vtkMRMLEMSNode1"  name="MRI Human Brain Parcellation"  hideFromEditors="false"  selectable="true"  selected="false"  SegmenterNodeID="vtkMRMLEMSSegmenterNode1"  TemplateFilename=""  SaveTemplateAfterSegmentation="0"  TclTaskFilename="MRI-Human-Brain.tcl"  TaskPreprocessingSetting="|C1|C1" ></EMS>
  <EMSSegmenter
   id="vtkMRMLEMSSegmenterNode1"  name="vtkMRMLEMSSegmenterNode1"  hideFromEditors="false"  selectable="true"  selected="false"  TemplateNodeID="vtkMRMLEMSTemplateNode1"  OutputVolumeNodeID=""  WorkingDataNodeID="vtkMRMLEMSWorkingDataNode1"  WorkingDirectory="NULL"  ></EMSSegmenter>
  <EMSTemplate
