@@ -458,7 +458,7 @@ itcl::body SliceSWidget::processEvent { {caller ""} {event ""} } {
 
   if { $_actionState == "Translate" && $_actionModifier == "Shift" } {
     # need to check if the user has stopped doing a shift-drag
-    if { ![$_interactor GetShiftKey] || $event == "LeftButtonReleaseEvent" } {
+    if { (![$_interactor GetShiftKey] && ![$_interactor GetControlKey]) || $event == "LeftButtonReleaseEvent" } {
       $this endTranslate
       set _actionModifier ""
     }
@@ -622,12 +622,14 @@ itcl::body SliceSWidget::processEvent { {caller ""} {event ""} } {
             FiducialsSWidget::AddFiducial $r $a $s
           }
         } else {
-          if { [$_interactor GetShiftKey] } {
+          if { [$_interactor GetShiftKey] || [$_interactor GetControlKey] } {
             # shift-left-button is alias for middle mouse button to support 
             # machines with no middle mouse button (e.g. macs)
             # - shift+mouse move will also do jump all slices if no left button
             #   is pressed.  This is unfortunate, but we use shift to be compatible
             #   with the 3D viewer convention for pan
+            # - control key is also a translate modifier to make it easier
+            #   to avoid the jump slice issue.
             $this startTranslate $x $y  $windowx $windowy  $rox $roy  $ras
             set _actionModifier "Shift"
           }
