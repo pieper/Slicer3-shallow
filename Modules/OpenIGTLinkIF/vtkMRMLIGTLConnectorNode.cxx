@@ -561,7 +561,19 @@ int vtkMRMLIGTLConnectorNode::ReceiveController()
     headerMsg->Unpack();
 
     //----------------------------------------------------------------
-    // Check Device Name if device name is restricted
+    // Check Device Name
+    // Nov 16, 2010: Currently the following code only checks
+    // if the device name is defined in the message.
+    const char* devName = headerMsg->GetDeviceName();
+    if (devName[0] == NULL)
+      {
+      // If no device name is defined, skip processing the message.
+      this->Skip(headerMsg->GetBodySizeToRead());
+      continue; //  while (!this->ServerStopFlag)
+      }
+
+    //----------------------------------------------------------------
+    // If device name is restricted
     if (this->RestrictDeviceName)
       {
       // Check if the node has already been registered.
